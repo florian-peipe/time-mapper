@@ -1,0 +1,26 @@
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+ios/
+android/
+coverage/
+
+# Env
+.env
+.env.local
+
+# EAS
+.easignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Drizzle
+drizzle/meta/_journal.json.bak
