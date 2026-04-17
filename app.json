@@ -13,17 +13,27 @@
       "resizeMode": "contain",
       "backgroundColor": "#FAFAF8"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.timemapper.app",
-      "config": { "usesNonExemptEncryption": false },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
-        "UIBackgroundModes": ["location", "fetch", "processing"],
-        "BGTaskSchedulerPermittedIdentifiers": ["com.timemapper.app.geofence-resolve"],
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "processing"
+        ],
+        "BGTaskSchedulerPermittedIdentifiers": [
+          "com.timemapper.app.geofence-resolve"
+        ],
         "NSLocationWhenInUseUsageDescription": "Time Mapper uses your location to start the timer automatically when you arrive at a saved place.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Time Mapper needs always-on location to start and stop timers automatically in the background \u2014 even with the app closed.",
-        "NSLocationAlwaysUsageDescription": "Time Mapper needs always-on location to start and stop timers automatically in the background \u2014 even with the app closed.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Time Mapper needs always-on location to start and stop timers automatically in the background — even with the app closed.",
+        "NSLocationAlwaysUsageDescription": "Time Mapper needs always-on location to start and stop timers automatically in the background — even with the app closed.",
         "NSUserNotificationsUsageDescription": "Time Mapper sends you a short confirmation when it starts or stops a timer automatically.",
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -48,19 +58,37 @@
     "plugins": [
       "expo-router",
       "expo-localization",
-      ["expo-location", {
-        "locationAlwaysAndWhenInUsePermission": "Time Mapper needs always-on location to start and stop timers automatically in the background.",
-        "isIosBackgroundLocationEnabled": true,
-        "isAndroidBackgroundLocationEnabled": true
-      }],
-      ["expo-notifications", {
-        "color": "#FF7A1A"
-      }],
-      ["expo-build-properties", {
-        "ios": { "deploymentTarget": "15.1" },
-        "android": { "compileSdkVersion": 34, "targetSdkVersion": 34, "minSdkVersion": 24 }
-      }]
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Time Mapper needs always-on location to start and stop timers automatically in the background.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#FF7A1A"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          },
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 24
+          }
+        }
+      ],
+      "expo-sqlite"
     ],
-    "experiments": { "typedRoutes": true }
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }
