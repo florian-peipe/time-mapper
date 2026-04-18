@@ -4,6 +4,31 @@ All notable changes to Time Mapper are documented here. Release tags are of
 the form `vMAJOR.MINOR-shortname` where the shortname traces back to the
 plan that shipped the work (`foundation`, `core-ui`, …).
 
+## v0.5.0-billing
+
+- Real RevenueCat SDK wired. `usePro()` replaces `useProMock()` everywhere,
+  same interface — consumer screens (Paywall, Settings, Stats, AddPlaceSheet)
+  see no breaking change.
+- Paywall purchases the selected RevenueCat package directly. Plan card
+  prices read from `product.priceString` when offerings have loaded;
+  hardcoded €4.99 / €29.99 stay as the fallback for first-render and
+  no-offering states. Errors surface in an inline `Banner` with a
+  "Try again" action.
+- Settings: new Subscription section with a "Time Mapper Pro · Active"
+  row that deep-links to App Store / Play Store subscription management,
+  plus an always-visible Restore purchases row that reflects in-flight
+  + completion state.
+- Anon RevenueCat user-id persisted in `kv['revenuecat.user_id']` and
+  passed to `Purchases.configure(...)` so entitlements survive
+  reinstalls on the same Apple/Google account.
+- `.env.example` + README section document the EXPO_PUBLIC_REVENUECAT_*
+  env vars the user must supply before a real build, with concrete
+  dashboard URLs and product IDs.
+- **Mock-mode fallback**: when RC keys are missing the SDK wrapper
+  short-circuits and `usePro()` delegates to `useProMock()` so the app
+  stays runnable in dev without a configured RevenueCat dashboard.
+  Logged once on boot via `console.warn`.
+
 ## v0.4.0-location-engine
 
 - **Core auto-tracking engine**: buffer state machine (IDLE → PENDING_ENTER
