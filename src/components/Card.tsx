@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, View, type StyleProp, type ViewStyle } from "react-native";
 import { useTheme, type Theme } from "@/theme/useTheme";
-import { tokens } from "@/theme/tokens";
+import type { tokens } from "@/theme/tokens";
 
 export type CardVariant = "tile" | "hero" | "elevated";
 

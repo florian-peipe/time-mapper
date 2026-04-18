@@ -41,9 +41,7 @@ describe("component barrel exports", () => {
   });
 
   it("renders Button + Card + Input without throwing", () => {
-    expect(() =>
-      wrap(<Components.Button onPress={() => {}}>Tap</Components.Button>),
-    ).not.toThrow();
+    expect(() => wrap(<Components.Button onPress={() => {}}>Tap</Components.Button>)).not.toThrow();
     expect(() =>
       wrap(
         <Components.Card variant="tile">

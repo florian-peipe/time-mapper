@@ -68,7 +68,11 @@ export class PlacesRepo {
 
   update(id: string, patch: Partial<CreatePlaceInput>): Place {
     const now = this.clock.now();
-    this.db.update(places).set({ ...patch, updatedAt: now }).where(eq(places.id, id)).run();
+    this.db
+      .update(places)
+      .set({ ...patch, updatedAt: now })
+      .where(eq(places.id, id))
+      .run();
     const row = this.get(id);
     if (!row) throw new Error(`Place ${id} not found after update`);
     return row;
@@ -76,10 +80,6 @@ export class PlacesRepo {
 
   softDelete(id: string): void {
     const now = this.clock.now();
-    this.db
-      .update(places)
-      .set({ deletedAt: now, updatedAt: now })
-      .where(eq(places.id, id))
-      .run();
+    this.db.update(places).set({ deletedAt: now, updatedAt: now }).where(eq(places.id, id)).run();
   }
 }

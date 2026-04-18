@@ -1,0 +1,11 @@
+node_modules/
+.expo/
+dist/
+coverage/
+package-lock.json
+
+# drizzle-kit output (do not reformat)
+src/db/migrations/
+
+# expo-generated (see its own header: "should not be edited")
+expo-env.d.ts

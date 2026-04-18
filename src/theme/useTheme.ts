@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { tokens, type ColorTokenKey, type Tokens } from "./tokens";
+import type { ColorTokenKey, Tokens } from "./tokens";
 
 export type Scheme = "light" | "dark";
 

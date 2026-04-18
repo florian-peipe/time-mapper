@@ -1,4 +1,4 @@
-import { tokens } from "./tokens";
+import { PLACE_COLORS, tokens } from "./tokens";
 
 describe("design tokens", () => {
   it("defines both light and dark themes", () => {
@@ -38,7 +38,6 @@ describe("design tokens", () => {
   });
 
   it("exposes the 8-color place palette", () => {
-    const { PLACE_COLORS } = require("./tokens");
     expect(PLACE_COLORS).toHaveLength(8);
     for (const c of PLACE_COLORS) expect(c).toMatch(/^#[0-9A-Fa-f]{6}$/);
   });

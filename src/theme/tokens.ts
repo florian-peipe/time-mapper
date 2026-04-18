@@ -52,8 +52,14 @@ export type ColorTokenKey = keyof typeof lightColors;
 
 // Place colors users can choose from (see design-system Components.jsx PLACE_COLORS).
 export const PLACE_COLORS = [
-  "#FF6A3D", "#2E9A5E", "#1D7FD1", "#9C46C2",
-  "#C98A10", "#C4361E", "#4C4741", "#17867F",
+  "#FF6A3D",
+  "#2E9A5E",
+  "#1D7FD1",
+  "#9C46C2",
+  "#C98A10",
+  "#C4361E",
+  "#4C4741",
+  "#17867F",
 ] as const;
 
 export const tokens = {

@@ -131,10 +131,6 @@ export class EntriesRepo {
 
   softDelete(id: string): void {
     const now = this.clock.now();
-    this.db
-      .update(entries)
-      .set({ deletedAt: now, updatedAt: now })
-      .where(eq(entries.id, id))
-      .run();
+    this.db.update(entries).set({ deletedAt: now, updatedAt: now }).where(eq(entries.id, id)).run();
   }
 }
