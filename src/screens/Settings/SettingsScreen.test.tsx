@@ -3,19 +3,42 @@ import { Linking } from "react-native";
 import { fireEvent, render, screen, within } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@/theme/ThemeProvider";
+import { PlacesRepoProvider } from "@/features/places/usePlaces";
+import { PlacesRepo } from "@/db/repository/places";
+import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore } from "@/state/uiStore";
 import { grantProMock, resetProMock } from "@/features/billing/useProMock";
 import { SettingsScreen } from "./SettingsScreen";
 
-const wrap = (ui: React.ReactNode) => (
+function makeRepo(
+  seeded: { name: string; address?: string; color?: string; icon?: string }[] = [],
+) {
+  const db = createTestDb();
+  const repo = new PlacesRepo(db);
+  for (const p of seeded) {
+    repo.create({
+      name: p.name,
+      address: p.address ?? "123 Example St",
+      latitude: 0,
+      longitude: 0,
+      color: p.color,
+      icon: p.icon,
+    });
+  }
+  return repo;
+}
+
+const wrap = (ui: React.ReactNode, repo: PlacesRepo = makeRepo()) => (
   <SafeAreaProvider
     initialMetrics={{
       frame: { x: 0, y: 0, width: 320, height: 640 },
       insets: { top: 47, left: 0, right: 0, bottom: 34 },
     }}
   >
-    <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>
+    <ThemeProvider schemeOverride="light">
+      <PlacesRepoProvider value={repo}>{ui}</PlacesRepoProvider>
+    </ThemeProvider>
   </SafeAreaProvider>
 );
 
@@ -35,12 +58,67 @@ describe("SettingsScreen", () => {
     expect(screen.getByText("Settings")).toBeTruthy();
   });
 
-  it("renders all four primary sections", () => {
+  it("renders all five primary sections (Places first)", () => {
     render(wrap(<SettingsScreen />));
+    expect(screen.getByTestId("settings-section-places")).toBeTruthy();
     expect(screen.getByTestId("settings-section-tracking")).toBeTruthy();
     expect(screen.getByTestId("settings-section-appearance")).toBeTruthy();
     expect(screen.getByTestId("settings-section-data")).toBeTruthy();
     expect(screen.getByTestId("settings-section-about")).toBeTruthy();
+  });
+
+  it("Places section shows 'Add your first place' when empty", () => {
+    render(wrap(<SettingsScreen />));
+    expect(screen.getByTestId("settings-row-add-first-place")).toBeTruthy();
+    expect(screen.getByText("Add your first place")).toBeTruthy();
+  });
+
+  it("tapping 'Add your first place' opens the AddPlaceSheet tagged as settings-places", () => {
+    render(wrap(<SettingsScreen />));
+    fireEvent.press(screen.getByTestId("settings-row-add-first-place"));
+    expect(useSheetStore.getState().active).toBe("addPlace");
+    expect(useSheetStore.getState().payload).toEqual({
+      placeId: null,
+      source: "settings-places",
+    });
+  });
+
+  it("Places section lists existing places with name + address and an Add row below", () => {
+    const repo = makeRepo([
+      { name: "Home", address: "1 Example Ln", color: "#FF6A3D", icon: "home" },
+      { name: "Gym", address: "42 Fitness Rd", color: "#2E9A5E", icon: "dumbbell" },
+    ]);
+    render(wrap(<SettingsScreen />, repo));
+    expect(screen.getByText("Home")).toBeTruthy();
+    expect(screen.getByText("1 Example Ln")).toBeTruthy();
+    expect(screen.getByText("Gym")).toBeTruthy();
+    expect(screen.getByText("42 Fitness Rd")).toBeTruthy();
+    // Add row is present at the bottom; the zero-places row is NOT.
+    expect(screen.getByTestId("settings-row-add-place")).toBeTruthy();
+    expect(screen.queryByTestId("settings-row-add-first-place")).toBeNull();
+  });
+
+  it("tapping a place row opens the AddPlaceSheet in edit mode for that placeId", () => {
+    const repo = makeRepo([{ name: "Home" }]);
+    const placeId = repo.list()[0]!.id;
+    render(wrap(<SettingsScreen />, repo));
+    fireEvent.press(screen.getByTestId(`settings-row-place-${placeId}`));
+    expect(useSheetStore.getState().active).toBe("addPlace");
+    expect(useSheetStore.getState().payload).toEqual({
+      placeId,
+      source: "settings-places",
+    });
+  });
+
+  it("tapping the Add place row at the bottom opens AddPlaceSheet in new mode", () => {
+    const repo = makeRepo([{ name: "Home" }]);
+    render(wrap(<SettingsScreen />, repo));
+    fireEvent.press(screen.getByTestId("settings-row-add-place"));
+    expect(useSheetStore.getState().active).toBe("addPlace");
+    expect(useSheetStore.getState().payload).toEqual({
+      placeId: null,
+      source: "settings-places",
+    });
   });
 
   it("renders the Tracking rows with their default details", () => {

@@ -2,7 +2,8 @@ import React, { useCallback } from "react";
 import { Linking, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/useTheme";
-import { ListRow, Section } from "@/components";
+import { ListRow, Section, type IconName } from "@/components";
+import { usePlaces } from "@/features/places/usePlaces";
 import { useProMock } from "@/features/billing/useProMock";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore, type ThemeOverride } from "@/state/uiStore";
@@ -28,9 +29,21 @@ export function SettingsScreen() {
   const insets = useSafeAreaInsets();
 
   const { isPro, grant, revoke } = useProMock();
+  const { places } = usePlaces();
   const openSheet = useSheetStore((s) => s.openSheet);
   const themeOverride = useUiStore((s) => s.themeOverride);
   const setThemeOverride = useUiStore((s) => s.setThemeOverride);
+
+  const handleAddPlace = useCallback(() => {
+    openSheet("addPlace", { placeId: null, source: "settings-places" });
+  }, [openSheet]);
+
+  const handleEditPlace = useCallback(
+    (placeId: string) => {
+      openSheet("addPlace", { placeId, source: "settings-places" });
+    },
+    [openSheet],
+  );
 
   const handleOpenPaywall = useCallback(
     (source: "settings" | "export") => {
@@ -92,6 +105,42 @@ export function SettingsScreen() {
       {!isPro ? (
         <ProUpsellCard onPress={() => handleOpenPaywall("settings")} testID="settings-pro-upsell" />
       ) : null}
+
+      <Section title="Places" testID="settings-section-places">
+        {places.length === 0 ? (
+          <ListRow
+            icon="map-pin"
+            iconBg={t.color("color.accent.soft")}
+            iconColor={t.color("color.accent")}
+            title="Add your first place"
+            onPress={handleAddPlace}
+            last
+            testID="settings-row-add-first-place"
+          />
+        ) : (
+          <>
+            {places.map((p) => (
+              <ListRow
+                key={p.id}
+                icon={toIconName(p.icon)}
+                iconBg={p.color}
+                iconColor={t.color("color.accent.contrast")}
+                title={p.name}
+                detail={p.address || undefined}
+                onPress={() => handleEditPlace(p.id)}
+                testID={`settings-row-place-${p.id}`}
+              />
+            ))}
+            <ListRow
+              icon="plus"
+              title="Add place"
+              onPress={handleAddPlace}
+              last
+              testID="settings-row-add-place"
+            />
+          </>
+        )}
+      </Section>
 
       <Section title="Tracking" testID="settings-section-tracking">
         <ListRow
@@ -199,6 +248,38 @@ function themeLabel(current: ThemeOverride): string {
 function localeLabel(locale: string): string {
   if (locale.startsWith("de")) return "Deutsch";
   return "English";
+}
+
+/**
+ * Known places-repo icon names (superset of the `AddPlaceSheet` picker).
+ * Anything else we observe in the DB — including the legacy default "pin"
+ * from older Place rows — falls back to `"map-pin"` so we never pass an
+ * unregistered name into `<Icon>` (which would throw at render time).
+ */
+const KNOWN_PLACE_ICONS: readonly IconName[] = [
+  "home",
+  "briefcase",
+  "dumbbell",
+  "coffee",
+  "book-open",
+  "shopping-bag",
+  "plane",
+  "car",
+  "heart",
+  "music",
+  "utensils",
+  "bed",
+  "baby",
+  "tree-pine",
+  "waves",
+  "mountain",
+  "map-pin",
+  "star",
+];
+
+function toIconName(raw: string | undefined): IconName {
+  if (!raw) return "map-pin";
+  return (KNOWN_PLACE_ICONS as readonly string[]).includes(raw) ? (raw as IconName) : "map-pin";
 }
 
 /**
