@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTheme, type Theme } from "@/theme/useTheme";
 import { Icon } from "@/components";
+import { i18n } from "@/lib/i18n";
 import type { Entry, Place } from "@/db/schema";
 
 type LedgerRow = {
@@ -187,7 +188,7 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
                 fontFamily: t.type.family.sans,
               }}
             >
-              No entries yet
+              {i18n.t("stats.empty.noRows")}
             </Text>
           </View>
         ) : null}

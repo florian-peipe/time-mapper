@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Banner, Button, Icon, Rings, Sheet } from "@/components";
 import { usePro } from "@/features/billing/usePro";
+import { i18n } from "@/lib/i18n";
 import { PlanPicker, type PlanId } from "./PlanPicker";
 
 export type PaywallScreenProps = {
@@ -25,12 +26,12 @@ export type PaywallScreenProps = {
   source?: string;
 };
 
-const FEATURES: readonly string[] = [
-  "Unlimited places",
-  "Full history (no 14-day limit)",
-  "Weekly reports for past weeks",
-  "CSV export",
-  "Place categories",
+const FEATURE_KEYS: readonly string[] = [
+  "paywall.features.unlimited",
+  "paywall.features.history",
+  "paywall.features.reports",
+  "paywall.features.export",
+  "paywall.features.categories",
 ] as const;
 
 /**
@@ -72,12 +73,16 @@ export function PaywallScreen({ visible = true, onClose, source: _source }: Payw
   const yearlyPrice = offerings?.annual?.product.priceString;
   const monthlyPrice = offerings?.monthly?.product.priceString;
 
-  const ctaLabel = busy ? "Processing…" : plan === "year" ? "Start free trial" : "Subscribe";
+  const ctaLabel = busy
+    ? i18n.t("paywall.cta.processing")
+    : plan === "year"
+      ? i18n.t("paywall.cta.freeTrial")
+      : i18n.t("paywall.cta.subscribe");
 
   const handleSubscribe = useCallback(async () => {
     setError(null);
     if (!selectedPackage) {
-      setError("Pricing isn't loaded yet. Please try again in a moment.");
+      setError(i18n.t("paywall.error.pricingNotLoaded"));
       return;
     }
     setBusy(true);
@@ -115,9 +120,9 @@ export function PaywallScreen({ visible = true, onClose, source: _source }: Payw
           {error ? (
             <Banner
               tone="danger"
-              title="Purchase failed"
+              title={i18n.t("paywall.error.title")}
               body={error}
-              action={{ label: "Try again", onPress: handleSubscribe }}
+              action={{ label: i18n.t("paywall.error.tryAgain"), onPress: handleSubscribe }}
               testID="paywall-error"
             />
           ) : null}
@@ -160,7 +165,7 @@ export function PaywallScreen({ visible = true, onClose, source: _source }: Payw
               marginTop: t.space[1],
             }}
           >
-            Terms · Privacy
+            {i18n.t("paywall.footer.legal")}
           </Text>
         </View>
       }
@@ -219,7 +224,7 @@ export function PaywallScreen({ visible = true, onClose, source: _source }: Payw
           lineHeight: (t.type.size.xl + 2) * t.type.lineHeight.tight,
         }}
       >
-        Track every place that matters.
+        {i18n.t("paywall.hero.title")}
       </Text>
       <Text
         style={{
@@ -230,7 +235,7 @@ export function PaywallScreen({ visible = true, onClose, source: _source }: Payw
           textAlign: "center",
         }}
       >
-        Pro gives you unlimited places, full history, CSV export, and categories.
+        {i18n.t("paywall.hero.body")}
       </Text>
 
       {/* Feature list */}
@@ -242,9 +247,9 @@ export function PaywallScreen({ visible = true, onClose, source: _source }: Payw
           marginTop: t.space[6],
         }}
       >
-        {FEATURES.map((label) => (
+        {FEATURE_KEYS.map((key) => (
           <View
-            key={label}
+            key={key}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -259,7 +264,7 @@ export function PaywallScreen({ visible = true, onClose, source: _source }: Payw
                 fontFamily: t.type.family.sans,
               }}
             >
-              {label}
+              {i18n.t(key)}
             </Text>
           </View>
         ))}
@@ -288,14 +293,14 @@ function messageFor(err: unknown): string {
     "userCancelled" in err &&
     (err as { userCancelled?: boolean }).userCancelled
   ) {
-    return "Purchase was cancelled.";
+    return i18n.t("paywall.error.cancelled");
   }
   if (err instanceof Error) return err.message;
-  return "Something went wrong. Please try again.";
+  return i18n.t("paywall.error.generic");
 }
 
 function restoreLabel(state: "idle" | "busy" | "done"): string {
-  if (state === "busy") return "Restoring…";
-  if (state === "done") return "Purchases restored";
-  return "Restore purchases";
+  if (state === "busy") return i18n.t("paywall.restore.busy");
+  if (state === "done") return i18n.t("paywall.restore.done");
+  return i18n.t("paywall.restore.idle");
 }

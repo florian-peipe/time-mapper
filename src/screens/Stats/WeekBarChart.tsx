@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Card } from "@/components";
+import { i18n } from "@/lib/i18n";
 import type { DayBuckets, PlaceWeekTotal } from "@/features/entries/useWeekStats";
 
 type Props = {
@@ -162,7 +163,7 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
               fontFamily: t.type.family.sans,
             }}
           >
-            No tracked time yet this week
+            {i18n.t("stats.empty.week")}
           </Text>
         </View>
       )}
