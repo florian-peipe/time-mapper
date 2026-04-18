@@ -1,26 +1,54 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
 import { Button, Icon } from "@/components";
+import {
+  requestForegroundLocation,
+  requestBackgroundLocation,
+  requestNotifications,
+} from "@/features/permissions";
 
 /**
- * Onboarding 2 / 3 — "primer" before the OS permission prompt. Explains why
- * Time Mapper needs Always location and what data stays on-device. The primer
- * pattern is essential: users double-tap Deny when a bare OS prompt appears
- * out of context. Both CTAs route to the same next screen — the OS prompt
- * itself is triggered by the tracking feature later, not here.
+ * Onboarding 2 / 3 — real permission request flow. This is the "primer"
+ * *and* the OS prompt trigger, consolidated per design feedback: users
+ * were dropping off when the primer implied the prompt would come later.
+ *
+ * Flow on the primary CTA:
+ *   1. requestForegroundLocation()
+ *   2. if granted → requestBackgroundLocation()
+ *   3. requestNotifications() regardless
+ *
+ * Any denial still advances to the first-place screen — a partial setup
+ * is still useful (manual tracking works), and the Timeline surfaces a
+ * recovery banner with a "Change in Settings" deep-link.
  */
 export function PermissionsScreen() {
   const t = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [busy, setBusy] = useState(false);
 
-  const handleContinue = useCallback(() => {
+  const advance = useCallback(() => {
     router.push("/(onboarding)/first-place");
   }, [router]);
+
+  const handleEnable = useCallback(async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const fg = await requestForegroundLocation();
+      if (fg === "foreground-only") {
+        await requestBackgroundLocation();
+      }
+      await requestNotifications();
+    } finally {
+      setBusy(false);
+      advance();
+    }
+  }, [advance, busy]);
 
   return (
     <View
@@ -84,7 +112,8 @@ export function PermissionsScreen() {
           variant="primary"
           size="md"
           full
-          onPress={handleContinue}
+          loading={busy}
+          onPress={handleEnable}
           testID="onboarding-permissions-enable"
         >
           {i18n.t("onboarding.permissions.cta")}
@@ -93,7 +122,7 @@ export function PermissionsScreen() {
           variant="tertiary"
           size="md"
           full
-          onPress={handleContinue}
+          onPress={advance}
           testID="onboarding-permissions-skip"
         >
           {i18n.t("onboarding.permissions.skip")}

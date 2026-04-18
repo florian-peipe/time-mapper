@@ -14,6 +14,7 @@ import type { IconName, SourceKind } from "@/components";
 import { DayNavHeader } from "./DayNavHeader";
 import { EntryRow } from "./EntryRow";
 import { RunningTimerCard } from "./RunningTimerCard";
+import { TrackingBanner } from "./TrackingBanner";
 
 /**
  * Home tab — today by default, with chevron navigation back through days.
@@ -95,6 +96,11 @@ export function TimelineScreen() {
           paddingBottom: t.space[10] + t.space[5],
         }}
       >
+        {/* Permission status banner — renders null when auto-tracking is healthy. */}
+        <View style={{ marginBottom: t.space[3] }}>
+          <TrackingBanner />
+        </View>
+
         {showRunning && ongoingState.entry && ongoingPlace ? (
           <View style={{ marginBottom: t.space[5] }}>
             <RunningTimerCard

@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { PermissionsScreen } from "./PermissionsScreen";
@@ -9,6 +9,19 @@ const mockReplace = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
+}));
+
+type LocStatus = "granted" | "foreground-only" | "denied" | "undetermined";
+const mockReqFg = jest.fn<Promise<LocStatus>, []>(async () => "granted");
+const mockReqBg = jest.fn<Promise<LocStatus>, []>(async () => "granted");
+const mockReqNotif = jest.fn<Promise<"granted" | "denied" | "undetermined">, []>(
+  async () => "granted",
+);
+
+jest.mock("@/features/permissions", () => ({
+  requestForegroundLocation: () => mockReqFg(),
+  requestBackgroundLocation: () => mockReqBg(),
+  requestNotifications: () => mockReqNotif(),
 }));
 
 function wrap(ui: React.ReactNode) {
@@ -27,6 +40,9 @@ function wrap(ui: React.ReactNode) {
 beforeEach(() => {
   mockPush.mockReset();
   mockReplace.mockReset();
+  mockReqFg.mockReset().mockResolvedValue("granted");
+  mockReqBg.mockReset().mockResolvedValue("granted");
+  mockReqNotif.mockReset().mockResolvedValue("granted");
 });
 
 describe("PermissionsScreen", () => {
@@ -36,15 +52,49 @@ describe("PermissionsScreen", () => {
     expect(screen.getByText(/on your device/i)).toBeTruthy();
   });
 
-  it("enable CTA advances to the first-place screen", () => {
+  it("enable CTA requests foreground location, advances to first-place", async () => {
     render(wrap(<PermissionsScreen />));
-    fireEvent.press(screen.getByTestId("onboarding-permissions-enable"));
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("onboarding-permissions-enable"));
+    });
+    expect(mockReqFg).toHaveBeenCalled();
     expect(mockPush).toHaveBeenCalledWith("/(onboarding)/first-place");
   });
 
-  it("'Not now' also advances — the OS prompt is deferred to later", () => {
+  it("foreground grant triggers background request", async () => {
+    mockReqFg.mockResolvedValue("foreground-only");
+    render(wrap(<PermissionsScreen />));
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("onboarding-permissions-enable"));
+    });
+    expect(mockReqBg).toHaveBeenCalled();
+  });
+
+  it("foreground denied skips background and still requests notifications", async () => {
+    mockReqFg.mockResolvedValue("denied");
+    render(wrap(<PermissionsScreen />));
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("onboarding-permissions-enable"));
+    });
+    expect(mockReqBg).not.toHaveBeenCalled();
+    expect(mockReqNotif).toHaveBeenCalled();
+    expect(mockPush).toHaveBeenCalledWith("/(onboarding)/first-place");
+  });
+
+  it("any denial still advances — partial setup is still usable", async () => {
+    mockReqFg.mockResolvedValue("denied");
+    mockReqNotif.mockResolvedValue("denied");
+    render(wrap(<PermissionsScreen />));
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("onboarding-permissions-enable"));
+    });
+    expect(mockPush).toHaveBeenCalledWith("/(onboarding)/first-place");
+  });
+
+  it("'Not now' skips prompting and advances", () => {
     render(wrap(<PermissionsScreen />));
     fireEvent.press(screen.getByTestId("onboarding-permissions-skip"));
+    expect(mockReqFg).not.toHaveBeenCalled();
     expect(mockPush).toHaveBeenCalledWith("/(onboarding)/first-place");
   });
 });
