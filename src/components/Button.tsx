@@ -17,9 +17,17 @@ type Props = {
   size?: ButtonSize;
   full?: boolean;
   loading?: boolean;
+  disabled?: boolean;
   onPress: () => void;
   children: React.ReactNode;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
+  accessibilityState?: {
+    disabled?: boolean;
+    selected?: boolean;
+    checked?: boolean;
+    busy?: boolean;
+  };
   testID?: string;
 };
 
@@ -28,9 +36,12 @@ export function Button({
   size = "md",
   full,
   loading,
+  disabled,
   onPress,
   children,
   accessibilityLabel,
+  accessibilityHint,
+  accessibilityState,
   testID,
 }: Props) {
   const t = useTheme();
@@ -64,21 +75,29 @@ export function Button({
 
   return (
     <Pressable
-      onPress={loading ? undefined : onPress}
-      disabled={loading}
+      onPress={loading || disabled ? undefined : onPress}
+      disabled={loading || disabled}
       accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
       accessibilityRole="button"
+      accessibilityState={{
+        disabled: disabled ?? loading ?? accessibilityState?.disabled,
+        busy: loading ?? accessibilityState?.busy,
+        selected: accessibilityState?.selected,
+        checked: accessibilityState?.checked,
+      }}
       testID={testID}
       style={({ pressed }): StyleProp<ViewStyle> => [
         styles.base,
         {
+          minHeight: Math.max(sizing.height, t.minTouchTarget),
           height: sizing.height,
           paddingHorizontal: sizing.paddingH,
           backgroundColor: palette.bg,
           borderColor: palette.border,
           borderRadius: t.radius.pill,
           width: full ? "100%" : undefined,
-          opacity: loading ? 0.6 : 1,
+          opacity: loading || disabled ? 0.6 : 1,
           transform: [{ scale: pressed ? 0.97 : 1 }],
         },
       ]}

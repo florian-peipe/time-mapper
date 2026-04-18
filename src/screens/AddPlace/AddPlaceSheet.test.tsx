@@ -1,6 +1,6 @@
 import React from "react";
 import { Alert } from "react-native";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { PlacesRepoProvider } from "@/features/places/usePlaces";
 import { PlacesRepo } from "@/db/repository/places";
@@ -55,9 +55,36 @@ function setup(opts: {
   return { ...utils, placesRepo, onClose, seeded };
 }
 
+/**
+ * Autocomplete is debounced 300ms + awaits an async Places/demo call. Tests
+ * that navigate past Phase 1 need to flush both the timer and the microtask
+ * queue before the suggestion rows appear.
+ */
+async function flushAutocomplete() {
+  await act(async () => {
+    jest.advanceTimersByTime(400);
+  });
+  await waitFor(() => screen.getByText(/Kinkelstr\. 3/));
+}
+
+/**
+ * Go to phase 2 by tapping the first demo suggestion. `geocodePlace` resolves
+ * asynchronously so we wait for the editor (radius label) to appear.
+ */
+async function gotoPhase2() {
+  await flushAutocomplete();
+  fireEvent.press(screen.getByText(/Kinkelstr\. 3/));
+  await waitFor(() => screen.getByText("Geofence radius"));
+}
+
 beforeEach(() => {
+  jest.useFakeTimers();
   useSheetStore.setState({ active: null, payload: null });
   resetProMock();
+});
+
+afterEach(() => {
+  jest.useRealTimers();
 });
 
 describe("AddPlaceSheet — Phase 1 (search)", () => {
@@ -67,66 +94,72 @@ describe("AddPlaceSheet — Phase 1 (search)", () => {
     expect(screen.getByTestId("add-place-search")).toBeTruthy();
   });
 
-  it("renders all hardcoded suggestions before the user types", () => {
+  it("renders all hardcoded demo suggestions before the user types", async () => {
     setup({});
-    expect(screen.getByText(/Kinkelstr\. 3, 50733 Köln/)).toBeTruthy();
-    expect(screen.getByText(/Mediapark 8, 50670 Köln/)).toBeTruthy();
-    expect(screen.getByText(/Kinkel Straße 12, Düsseldorf/)).toBeTruthy();
+    await flushAutocomplete();
+    expect(screen.getByText(/Kinkelstr\. 3/)).toBeTruthy();
+    expect(screen.getByText(/Mediapark 8/)).toBeTruthy();
+    expect(screen.getByText(/Kinkel Straße 12/)).toBeTruthy();
   });
 
-  it("filters suggestions on query (case-insensitive)", () => {
+  it("filters suggestions on query (case-insensitive)", async () => {
     setup({});
     fireEvent.changeText(screen.getByTestId("add-place-search"), "medi");
-    expect(screen.getByText(/Mediapark 8, 50670 Köln/)).toBeTruthy();
+    await act(async () => {
+      jest.advanceTimersByTime(400);
+    });
+    await waitFor(() => screen.getByText(/Mediapark 8/));
     expect(screen.queryByText(/Kinkelstr\. 3/)).toBeNull();
     expect(screen.queryByText(/Kinkel Straße 12/)).toBeNull();
   });
 
-  it("filters out all rows when nothing matches", () => {
+  it("filters out all rows when nothing matches", async () => {
     setup({});
     fireEvent.changeText(screen.getByTestId("add-place-search"), "zzznomatch");
+    await act(async () => {
+      jest.advanceTimersByTime(400);
+    });
     expect(screen.queryByText(/Kinkelstr/)).toBeNull();
     expect(screen.queryByText(/Mediapark/)).toBeNull();
   });
 });
 
 describe("AddPlaceSheet — Phase 2 (editor)", () => {
-  function gotoPhase2() {
+  it("enters the editor after selecting a suggestion and pre-fills the name", async () => {
     setup({});
-    // Tap the first suggestion — switches to the editor view.
-    fireEvent.press(screen.getByText(/Kinkelstr\. 3, 50733 Köln/));
-  }
-
-  it("enters the editor after selecting a suggestion and pre-fills the name", () => {
-    gotoPhase2();
-    // Name input pre-filled with first part of address.
+    await gotoPhase2();
+    // Name input pre-filled with mainText ("Kinkelstr. 3").
     expect(screen.getByTestId("add-place-name").props.value).toBe("Kinkelstr. 3");
-    // Address preview shown.
-    expect(screen.getByText("Kinkelstr. 3, 50733 Köln")).toBeTruthy();
+    // Address preview uses the formatted_address from the demo details.
+    expect(screen.getByText(/Kinkelstr\. 3, 50733 Köln, Germany/)).toBeTruthy();
   });
 
-  it("renders radius label and initial value 100 m", () => {
-    gotoPhase2();
+  it("renders radius label and initial value 100 m", async () => {
+    setup({});
+    await gotoPhase2();
     expect(screen.getByText("Geofence radius")).toBeTruthy();
     expect(screen.getByText("100 m")).toBeTruthy();
   });
 
-  it("updates the radius label when the slider value changes", () => {
-    gotoPhase2();
+  it("updates the radius label when the slider value changes", async () => {
+    setup({});
+    await gotoPhase2();
     const slider = screen.getByTestId("add-place-radius");
     fireEvent(slider, "valueChange", 225);
     expect(screen.getByText("225 m")).toBeTruthy();
   });
 
-  it("renders 8 color swatches", () => {
-    gotoPhase2();
+  it("renders 8 color swatches", async () => {
+    setup({});
+    await gotoPhase2();
     for (let i = 0; i < 8; i++) {
       expect(screen.getByTestId(`add-place-color-${i}`)).toBeTruthy();
     }
   });
 
-  it("tapping a color swatch updates the selection", () => {
-    gotoPhase2();
+  it("tapping a color swatch updates the selection", async () => {
+    setup({});
+    await gotoPhase2();
     // Initially swatch #0 is selected.
     expect(screen.getByTestId("add-place-color-0").props.accessibilityState).toEqual(
       expect.objectContaining({ selected: true }),
@@ -140,15 +173,17 @@ describe("AddPlaceSheet — Phase 2 (editor)", () => {
     );
   });
 
-  it("renders 9 icon tiles", () => {
-    gotoPhase2();
+  it("renders 9 icon tiles", async () => {
+    setup({});
+    await gotoPhase2();
     for (let i = 0; i < 9; i++) {
       expect(screen.getByTestId(`add-place-icon-${i}`)).toBeTruthy();
     }
   });
 
-  it("tapping an icon updates the selection", () => {
-    gotoPhase2();
+  it("tapping an icon updates the selection", async () => {
+    setup({});
+    await gotoPhase2();
     expect(screen.getByTestId("add-place-icon-0").props.accessibilityState).toEqual(
       expect.objectContaining({ selected: true }),
     );
@@ -163,18 +198,19 @@ describe("AddPlaceSheet — Phase 2 (editor)", () => {
 });
 
 describe("AddPlaceSheet — Save", () => {
-  it("Save button CTA reads 'Save place' on an empty-places free user", () => {
+  it("Save button CTA reads 'Save place' on an empty-places free user", async () => {
     const { placesRepo } = setup({});
     expect(placesRepo.count()).toBe(0);
-    // Enter phase 2 then inspect the CTA.
-    fireEvent.press(screen.getByText(/Kinkelstr\. 3/));
+    await gotoPhase2();
     expect(screen.getByText("Save place")).toBeTruthy();
   });
 
-  it("calls placesRepo.create with the edited fields and closes", () => {
+  it("calls placesRepo.create with the edited fields and closes", async () => {
     const onClose = jest.fn();
     const { placesRepo } = setup({ onClose });
-    fireEvent.press(screen.getByText(/Mediapark 8, 50670 Köln/));
+    await flushAutocomplete();
+    fireEvent.press(screen.getByText(/Mediapark 8/));
+    await waitFor(() => screen.getByText("Geofence radius"));
     // Change the name.
     fireEvent.changeText(screen.getByTestId("add-place-name"), "Studio");
     // Switch to icon 2 (dumbbell).
@@ -193,12 +229,15 @@ describe("AddPlaceSheet — Save", () => {
     expect(p).toBeDefined();
     if (!p) return;
     expect(p.name).toBe("Studio");
-    expect(p.address).toBe("Mediapark 8, 50670 Köln");
+    expect(p.address).toContain("Mediapark 8");
     expect(p.radiusM).toBe(200);
     // Color index 4 from PLACE_COLORS.
     expect(p.color).toBe("#C98A10");
     // Icon index 2 → 'dumbbell'.
     expect(p.icon).toBe("dumbbell");
+    // Demo details populate lat/lng.
+    expect(p.latitude).toBeCloseTo(50.9484, 2);
+    expect(p.longitude).toBeCloseTo(6.9445, 2);
   });
 });
 
@@ -298,26 +337,25 @@ describe("AddPlaceSheet — Edit mode", () => {
 });
 
 describe("AddPlaceSheet — Pro gate", () => {
-  it("CTA label becomes 'Unlock more places with Pro' when !isPro and places.length >= 1", () => {
+  it("CTA label becomes 'Unlock more places with Pro' when !isPro and places.length >= 1", async () => {
     setup({ preSeeded: [{ name: "Home" }] });
-    // Non-Pro user, 1 place already exists.
-    fireEvent.press(screen.getByText(/Kinkelstr\. 3/));
+    await gotoPhase2();
     expect(screen.getByText("Unlock more places with Pro")).toBeTruthy();
     expect(screen.queryByText("Save place")).toBeNull();
   });
 
-  it("CTA remains 'Save place' for a Pro user even with a pre-seeded place", () => {
+  it("CTA remains 'Save place' for a Pro user even with a pre-seeded place", async () => {
     grantProMock();
     setup({ preSeeded: [{ name: "Home" }] });
-    fireEvent.press(screen.getByText(/Kinkelstr\. 3/));
+    await gotoPhase2();
     expect(screen.getByText("Save place")).toBeTruthy();
     expect(screen.queryByText("Unlock more places with Pro")).toBeNull();
   });
 
-  it("tapping the Pro-gated CTA opens the paywall sheet and does NOT create a place", () => {
+  it("tapping the Pro-gated CTA opens the paywall sheet and does NOT create a place", async () => {
     const onClose = jest.fn();
     const { placesRepo } = setup({ onClose, preSeeded: [{ name: "Home" }] });
-    fireEvent.press(screen.getByText(/Kinkelstr\. 3/));
+    await gotoPhase2();
     fireEvent.press(screen.getByTestId("add-place-save"));
 
     // Paywall opened.
@@ -331,13 +369,13 @@ describe("AddPlaceSheet — Pro gate", () => {
 });
 
 describe("AddPlaceSheet — 20-place soft cap (iOS geofence limit)", () => {
-  it("blocks creating a 21st place with an Alert and does NOT create", () => {
+  it("blocks creating a 21st place with an Alert and does NOT create", async () => {
     grantProMock(); // bypass the 2nd-place paywall
     const preSeeded = Array.from({ length: 20 }, (_, i) => ({ name: `Place-${i}` }));
     const onClose = jest.fn();
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     const { placesRepo } = setup({ onClose, preSeeded });
-    fireEvent.press(screen.getByText(/Kinkelstr\. 3/));
+    await gotoPhase2();
     fireEvent.press(screen.getByTestId("add-place-save"));
 
     expect(alertSpy).toHaveBeenCalledWith(

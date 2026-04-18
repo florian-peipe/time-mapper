@@ -1,14 +1,20 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import Slider from "@react-native-community/slider";
 import { useTheme } from "@/theme/useTheme";
 import { PLACE_COLORS } from "@/theme/tokens";
-import { Button, Icon, Input, Sheet, type IconName } from "@/components";
+import { Banner, Button, Icon, Input, Sheet, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { usePro } from "@/features/billing/usePro";
 import { useSheetStore, type AddPlaceSource } from "@/state/sheetStore";
 import { MAX_PLACES } from "@/features/tracking/geofenceService";
 import { i18n } from "@/lib/i18n";
+import {
+  autocomplete,
+  geocodePlace,
+  createSessionToken,
+  type PlaceSuggestion,
+} from "@/lib/geocode";
 
 export type AddPlaceSheetProps = {
   visible: boolean;
@@ -31,22 +37,13 @@ export type AddPlaceSheetProps = {
   onSaved?: (placeId: string) => void;
 };
 
-type Suggestion = {
-  /** Street + city line (primary label). */
-  desc: string;
-  /** Country line (secondary). */
-  sec: string;
+/** Internal selection state — either from an autocomplete pick or an edit. */
+type Selection = {
+  description: string;
+  placeId?: string;
+  latitude: number;
+  longitude: number;
 };
-
-/**
- * Hardcoded German address suggestions. Real Google Places integration is
- * Plan 3/4. Source: Screens.jsx AddPlaceSheet (lines 329-342).
- */
-const SUGGESTIONS: readonly Suggestion[] = [
-  { desc: "Kinkelstr. 3, 50733 Köln", sec: "Germany" },
-  { desc: "Mediapark 8, 50670 Köln", sec: "Germany" },
-  { desc: "Kinkel Straße 12, Düsseldorf", sec: "Germany" },
-] as const;
 
 /**
  * The 9 icons the design offers for place customisation. Source: Screens.jsx
@@ -69,14 +66,16 @@ const ICON_CHOICES: readonly IconName[] = [
 const RADIUS_MIN = 50;
 const RADIUS_MAX = 300;
 const RADIUS_DEFAULT = 100;
+const AUTOCOMPLETE_DEBOUNCE_MS = 300;
 
 /**
  * AddPlaceSheet — two-phase flow for creating (or, in v0.3, editing) a place.
  *
- * Phase 1: Search input (leading icon) + list of suggestion rows. Tap a
- * suggestion to transition to Phase 2 with the name pre-filled from the
- * first part of the address. Skipped entirely when `placeId != null`
- * because we jump straight into Phase 2 with the loaded place's fields.
+ * Phase 1: Search input (leading icon) + list of suggestion rows. In Plan 5+
+ * suggestions come from `@/lib/geocode.autocomplete`, which calls Google
+ * Places if `EXPO_PUBLIC_GOOGLE_PLACES_API_KEY` is set or falls back to a
+ * hardcoded demo list otherwise. Tap a suggestion to trigger `geocodePlace`
+ * (resolves to lat/lng) and transition to Phase 2 with the name pre-filled.
  *
  * Phase 2: Name input, address preview card, geofence radius slider
  * (50–300 m), color picker (8 swatches), icon picker (9 tiles), and a
@@ -115,21 +114,39 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   }, [editingPlace]);
 
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Suggestion | null>(
-    editingPlace ? { desc: editingPlace.address, sec: "" } : null,
+  const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
+  const [selected, setSelected] = useState<Selection | null>(
+    editingPlace
+      ? {
+          description: editingPlace.address,
+          latitude: editingPlace.latitude,
+          longitude: editingPlace.longitude,
+        }
+      : null,
   );
   const [name, setName] = useState(editingPlace?.name ?? "");
   const [radius, setRadius] = useState(editingPlace?.radiusM ?? RADIUS_DEFAULT);
   const [colorIdx, setColorIdx] = useState(initialColorIdx);
   const [iconIdx, setIconIdx] = useState(initialIconIdx);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  // Places session token — minted per "open search → select" interaction so
+  // Google bills a single transaction across the autocomplete keystrokes and
+  // the final details call. Refreshed when a selection completes (prep for
+  // the next search) or when the sheet opens fresh.
+  const sessionTokenRef = useRef<string>(createSessionToken());
 
   // When the sheet is reused for a different placeId (edit vs. new vs.
   // another edit), re-hydrate the local state so stale values from the
   // previous instance don't leak through. Also resets when the sheet is
   // hidden so reopening gives a clean slate.
-  React.useEffect(() => {
+  useEffect(() => {
     if (editingPlace) {
-      setSelected({ desc: editingPlace.address, sec: "" });
+      setSelected({
+        description: editingPlace.address,
+        latitude: editingPlace.latitude,
+        longitude: editingPlace.longitude,
+      });
       setName(editingPlace.name);
       setRadius(editingPlace.radiusM);
       setColorIdx(initialColorIdx);
@@ -141,23 +158,72 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setRadius(RADIUS_DEFAULT);
       setColorIdx(0);
       setIconIdx(0);
+      setSuggestions([]);
+      setApiError(null);
+      sessionTokenRef.current = createSessionToken();
     }
   }, [editingPlace, visible, initialColorIdx, initialIconIdx]);
+
+  // Autocomplete debounce. Every keystroke schedules a Places Autocomplete
+  // call 300ms later; if the user keeps typing we cancel and reschedule.
+  // Empty query → show all demo rows (when no key) or clear suggestions.
+  useEffect(() => {
+    if (editing || selected) return;
+    let cancelled = false;
+    const handle = setTimeout(() => {
+      void (async () => {
+        try {
+          const results = await autocomplete(query, sessionTokenRef.current);
+          if (!cancelled) {
+            setSuggestions(results);
+            setApiError(null);
+          }
+        } catch (err) {
+          if (!cancelled) {
+            const msg = err instanceof Error ? err.message : String(err);
+            setApiError(msg);
+            setSuggestions([]);
+          }
+        }
+      })();
+    }, AUTOCOMPLETE_DEBOUNCE_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [query, editing, selected]);
 
   // Pro gate only applies when the user is trying to create an ADDITIONAL
   // place on the free plan. Edit mode (placeId !== null) is never gated.
   const shouldPaywall = !isPro && count >= 1 && !editing;
 
-  const suggestions = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return SUGGESTIONS;
-    return SUGGESTIONS.filter((s) => s.desc.toLowerCase().includes(q));
-  }, [query]);
-
-  const handlePickSuggestion = (s: Suggestion) => {
-    setSelected(s);
-    // Pre-fill name from first part of the address (before the first comma).
-    setName(s.desc.split(",")[0] ?? s.desc);
+  const handlePickSuggestion = async (s: PlaceSuggestion) => {
+    // Optimistically set the name from the main text so users see progress
+    // while Place Details resolves in the background.
+    setName(s.mainText || s.description.split(",")[0] || s.description);
+    try {
+      const details = await geocodePlace(s.placeId, sessionTokenRef.current);
+      setSelected({
+        description: details.formattedAddress || s.description,
+        placeId: s.placeId,
+        latitude: details.lat,
+        longitude: details.lng,
+      });
+      // Mint a fresh token — this selection ended the billing session.
+      sessionTokenRef.current = createSessionToken();
+      setApiError(null);
+    } catch (err) {
+      // If geocoding fails, still let the user proceed with description
+      // only (lat/lng zero). Surface the error in a Banner.
+      const msg = err instanceof Error ? err.message : String(err);
+      setApiError(msg);
+      setSelected({
+        description: s.description,
+        placeId: s.placeId,
+        latitude: 0,
+        longitude: 0,
+      });
+    }
   };
 
   const handleSave = () => {
@@ -182,21 +248,20 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
     let saved;
     if (editing && placeId) {
       saved = update(placeId, {
-        name: name.trim() || selected.desc,
-        address: selected.desc,
+        name: name.trim() || selected.description,
+        address: selected.description,
+        latitude: selected.latitude,
+        longitude: selected.longitude,
         radiusM: radius,
         color: chosenColor,
         icon: chosenIcon,
       });
     } else {
       saved = create({
-        name: name.trim() || selected.desc,
-        address: selected.desc,
-        // Coordinates are unavailable without a geocoder; stored as zeros for
-        // Plan 2. Plan 3 replaces the hardcoded suggestions with Google Places
-        // and populates real lat/long.
-        latitude: 0,
-        longitude: 0,
+        name: name.trim() || selected.description,
+        address: selected.description,
+        latitude: selected.latitude,
+        longitude: selected.longitude,
         radiusM: radius,
         color: chosenColor,
         icon: chosenIcon,
@@ -208,10 +273,10 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
 
   const handleDelete = () => {
     if (!placeId) return;
-    Alert.alert("Delete place?", "This removes the place from your list. Entries are kept.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(i18n.t("addPlace.delete.title"), i18n.t("addPlace.delete.body"), [
+      { text: i18n.t("common.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: i18n.t("common.delete"),
         style: "destructive",
         onPress: () => {
           remove(placeId);
@@ -228,11 +293,11 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   void source;
 
   const saveLabel = shouldPaywall
-    ? "Unlock more places with Pro"
+    ? i18n.t("addPlace.cta.unlockPro")
     : editing
-      ? "Save changes"
-      : "Save place";
-  const sheetTitle = editing ? "Edit place" : "Add place";
+      ? i18n.t("addPlace.cta.saveChanges")
+      : i18n.t("addPlace.cta.savePlace");
+  const sheetTitle = editing ? i18n.t("addPlace.title.edit") : i18n.t("addPlace.title.new");
 
   return (
     <Sheet
@@ -244,7 +309,15 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       footer={
         selected ? (
           <View style={{ gap: t.space[2] }}>
-            <Button variant="primary" size="md" full onPress={handleSave} testID="add-place-save">
+            <Button
+              variant="primary"
+              size="md"
+              full
+              onPress={handleSave}
+              testID="add-place-save"
+              accessibilityLabel={saveLabel}
+              accessibilityHint={shouldPaywall ? i18n.t("addPlace.cta.unlockPro.hint") : undefined}
+            >
               {saveLabel}
             </Button>
             {editing ? (
@@ -254,8 +327,10 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
                 full
                 onPress={handleDelete}
                 testID="add-place-delete"
+                accessibilityLabel={i18n.t("addPlace.delete.cta")}
+                accessibilityHint={i18n.t("addPlace.delete.hint")}
               >
-                Delete place
+                {i18n.t("addPlace.delete.cta")}
               </Button>
             ) : null}
           </View>
@@ -267,18 +342,35 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
           <Input
             testID="add-place-search"
             autoFocus
-            placeholder="Search address"
+            placeholder={i18n.t("addPlace.search.placeholder")}
             value={query}
             onChangeText={setQuery}
             leading="search"
             containerStyle={{ marginBottom: t.space[3] }}
+            accessibilityLabel={i18n.t("addPlace.search.placeholder")}
+            accessibilityHint={i18n.t("addPlace.search.hint")}
           />
+          {apiError ? (
+            <View style={{ marginBottom: t.space[3] }}>
+              <Banner
+                tone="warning"
+                title={i18n.t("addPlace.search.errorTitle")}
+                body={i18n.t("addPlace.search.errorBody")}
+                testID="add-place-api-error"
+              />
+            </View>
+          ) : null}
           {suggestions.map((s, i) => (
             <Pressable
-              key={`${s.desc}-${i}`}
+              key={`${s.placeId}-${i}`}
               testID={`add-place-suggestion-${i}`}
-              onPress={() => handlePickSuggestion(s)}
+              onPress={() => {
+                void handlePickSuggestion(s);
+              }}
               accessibilityRole="button"
+              accessibilityLabel={`${s.mainText}, ${s.secondaryText}`}
+              accessibilityHint={i18n.t("addPlace.suggestion.hint")}
+              hitSlop={t.space[2]}
               style={{
                 flexDirection: "row",
                 gap: t.space[3],
@@ -286,10 +378,16 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
                 paddingHorizontal: t.space[1],
                 borderBottomWidth: 1,
                 borderBottomColor: t.color("color.border"),
+                minHeight: t.minTouchTarget,
               }}
             >
               <View style={{ marginTop: 2 }}>
-                <Icon name="map-pin" size={18} color={t.color("color.fg3")} />
+                <Icon
+                  name="map-pin"
+                  size={18}
+                  color={t.color("color.fg3")}
+                  accessibilityLabel={i18n.t("addPlace.icon.pin")}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
@@ -299,7 +397,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
                     fontFamily: t.type.family.sans,
                   }}
                 >
-                  {s.desc}
+                  {s.mainText || s.description}
                 </Text>
                 <Text
                   style={{
@@ -309,7 +407,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
                     marginTop: 2,
                   }}
                 >
-                  {s.sec}
+                  {s.secondaryText}
                 </Text>
               </View>
             </Pressable>
@@ -320,6 +418,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
           {/* Name field. */}
           <View style={{ flexDirection: "column", gap: t.space[1] + 2 }}>
             <Text
+              accessibilityRole="text"
               style={{
                 fontSize: t.type.size.s,
                 color: t.color("color.fg2"),
@@ -327,13 +426,20 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
                 fontWeight: t.type.weight.medium,
               }}
             >
-              Name
+              {i18n.t("addPlace.field.name")}
             </Text>
-            <Input testID="add-place-name" value={name} onChangeText={setName} />
+            <Input
+              testID="add-place-name"
+              value={name}
+              onChangeText={setName}
+              accessibilityLabel={i18n.t("addPlace.field.name")}
+            />
           </View>
 
           {/* Address preview card. */}
           <View
+            accessibilityRole="text"
+            accessibilityLabel={`${i18n.t("addPlace.field.address")}, ${selected.description}`}
             style={{
               flexDirection: "row",
               alignItems: "flex-start",
@@ -355,7 +461,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
                 fontFamily: t.type.family.sans,
               }}
             >
-              {selected.desc}
+              {selected.description}
             </Text>
           </View>
 
@@ -369,6 +475,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
               }}
             >
               <Text
+                accessibilityRole="text"
                 style={{
                   fontSize: t.type.size.s,
                   color: t.color("color.fg2"),
@@ -376,7 +483,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
                   fontWeight: t.type.weight.medium,
                 }}
               >
-                Geofence radius
+                {i18n.t("addPlace.field.radius")}
               </Text>
               <Text
                 style={{
@@ -400,12 +507,22 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
               maximumTrackTintColor={t.color("color.border")}
               thumbTintColor={t.color("color.accent")}
               style={{ width: "100%", height: 40 }}
+              accessibilityRole="adjustable"
+              accessibilityLabel={i18n.t("addPlace.field.radius")}
+              accessibilityValue={{
+                min: RADIUS_MIN,
+                max: RADIUS_MAX,
+                now: radius,
+                text: `${radius} m`,
+              }}
+              accessibilityHint={i18n.t("addPlace.field.radius.hint")}
             />
           </View>
 
           {/* Color picker. */}
           <View>
             <Text
+              accessibilityRole="text"
               style={{
                 fontSize: t.type.size.s,
                 color: t.color("color.fg2"),
@@ -414,7 +531,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
                 marginBottom: t.space[2],
               }}
             >
-              Color
+              {i18n.t("addPlace.field.color")}
             </Text>
             <View
               style={{
@@ -438,6 +555,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
           {/* Icon picker grid (6 per row). */}
           <View>
             <Text
+              accessibilityRole="text"
               style={{
                 fontSize: t.type.size.s,
                 color: t.color("color.fg2"),
@@ -446,7 +564,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
                 marginBottom: t.space[2],
               }}
             >
-              Icon
+              {i18n.t("addPlace.field.icon")}
             </Text>
             <View
               style={{
@@ -495,7 +613,9 @@ function ColorSwatch({
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel={`${i18n.t("addPlace.field.color")} ${color}`}
       accessibilityState={{ selected }}
+      hitSlop={t.space[1]}
       style={{
         // Outer ring = bg-colour with 5px extra — only painted when selected.
         width: 46,
@@ -554,7 +674,9 @@ function IconTile({
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel={`${i18n.t("addPlace.field.icon")} ${name}`}
       accessibilityState={{ selected }}
+      hitSlop={t.space[1]}
       style={{
         // design-source: 6 per row = (100% - 5 gaps of 8) / 6; we keep a
         // fixed square so the test environment width stays stable.
