@@ -89,6 +89,10 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "revenueCatIosKey": "${EXPO_PUBLIC_REVENUECAT_IOS_KEY}",
+      "revenueCatAndroidKey": "${EXPO_PUBLIC_REVENUECAT_ANDROID_KEY}"
     }
   }
 }
