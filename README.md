@@ -26,7 +26,8 @@ RevenueCat for billing.
 | RevenueCat project + API keys | `EXPO_PUBLIC_REVENUECAT_{IOS,ANDROID}_KEY` | [revenuecat.com](https://www.revenuecat.com) |
 | Google Places API key | `EXPO_PUBLIC_GOOGLE_PLACES_API_KEY` | [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) |
 | Sentry DSN (optional) | `EXPO_PUBLIC_SENTRY_DSN` | [sentry.io](https://sentry.io) |
-| Impressum contact details | `docs/legal/impressum-*.md` + `src/screens/Legal/documents.ts` | See § 5 TMG |
+| Impressum contact details | `src/screens/Legal/contact.local.ts` (gitignored) | See § 5 TMG |
+| Support email | `src/screens/Settings/SettingsScreen.tsx` (mailto) + app.json | Placeholder `support@timemapper.app` |
 | Privacy policy public URL | App Store Connect → App Privacy | Host `docs/legal/privacy-en.md` |
 | Apple ID + ASC App ID + Team ID | `eas.json` submit.production.ios | ASC → App Information |
 | Play service account JSON | `play-service-account.json` (gitignored) | Play Console → Setup → API access |
@@ -150,7 +151,7 @@ keys from `EXPO_PUBLIC_*` env vars (which Expo substitutes into
 Crash reporting is opt-in. The app runs fine without it; when enabled it
 reports uncaught errors + explicit `captureException` calls.
 
-1. `npm install @sentry/react-native`
+1. `npx expo install @sentry/react-native`
 2. Create a project at https://sentry.io and copy the DSN.
 3. Add to `.env.local`:
    ```
@@ -160,6 +161,23 @@ reports uncaught errors + explicit `captureException` calls.
 Privacy note: the wrapper in `src/lib/crash.ts` strips `latitude`,
 `longitude`, and `location` fields from all breadcrumbs/events before
 they leave the device. User id is the anonymous RevenueCat id only.
+
+### Impressum contact details
+
+German law (§ 5 TMG) requires apps distributed in the EU to publish real
+contact info on a reachable "Impressum" page. We keep these details
+out of git — copy the template and fill in your real values:
+
+```sh
+cp src/screens/Legal/contact.local.example.ts src/screens/Legal/contact.local.ts
+```
+
+Then edit `src/screens/Legal/contact.local.ts` with your real
+`ownerName`, `address`, `email`, and `phone`. The `.local.ts` file is
+gitignored. If the file is missing (or any field contains `{{...}}`
+tokens), the Impressum page displays an "Impressum not yet configured"
+notice instead of the literal placeholder text — App Store review
+would otherwise reject the build.
 
 ## Repo layout
 

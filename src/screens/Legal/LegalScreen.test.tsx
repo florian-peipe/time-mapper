@@ -51,15 +51,17 @@ describe("LegalScreen", () => {
     expect(getAllByText(/terms of service/i).length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders the Impressum with placeholder tokens visible", () => {
-    const { getByTestId, getByText } = render(wrap(<LegalScreen documentKey="impressum" />));
+  it("renders the Impressum unconfigured variant when contact.local.ts is missing", () => {
+    // In this sandbox there is no `src/screens/Legal/contact.local.ts` — the
+    // document loader should fall back to the "not yet configured" copy
+    // rather than leaking `{{OWNER_NAME}}` etc. through to the UI.
+    const { getByTestId, getAllByText, queryByText } = render(
+      wrap(<LegalScreen documentKey="impressum" />),
+    );
     expect(getByTestId("legal-screen-impressum")).toBeTruthy();
-    // Placeholder tokens stay in the rendered output so testers see them.
-    // Multiple blocks reference OWNER_NAME (owner + responsible) — use getAll.
-    const { getAllByText } = render(wrap(<LegalScreen documentKey="impressum" />));
-    expect(getAllByText(/OWNER_NAME/).length).toBeGreaterThanOrEqual(1);
-    expect(getAllByText(/ADDRESS/).length).toBeGreaterThanOrEqual(1);
-    void getByText; // silence lint
+    expect(getAllByText(/not yet configured/i).length).toBeGreaterThanOrEqual(1);
+    // And critically: no {{...}} token can slip through.
+    expect(queryByText(/\{\{[A-Z_]+\}\}/)).toBeNull();
   });
 
   it("back button calls router.back() when history exists", () => {

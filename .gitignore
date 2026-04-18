@@ -14,6 +14,10 @@ coverage/
 .env
 .env.local
 
+# Per-developer contact info for the Impressum — the user creates this
+# locally and never commits their real address/phone/email.
+src/screens/Legal/contact.local.ts
+
 # EAS
 .easignore
 

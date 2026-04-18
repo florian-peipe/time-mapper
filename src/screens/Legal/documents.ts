@@ -1,7 +1,19 @@
-// Legal document content — stub for Plan 5 Commit 3. Real content lands in
-// Commit 7 (docs/legal/*-de.md + -en.md). This module simply serves a
-// structured block list keyed by document + locale so the `LegalScreen`
-// generic renderer doesn't need to know about markdown parsing.
+// Legal document content. Privacy + Terms are stable strings baked into the
+// bundle. The Impressum requires real contact info (German § 5 TMG), which
+// must not be committed — the developer provides it via a local, gitignored
+// `contact.local.ts` module.
+//
+// Behavior:
+//   1. On build, `contact.local.ts` may or may not exist.
+//   2. At render time, `getLegalDocument("impressum", locale)` reads the
+//      locally-overridden contact info (if any) and interpolates it into the
+//      Impressum template.
+//   3. If `contact.local.ts` is missing OR any {{...}} token survives after
+//      interpolation, we return the `UNCONFIGURED_IMPRESSUM` variant
+//      explaining the situation instead of rendering placeholders — App
+//      Store review would otherwise reject the literal `{{OWNER_NAME}}`.
+//
+// See README.md → "User-provided values → Impressum" for instructions.
 
 export type DocumentKey = "privacy" | "terms" | "impressum";
 export type Locale = "en" | "de";
@@ -14,6 +26,109 @@ export type Block =
 export type LegalDoc = {
   title: string;
   blocks: Block[];
+};
+
+/**
+ * Shape the gitignored `contact.local.ts` module is expected to export. Each
+ * field MUST be a non-empty, placeholder-free string or the document is
+ * treated as unconfigured.
+ */
+export type ImpressumContact = {
+  ownerName: string;
+  address: string;
+  email: string;
+  phone: string;
+};
+
+type ContactModule = { default?: ImpressumContact } & Partial<ImpressumContact>;
+
+/**
+ * Load the per-developer contact module if present. `require` is wrapped in
+ * try/catch so a missing file — the default checkout state — simply yields
+ * `null` and the doc renders the "unconfigured" variant. The lazy require is
+ * intentional: we cannot hard-import a file that doesn't exist during TS
+ * typecheck.
+ */
+function loadContact(): ImpressumContact | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require("./contact.local") as ContactModule;
+    const candidate: Partial<ImpressumContact> = mod.default ?? mod;
+    const { ownerName, address, email, phone } = candidate;
+    if (!ownerName || !address || !email || !phone) return null;
+    // Final paranoia: if the user copied a template that still has {{...}}
+    // tokens in any field we want to fall through to the error variant.
+    if (
+      hasPlaceholder(ownerName) ||
+      hasPlaceholder(address) ||
+      hasPlaceholder(email) ||
+      hasPlaceholder(phone)
+    ) {
+      return null;
+    }
+    return { ownerName, address, email, phone };
+  } catch {
+    return null;
+  }
+}
+
+/** True if `s` contains any `{{TOKEN}}` style placeholder. */
+function hasPlaceholder(s: string): boolean {
+  return /\{\{[^}]+\}\}/.test(s);
+}
+
+function interpolate(s: string, contact: ImpressumContact): string {
+  return s
+    .replace(/\{\{OWNER_NAME\}\}/g, contact.ownerName)
+    .replace(/\{\{ADDRESS\}\}/g, contact.address)
+    .replace(/\{\{EMAIL\}\}/g, contact.email)
+    .replace(/\{\{PHONE\}\}/g, contact.phone);
+}
+
+/**
+ * Shown in place of the real Impressum when `contact.local.ts` is missing or
+ * still has unfilled placeholders. Intentionally clear so a reviewer (and any
+ * future dev) knows exactly what to do.
+ */
+export const UNCONFIGURED_IMPRESSUM: Record<Locale, LegalDoc> = {
+  en: {
+    title: "Impressum",
+    blocks: [
+      { type: "h1", text: "Impressum not yet configured" },
+      {
+        type: "p",
+        text: "This build does not include the developer's Impressum contact details yet. The Impressum is required by German law (§ 5 TMG) for apps distributed in the EU.",
+      },
+      { type: "h2", text: "What to do" },
+      {
+        type: "p",
+        text: "If you're the developer: create src/screens/Legal/contact.local.ts with your ownerName, address, email, and phone number (see README). The file is gitignored so your real address never enters version control.",
+      },
+      {
+        type: "p",
+        text: "If you're a user and see this page in a shipped build: please contact the developer — this page should have been filled in before submission.",
+      },
+    ],
+  },
+  de: {
+    title: "Impressum",
+    blocks: [
+      { type: "h1", text: "Impressum noch nicht konfiguriert" },
+      {
+        type: "p",
+        text: "Dieser Build enthält noch keine echten Impressum-Kontaktdaten des Entwicklers. Das Impressum ist nach § 5 TMG für in der EU vertriebene Apps vorgeschrieben.",
+      },
+      { type: "h2", text: "Was zu tun ist" },
+      {
+        type: "p",
+        text: "Als Entwickler: Lege src/screens/Legal/contact.local.ts mit ownerName, address, email und phone an (siehe README). Die Datei ist per .gitignore ausgenommen, deine Kontaktdaten verlassen dein lokales Repo nicht.",
+      },
+      {
+        type: "p",
+        text: "Als Nutzer: Bitte wende dich an den Entwickler — diese Seite hätte vor der Einreichung ausgefüllt werden müssen.",
+      },
+    ],
+  },
 };
 
 export const LEGAL_DOCS: Record<DocumentKey, Record<Locale, LegalDoc>> = {
@@ -157,10 +272,6 @@ export const LEGAL_DOCS: Record<DocumentKey, Record<Locale, LegalDoc>> = {
         { type: "p", text: "Phone: {{PHONE}}" },
         { type: "h2", text: "Responsible for content" },
         { type: "p", text: "{{OWNER_NAME}}, address as above" },
-        {
-          type: "p",
-          text: "Before publishing: replace the {{placeholders}} in docs/legal/impressum-en.md and docs/legal/impressum-de.md with your real contact information.",
-        },
       ],
     },
     de: {
@@ -177,16 +288,34 @@ export const LEGAL_DOCS: Record<DocumentKey, Record<Locale, LegalDoc>> = {
         { type: "p", text: "Telefon: {{PHONE}}" },
         { type: "h2", text: "Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV" },
         { type: "p", text: "{{OWNER_NAME}}, Anschrift wie oben" },
-        {
-          type: "p",
-          text: "Vor der Veröffentlichung: Ersetze die {{Platzhalter}} in docs/legal/impressum-de.md und docs/legal/impressum-en.md durch deine echten Kontaktdaten.",
-        },
       ],
     },
   },
 };
 
+/**
+ * Look up a legal document in the requested locale. For the Impressum we
+ * interpolate `contact.local.ts` values into the `{{TOKEN}}` placeholders;
+ * if the module is missing or any token survives, we return the
+ * "unconfigured" variant instead of rendering literal `{{OWNER_NAME}}` —
+ * App Store review would otherwise reject the build.
+ */
 export function getLegalDocument(key: DocumentKey, locale: Locale): LegalDoc {
   const forKey = LEGAL_DOCS[key];
-  return forKey[locale] ?? forKey.en;
+  const doc = forKey[locale] ?? forKey.en;
+  if (key !== "impressum") return doc;
+
+  const contact = loadContact();
+  if (!contact) return UNCONFIGURED_IMPRESSUM[locale] ?? UNCONFIGURED_IMPRESSUM.en;
+
+  // Interpolate every block, then guard: if any placeholder survives (e.g.
+  // someone added a new `{{TOKEN}}` to the template without updating the
+  // contact interface), still render the unconfigured variant.
+  const interpolated: LegalDoc = {
+    title: doc.title,
+    blocks: doc.blocks.map((b) => ({ ...b, text: interpolate(b.text, contact) })),
+  };
+  const anyPlaceholder = interpolated.blocks.some((b) => hasPlaceholder(b.text));
+  if (anyPlaceholder) return UNCONFIGURED_IMPRESSUM[locale] ?? UNCONFIGURED_IMPRESSUM.en;
+  return interpolated;
 }
