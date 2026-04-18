@@ -37,6 +37,8 @@ import {
   Info,
   TriangleAlert,
   CircleAlert,
+  Trash2,
+  Repeat,
   type LucideProps,
 } from "lucide-react-native";
 import { useTheme } from "@/theme/useTheme";
@@ -84,6 +86,8 @@ const ICONS = {
   info: Info,
   "alert-triangle": TriangleAlert,
   "alert-circle": CircleAlert,
+  "trash-2": Trash2,
+  repeat: Repeat,
 } as const;
 
 export type IconName = keyof typeof ICONS;
