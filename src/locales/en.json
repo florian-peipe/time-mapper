@@ -1,0 +1,13 @@
+{
+  "app.name": "Time Mapper",
+  "tabs.timeline": "Timeline",
+  "tabs.stats": "Stats",
+  "tabs.settings": "Settings",
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+  "common.delete": "Delete",
+  "common.edit": "Edit",
+  "timeline.empty.title": "No entries yet. Add a place to start tracking automatically.",
+  "stats.title": "This week",
+  "settings.title": "Settings"
+}

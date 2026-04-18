@@ -1,0 +1,13 @@
+{
+  "app.name": "Time Mapper",
+  "tabs.timeline": "Verlauf",
+  "tabs.stats": "Statistik",
+  "tabs.settings": "Einstellungen",
+  "common.save": "Speichern",
+  "common.cancel": "Abbrechen",
+  "common.delete": "Löschen",
+  "common.edit": "Bearbeiten",
+  "timeline.empty.title": "Noch keine Einträge. Füge einen Ort hinzu, damit wir automatisch starten.",
+  "stats.title": "Diese Woche",
+  "settings.title": "Einstellungen"
+}
