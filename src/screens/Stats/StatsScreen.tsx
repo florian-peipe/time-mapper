@@ -3,7 +3,7 @@ import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/useTheme";
 import { Card, Icon, IconBadge } from "@/components";
-import { useProMock } from "@/features/billing/useProMock";
+import { usePro } from "@/features/billing/usePro";
 import { useWeekStats } from "@/features/entries/useWeekStats";
 import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClose";
 import { usePlaces } from "@/features/places/usePlaces";
@@ -29,7 +29,7 @@ export function StatsScreen() {
 
   const stats = useWeekStats();
   const placesState = usePlaces();
-  const { isPro } = useProMock();
+  const { isPro } = usePro();
   const openSheet = useSheetStore((s) => s.openSheet);
 
   const handleRefresh = useCallback(() => {

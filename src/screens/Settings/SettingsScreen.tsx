@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/useTheme";
 import { ListRow, Section, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
-import { useProMock } from "@/features/billing/useProMock";
+import { usePro } from "@/features/billing/usePro";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore, type ThemeOverride } from "@/state/uiStore";
 import { i18n } from "@/lib/i18n";
@@ -29,7 +29,7 @@ export function SettingsScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
 
-  const { isPro, grant, revoke } = useProMock();
+  const { isPro, grant, revoke } = usePro();
   const { places } = usePlaces();
   const openSheet = useSheetStore((s) => s.openSheet);
   const themeOverride = useUiStore((s) => s.themeOverride);

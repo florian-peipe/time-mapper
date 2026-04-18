@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Button, Icon, Rings, Sheet } from "@/components";
-import { useProMock } from "@/features/billing/useProMock";
+import { usePro } from "@/features/billing/usePro";
 import { PlanPicker, type PlanId } from "./PlanPicker";
 
 export type PaywallScreenProps = {
@@ -50,7 +50,7 @@ const FEATURES: readonly string[] = [
  */
 export function PaywallScreen({ visible = true, onClose, source: _source }: PaywallScreenProps) {
   const t = useTheme();
-  const { grant } = useProMock();
+  const { grant } = usePro();
   const [plan, setPlan] = useState<PlanId>("year");
 
   const ctaLabel = plan === "year" ? "Start free trial" : "Subscribe";

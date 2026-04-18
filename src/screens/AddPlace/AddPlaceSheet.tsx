@@ -5,7 +5,7 @@ import { useTheme } from "@/theme/useTheme";
 import { PLACE_COLORS } from "@/theme/tokens";
 import { Button, Icon, Input, Sheet, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
-import { useProMock } from "@/features/billing/useProMock";
+import { usePro } from "@/features/billing/usePro";
 import { useSheetStore, type AddPlaceSource } from "@/state/sheetStore";
 import { MAX_PLACES } from "@/features/tracking/geofenceService";
 import { i18n } from "@/lib/i18n";
@@ -91,7 +91,7 @@ const RADIUS_DEFAULT = 100;
 export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: AddPlaceSheetProps) {
   const t = useTheme();
   const { places, create, update, remove, count } = usePlaces();
-  const { isPro } = useProMock();
+  const { isPro } = usePro();
   const openSheet = useSheetStore((s) => s.openSheet);
 
   const editing = placeId != null;
