@@ -33,7 +33,12 @@ function getDeviceRepo(): PlacesRepo {
   return cachedDeviceRepo;
 }
 
-function usePlacesRepo(): PlacesRepo {
+/**
+ * Resolve a `PlacesRepo` from context, falling back to a device-bound repo.
+ * Exported so other feature hooks (e.g. `useWeekStats`) can reuse the same
+ * resolution rules when they need place metadata.
+ */
+export function usePlacesRepo(): PlacesRepo {
   const injected = useContext(PlacesRepoContext);
   // Memoize so the fallback repo is stable across renders within a component.
   return useMemo(() => injected ?? getDeviceRepo(), [injected]);
