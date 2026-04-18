@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react-native";
-import { resetProMock, useProMock } from "./useProMock";
+import { grantProMock, resetProMock, useProMock } from "./useProMock";
 
 beforeEach(() => resetProMock());
 
@@ -30,5 +30,11 @@ describe("useProMock", () => {
     expect(result.current.isPro).toBe(true);
     act(() => resetProMock());
     expect(result.current.isPro).toBe(false);
+  });
+
+  it("grantProMock() flips the store to Pro without a component", () => {
+    grantProMock();
+    const { result } = renderHook(() => useProMock());
+    expect(result.current.isPro).toBe(true);
   });
 });

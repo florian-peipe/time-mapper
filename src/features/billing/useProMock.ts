@@ -28,3 +28,8 @@ export function useProMock() {
 export function resetProMock() {
   useProStore.setState({ isPro: false });
 }
+
+/** Test-only helper that flips Pro on without needing to render a component. */
+export function grantProMock() {
+  useProStore.setState({ isPro: true });
+}
