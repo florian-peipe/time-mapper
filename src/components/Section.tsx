@@ -26,6 +26,8 @@ export function Section({ title, children, testID }: Props) {
     <View testID={testID} style={{ marginBottom: t.space[5] }}>
       {title ? (
         <Text
+          accessibilityRole="header"
+          accessibilityLabel={title}
           style={{
             fontSize: t.type.size.xs,
             fontWeight: t.type.weight.bold,

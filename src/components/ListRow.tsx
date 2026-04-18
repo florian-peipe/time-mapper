@@ -15,6 +15,19 @@ type Props = {
   last?: boolean;
   /** Override the right accessory (e.g. a Switch). Suppresses the default chevron. */
   accessoryRight?: React.ReactNode;
+  /** Override the computed accessibility label. Defaults to `title` + detail. */
+  accessibilityLabel?: string;
+  /** Short hint explaining what the row does when activated. */
+  accessibilityHint?: string;
+  /** Semantic role. Defaults to "button" for tappable rows. */
+  accessibilityRole?: "button" | "link" | "switch" | "header";
+  /** Optional a11y state — used when `accessoryRight` is a Switch, etc. */
+  accessibilityState?: {
+    disabled?: boolean;
+    selected?: boolean;
+    checked?: boolean;
+    busy?: boolean;
+  };
   testID?: string;
 };
 
@@ -36,6 +49,10 @@ export function ListRow({
   onPress,
   last,
   accessoryRight,
+  accessibilityLabel,
+  accessibilityHint,
+  accessibilityRole,
+  accessibilityState,
   testID,
 }: Props) {
   const t = useTheme();
@@ -95,13 +112,22 @@ export function ListRow({
     </>
   );
 
+  // Compose the default a11y label from title + string detail so screen
+  // readers announce "Theme, Light" rather than just "Theme".
+  const computedLabel =
+    accessibilityLabel ??
+    (typeof detail === "string" && detail.length > 0 ? `${title}, ${detail}` : title);
+
   if (onPress) {
     return (
       <Pressable
         testID={testID}
         onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={title}
+        accessibilityRole={accessibilityRole ?? "button"}
+        accessibilityLabel={computedLabel}
+        accessibilityHint={accessibilityHint}
+        accessibilityState={accessibilityState}
+        hitSlop={4}
         style={style}
       >
         {content}
@@ -109,7 +135,12 @@ export function ListRow({
     );
   }
   return (
-    <View testID={testID} style={style}>
+    <View
+      testID={testID}
+      accessibilityLabel={computedLabel}
+      accessibilityRole={accessibilityRole}
+      style={style}
+    >
       {content}
     </View>
   );

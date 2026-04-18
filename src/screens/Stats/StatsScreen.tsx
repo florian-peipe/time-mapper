@@ -8,6 +8,7 @@ import { useWeekStats } from "@/features/entries/useWeekStats";
 import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClose";
 import { usePlaces } from "@/features/places/usePlaces";
 import { useSheetStore } from "@/state/sheetStore";
+import { i18n } from "@/lib/i18n";
 import type { Place } from "@/db/schema";
 import { WeekBarChart } from "./WeekBarChart";
 import { Ledger } from "./Ledger";
@@ -67,6 +68,7 @@ export function StatsScreen() {
       {/* Heading */}
       <View style={{ paddingHorizontal: t.space[5], paddingBottom: t.space[2] }}>
         <Text
+          accessibilityRole="header"
           style={{
             fontSize: t.type.size.xl,
             fontWeight: t.type.weight.bold,
@@ -75,7 +77,7 @@ export function StatsScreen() {
             letterSpacing: -0.4,
           }}
         >
-          This week
+          {i18n.t("stats.title")}
         </Text>
         <Text
           style={{
@@ -118,7 +120,7 @@ export function StatsScreen() {
                     fontFamily: t.type.family.sans,
                   }}
                 >
-                  Past weeks with Pro
+                  {i18n.t("stats.upsell.title")}
                 </Text>
                 <Text
                   style={{
@@ -128,7 +130,7 @@ export function StatsScreen() {
                     marginTop: 2,
                   }}
                 >
-                  Browse full history and export CSV.
+                  {i18n.t("stats.upsell.body")}
                 </Text>
               </View>
               <Icon name="chevron-right" size={18} color={t.color("color.fg3")} />

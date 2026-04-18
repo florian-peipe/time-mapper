@@ -70,6 +70,9 @@ export function PermissionsScreen() {
         }}
       >
         <View
+          accessible
+          accessibilityRole="image"
+          accessibilityLabel={i18n.t("onboarding.permissions.title")}
           style={{
             width: 96,
             height: 96,
@@ -82,6 +85,7 @@ export function PermissionsScreen() {
           <Icon name="map-pin" size={44} color={t.color("color.accent")} />
         </View>
         <Text
+          accessibilityRole="header"
           style={{
             fontSize: t.type.size.display,
             fontWeight: t.type.weight.bold,
@@ -105,6 +109,35 @@ export function PermissionsScreen() {
         >
           {i18n.t("onboarding.permissions.body")}
         </Text>
+        {/*
+          Privacy callout — design-system voice says "reassure on every
+          permission screen". Uses accent-soft surface + lock glyph to signal
+          "on-device" without reaching for a Banner primitive (Banner is
+          reserved for actionable warnings).
+        */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: t.space[2],
+            paddingHorizontal: t.space[3],
+            paddingVertical: t.space[2],
+            borderRadius: t.radius.pill,
+            backgroundColor: t.color("color.accent.soft"),
+          }}
+        >
+          <Icon name="lock" size={14} color={t.color("color.accent")} />
+          <Text
+            style={{
+              fontSize: t.type.size.s,
+              color: t.color("color.accent"),
+              fontFamily: t.type.family.sans,
+              fontWeight: t.type.weight.medium,
+            }}
+          >
+            {i18n.t("onboarding.permissions.privacy")}
+          </Text>
+        </View>
       </View>
 
       <View style={{ gap: t.space[2] }}>

@@ -11,6 +11,8 @@ type Props = {
   selected?: boolean;
   onPress?: () => void;
   tone?: ChipTone;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
   testID?: string;
 };
 
@@ -26,7 +28,16 @@ type Props = {
  * - `accent` — same as neutral's selected state regardless of `selected`
  *   (purely visual emphasis, e.g. for paywall badges).
  */
-export function Chip({ label, icon, selected, onPress, tone = "neutral", testID }: Props) {
+export function Chip({
+  label,
+  icon,
+  selected,
+  onPress,
+  tone = "neutral",
+  accessibilityLabel,
+  accessibilityHint,
+  testID,
+}: Props) {
   const t = useTheme();
 
   const isHighlighted = tone === "accent" || selected;
@@ -72,7 +83,10 @@ export function Chip({ label, icon, selected, onPress, tone = "neutral", testID 
         testID={testID}
         onPress={onPress}
         accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityHint={accessibilityHint}
         accessibilityState={{ selected: !!selected }}
+        hitSlop={6}
         style={style}
       >
         {content}
@@ -80,7 +94,12 @@ export function Chip({ label, icon, selected, onPress, tone = "neutral", testID 
     );
   }
   return (
-    <View testID={testID} style={style}>
+    <View
+      testID={testID}
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityRole="text"
+      style={style}
+    >
       {content}
     </View>
   );

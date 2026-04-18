@@ -149,7 +149,9 @@ export function TimelineScreen() {
         <Pressable
           onPress={handleAddManual}
           accessibilityRole="button"
-          accessibilityLabel="Add manual entry"
+          accessibilityLabel={i18n.t("timeline.fab.addEntry")}
+          accessibilityHint={i18n.t("timeline.fab.addEntry.hint")}
+          hitSlop={t.space[3]}
           testID="timeline-fab"
           style={{
             position: "absolute",
@@ -207,6 +209,7 @@ function NoPlacesEmptyState({ onAddPlace }: { onAddPlace: () => void }) {
       </View>
       <View style={{ marginTop: t.space[10], alignItems: "center", gap: t.space[3] }}>
         <Text
+          accessibilityRole="header"
           style={{
             fontSize: t.type.size.l,
             fontWeight: t.type.weight.bold,
@@ -270,6 +273,7 @@ function NoEntriesEmptyState({ onAddAnotherPlace }: { onAddAnotherPlace: () => v
       </View>
       <View style={{ marginTop: t.space[10], alignItems: "center", gap: t.space[2] }}>
         <Text
+          accessibilityRole="header"
           style={{
             fontSize: t.type.size.m,
             fontWeight: t.type.weight.semibold,

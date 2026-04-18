@@ -9,6 +9,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useTheme } from "@/theme/useTheme";
+import { i18n } from "@/lib/i18n";
 import { Icon } from "./Icon";
 
 type Props = {
@@ -92,7 +93,8 @@ export function Sheet({
       <Pressable
         testID="sheet-overlay"
         accessibilityRole="button"
-        accessibilityLabel="Dismiss sheet"
+        accessibilityLabel={i18n.t("common.close")}
+        accessibilityHint={title ? `${i18n.t("common.close")} ${title}` : undefined}
         style={overlayStyle}
         onPress={onClose}
       >
@@ -129,11 +131,13 @@ export function Sheet({
             <Pressable
               onPress={onClose}
               accessibilityRole="button"
-              accessibilityLabel="Close"
-              hitSlop={8}
+              accessibilityLabel={i18n.t("common.close")}
+              hitSlop={t.space[2]}
               style={{
                 width: 36,
                 height: 36,
+                minWidth: t.minTouchTarget,
+                minHeight: t.minTouchTarget,
                 borderRadius: t.radius.pill,
                 alignItems: "center",
                 justifyContent: "center",
@@ -144,6 +148,7 @@ export function Sheet({
             <View style={{ flex: 1, alignItems: "center" }}>
               {title ? (
                 <Text
+                  accessibilityRole="header"
                   style={{
                     fontSize: t.type.size.m,
                     fontWeight: t.type.weight.semibold,

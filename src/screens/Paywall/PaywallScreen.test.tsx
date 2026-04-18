@@ -244,8 +244,13 @@ describe("PaywallScreen — restore purchases", () => {
 describe("PaywallScreen — close + props", () => {
   it("tapping the close (X) button calls onClose without invoking purchase", () => {
     const onClose = jest.fn();
-    const { getByLabelText } = render(wrap(<PaywallScreen onClose={onClose} />));
-    fireEvent.press(getByLabelText("Close"));
+    const { getAllByLabelText } = render(wrap(<PaywallScreen onClose={onClose} />));
+    // Both the scrim and the X button now carry the label "Close" (sheet
+    // a11y audit in Plan 5). Find the one that's NOT the scrim overlay.
+    const closeButtons = getAllByLabelText("Close");
+    const xButton = closeButtons.find((n) => n.props.testID !== "sheet-overlay");
+    expect(xButton).toBeTruthy();
+    fireEvent.press(xButton!);
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(mockPro.purchase).not.toHaveBeenCalled();
   });

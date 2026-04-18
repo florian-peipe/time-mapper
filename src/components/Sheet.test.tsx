@@ -62,7 +62,13 @@ describe("Sheet", () => {
         </Sheet>,
       ),
     );
-    fireEvent.press(screen.getByLabelText("Close"));
+    // Both the scrim and the X button now carry the "Close" label, so query
+    // by a distinguishing attribute — the scrim has the testID `sheet-overlay`,
+    // and the X button sits in the header without a testID.
+    const closeButtons = screen.getAllByLabelText("Close");
+    const xButton = closeButtons.find((n) => n.props.testID !== "sheet-overlay");
+    expect(xButton).toBeTruthy();
+    fireEvent.press(xButton!);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { Alert, Linking, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 import { ListRow, Section, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
@@ -10,6 +11,7 @@ import { useUiStore, type ThemeOverride } from "@/state/uiStore";
 import { i18n } from "@/lib/i18n";
 import { ProUpsellCard } from "./ProUpsellCard";
 import { simulatePassage } from "@/features/tracking/devSim";
+import { exportDiagnosticLog } from "@/features/diagnostics/exportLog";
 
 /**
  * Deep-link to the platform-specific subscription management page. iOS
@@ -39,6 +41,7 @@ const SUBSCRIPTION_MANAGEMENT_URL =
 export function SettingsScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const { isPro, grant, revoke, restore } = usePro();
   const [restoreState, setRestoreState] = useState<"idle" | "busy" | "done" | "error">("idle");
@@ -69,8 +72,26 @@ export function SettingsScreen() {
     setThemeOverride(nextTheme(themeOverride));
   }, [themeOverride, setThemeOverride]);
 
+  // Legal routes live under `app/legal/*` — the typed-routes generator runs
+  // at `expo start` time, so the string-literal types for these paths aren't
+  // visible during `tsc --noEmit`. Cast the union until the generator catches
+  // up; the runtime still resolves correctly.
   const handleOpenPrivacy = useCallback(() => {
-    void Linking.openURL("https://timemapper.app/privacy");
+    router.push("/legal/privacy" as unknown as Parameters<typeof router.push>[0]);
+  }, [router]);
+
+  const handleOpenTerms = useCallback(() => {
+    router.push("/legal/terms" as unknown as Parameters<typeof router.push>[0]);
+  }, [router]);
+
+  const handleOpenImpressum = useCallback(() => {
+    router.push("/legal/impressum" as unknown as Parameters<typeof router.push>[0]);
+  }, [router]);
+
+  const handleExportDiagnostics = useCallback(() => {
+    void exportDiagnosticLog().catch((err) => {
+      console.warn("Failed to export diagnostic log", err);
+    });
   }, []);
 
   const handleExport = useCallback(() => {
@@ -103,9 +124,11 @@ export function SettingsScreen() {
 
   const handleSimulateVisit = useCallback(() => {
     if (places.length === 0) {
-      Alert.alert("No places yet", "Add a place first, then come back to simulate a visit.", [
-        { text: "OK" },
-      ]);
+      Alert.alert(
+        i18n.t("settings.dev.simulate.empty.title"),
+        i18n.t("settings.dev.simulate.empty.body"),
+        [{ text: i18n.t("common.ok") }],
+      );
       return;
     }
     // Show a picker via Alert buttons — good enough for dev-only UI. Each
@@ -117,10 +140,11 @@ export function SettingsScreen() {
         void simulatePassage(p.id, 30);
       },
     }));
-    Alert.alert("Simulate a 30s visit", "Pick a place", [
-      ...buttons,
-      { text: "Cancel", style: "cancel" as const },
-    ]);
+    Alert.alert(
+      i18n.t("settings.dev.simulate.picker.title"),
+      i18n.t("settings.dev.simulate.picker.body"),
+      [...buttons, { text: i18n.t("common.cancel"), style: "cancel" as const }],
+    );
   }, [places]);
 
   return (
@@ -156,13 +180,13 @@ export function SettingsScreen() {
         <ProUpsellCard onPress={() => handleOpenPaywall("settings")} testID="settings-pro-upsell" />
       ) : null}
 
-      <Section title="Places" testID="settings-section-places">
+      <Section title={i18n.t("settings.section.places")} testID="settings-section-places">
         {places.length === 0 ? (
           <ListRow
             icon="map-pin"
             iconBg={t.color("color.accent.soft")}
             iconColor={t.color("color.accent")}
-            title="Add your first place"
+            title={i18n.t("settings.places.addFirst")}
             onPress={handleAddPlace}
             last
             testID="settings-row-add-first-place"
@@ -179,11 +203,12 @@ export function SettingsScreen() {
                 detail={p.address || undefined}
                 onPress={() => handleEditPlace(p.id)}
                 testID={`settings-row-place-${p.id}`}
+                accessibilityHint={i18n.t("common.edit")}
               />
             ))}
             <ListRow
               icon="plus"
-              title="Add place"
+              title={i18n.t("settings.places.addAnother")}
               onPress={handleAddPlace}
               last
               testID="settings-row-add-place"
@@ -192,116 +217,147 @@ export function SettingsScreen() {
         )}
       </Section>
 
-      <Section title="Tracking" testID="settings-section-tracking">
+      <Section title={i18n.t("settings.section.tracking")} testID="settings-section-tracking">
         <ListRow
           icon="map-pin"
           iconBg={t.color("color.success.soft")}
           iconColor={t.color("color.success")}
-          title="Location"
-          detail="Always"
+          title={i18n.t("settings.tracking.location")}
+          detail={i18n.t("settings.tracking.location.detail")}
           testID="settings-row-location"
         />
         <ListRow
           icon="bell"
           iconBg={t.color("color.accent.soft")}
           iconColor={t.color("color.accent")}
-          title="Notifications"
-          detail="On"
+          title={i18n.t("settings.tracking.notifications")}
+          detail={i18n.t("settings.tracking.notifications.detail")}
           testID="settings-row-notifications"
         />
         <ListRow
           icon="clock"
-          title="Default buffers"
-          detail="5 / 3 min"
+          title={i18n.t("settings.tracking.buffers")}
+          detail={i18n.t("settings.tracking.buffers.detail")}
           last
           testID="settings-row-buffers"
         />
       </Section>
 
-      <Section title="Appearance" testID="settings-section-appearance">
+      <Section title={i18n.t("settings.section.appearance")} testID="settings-section-appearance">
         <ListRow
           icon="moon"
-          title="Theme"
+          title={i18n.t("settings.appearance.theme")}
           detail={themeLabel(themeOverride)}
           onPress={handleCycleTheme}
           testID="settings-row-theme"
         />
         <ListRow
           icon="globe"
-          title="Language"
+          title={i18n.t("settings.appearance.language")}
           detail={localeLabel(i18n.locale)}
           last
           testID="settings-row-language"
         />
       </Section>
 
-      <Section title="Subscription" testID="settings-section-subscription">
+      <Section
+        title={i18n.t("settings.section.subscription")}
+        testID="settings-section-subscription"
+      >
         {isPro ? (
           <ListRow
             icon="star"
             iconBg={t.color("color.accent.soft")}
             iconColor={t.color("color.accent")}
-            title="Time Mapper Pro"
-            detail="Active"
+            title={i18n.t("settings.subscription.active")}
+            detail={i18n.t("settings.subscription.active.detail")}
             onPress={handleManageSubscription}
             testID="settings-row-pro-active"
           />
         ) : null}
         <ListRow
           icon="repeat"
-          title="Restore purchases"
+          title={i18n.t("settings.subscription.restore")}
           detail={restoreLabel(restoreState)}
           onPress={handleRestore}
           last
           testID="settings-row-restore"
+          accessibilityState={{ busy: restoreState === "busy" }}
         />
       </Section>
 
-      <Section title="Data" testID="settings-section-data">
+      <Section title={i18n.t("settings.section.data")} testID="settings-section-data">
         <ListRow
           icon="download"
           iconBg={isPro ? t.color("color.accent.soft") : t.color("color.surface2")}
           iconColor={isPro ? t.color("color.accent") : t.color("color.fg3")}
-          title="Export CSV"
+          title={i18n.t("settings.data.export")}
           detail={!isPro ? <ProChip /> : undefined}
           onPress={handleExport}
           testID="settings-row-export"
         />
         <ListRow
           icon="clock"
-          title="History retention"
-          detail="14 days"
+          title={i18n.t("settings.data.retention")}
+          detail={i18n.t("settings.data.retention.detail")}
           last
           testID="settings-row-retention"
         />
       </Section>
 
-      <Section title="About" testID="settings-section-about">
+      <Section title={i18n.t("settings.section.about")} testID="settings-section-about">
         <ListRow
           icon="heart"
-          title="Privacy policy"
+          title={i18n.t("settings.about.privacy")}
           onPress={handleOpenPrivacy}
           testID="settings-row-privacy"
         />
-        <ListRow icon="star" title="Rate Time Mapper" last testID="settings-row-rate" />
+        <ListRow
+          icon="book-open"
+          title={i18n.t("settings.about.terms")}
+          onPress={handleOpenTerms}
+          testID="settings-row-terms"
+        />
+        <ListRow
+          icon="info"
+          title={i18n.t("settings.about.impressum")}
+          onPress={handleOpenImpressum}
+          testID="settings-row-impressum"
+        />
+        <ListRow
+          icon="star"
+          title={i18n.t("settings.about.rate")}
+          last
+          testID="settings-row-rate"
+        />
       </Section>
 
       {__DEV__ ? (
-        <Section title="Developer" testID="settings-section-dev">
+        <Section title={i18n.t("settings.section.dev")} testID="settings-section-dev">
           <ListRow
             icon="settings"
-            title="Toggle Pro (mock)"
-            detail={isPro ? "On" : "Off"}
+            title={i18n.t("settings.dev.togglePro")}
+            detail={
+              isPro ? i18n.t("settings.dev.togglePro.on") : i18n.t("settings.dev.togglePro.off")
+            }
             onPress={handleToggleProMock}
             testID="settings-row-toggle-pro"
+            accessibilityState={{ checked: isPro }}
           />
           <ListRow
             icon="repeat"
-            title="Simulate visit"
-            detail="30s passage"
-            last
+            title={i18n.t("settings.dev.simulate")}
+            detail={i18n.t("settings.dev.simulate.detail")}
             onPress={handleSimulateVisit}
             testID="settings-row-simulate-visit"
+          />
+          <ListRow
+            icon="download"
+            title={i18n.t("settings.data.diagnostics")}
+            detail={i18n.t("settings.data.diagnostics.detail")}
+            onPress={handleExportDiagnostics}
+            last
+            testID="settings-row-diagnostics"
           />
         </Section>
       ) : null}
@@ -314,9 +370,9 @@ export function SettingsScreen() {
  * + post-completion state so the user knows their tap was acknowledged.
  */
 function restoreLabel(state: "idle" | "busy" | "done" | "error"): string | undefined {
-  if (state === "busy") return "Restoring…";
-  if (state === "done") return "Restored";
-  if (state === "error") return "Try again";
+  if (state === "busy") return i18n.t("settings.subscription.restore.busy");
+  if (state === "done") return i18n.t("settings.subscription.restore.done");
+  if (state === "error") return i18n.t("settings.subscription.restore.error");
   return undefined;
 }
 
@@ -329,15 +385,15 @@ function nextTheme(current: ThemeOverride): ThemeOverride {
 
 /** Human label for the Theme row's right-side detail string. */
 function themeLabel(current: ThemeOverride): string {
-  if (current === null) return "System";
-  if (current === "light") return "Light";
-  return "Dark";
+  if (current === null) return i18n.t("settings.appearance.theme.system");
+  if (current === "light") return i18n.t("settings.appearance.theme.light");
+  return i18n.t("settings.appearance.theme.dark");
 }
 
 /** Human label for the Language row. Plan 2 only ships English + German. */
 function localeLabel(locale: string): string {
-  if (locale.startsWith("de")) return "Deutsch";
-  return "English";
+  if (locale.startsWith("de")) return i18n.t("settings.appearance.language.de");
+  return i18n.t("settings.appearance.language.en");
 }
 
 /**
@@ -384,6 +440,8 @@ function ProChip() {
   const t = useTheme();
   return (
     <View
+      accessibilityRole="text"
+      accessibilityLabel={i18n.t("settings.proChip")}
       style={{
         // design-source: padding '2px 7px', radius 9999, accent bg
         paddingVertical: 2,
@@ -400,7 +458,7 @@ function ProChip() {
           fontFamily: t.type.family.sans,
         }}
       >
-        Pro
+        {i18n.t("settings.proChip")}
       </Text>
     </View>
   );

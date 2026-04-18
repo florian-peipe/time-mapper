@@ -55,6 +55,7 @@ export function WelcomeScreen() {
         }}
       >
         <Text
+          accessibilityRole="header"
           style={{
             fontSize: t.type.size.display,
             fontWeight: t.type.weight.bold,

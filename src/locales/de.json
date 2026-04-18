@@ -22,6 +22,8 @@
   "timeline.fab.addEntry": "Eintrag manuell hinzufügen",
   "timeline.fab.addEntry.hint": "Öffnet den Editor für einen manuellen Zeitblock.",
   "stats.title": "Diese Woche",
+  "stats.upsell.title": "Frühere Wochen mit Pro",
+  "stats.upsell.body": "Ganze Historie durchsuchen und als CSV exportieren.",
   "settings.title": "Einstellungen",
   "settings.section.places": "Orte",
   "settings.places.addFirst": "Ersten Ort hinzufügen",

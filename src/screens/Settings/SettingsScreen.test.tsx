@@ -11,6 +11,17 @@ import { useUiStore } from "@/state/uiStore";
 import { grantProMock, resetProMock } from "@/features/billing/useProMock";
 import { SettingsScreen } from "./SettingsScreen";
 
+// Capture router.push() calls for legal-screen navigation assertions.
+const mockRouterPush = jest.fn();
+jest.mock("expo-router", () => ({
+  __esModule: true,
+  useRouter: () => ({
+    push: mockRouterPush,
+    replace: jest.fn(),
+    back: jest.fn(),
+  }),
+}));
+
 function makeRepo(
   seeded: { name: string; address?: string; color?: string; icon?: string }[] = [],
 ) {
@@ -186,12 +197,25 @@ describe("SettingsScreen", () => {
     expect(useSheetStore.getState().active).toBeNull();
   });
 
-  it("tapping the Privacy row calls Linking.openURL with the privacy URL", () => {
-    const spy = jest.spyOn(Linking, "openURL").mockResolvedValueOnce(undefined as unknown as never);
+  it("tapping the Privacy row navigates to /legal/privacy", () => {
+    mockRouterPush.mockClear();
     render(wrap(<SettingsScreen />));
     fireEvent.press(screen.getByTestId("settings-row-privacy"));
-    expect(spy).toHaveBeenCalledWith("https://timemapper.app/privacy");
-    spy.mockRestore();
+    expect(mockRouterPush).toHaveBeenCalledWith("/legal/privacy");
+  });
+
+  it("tapping the Terms row navigates to /legal/terms", () => {
+    mockRouterPush.mockClear();
+    render(wrap(<SettingsScreen />));
+    fireEvent.press(screen.getByTestId("settings-row-terms"));
+    expect(mockRouterPush).toHaveBeenCalledWith("/legal/terms");
+  });
+
+  it("tapping the Impressum row navigates to /legal/impressum", () => {
+    mockRouterPush.mockClear();
+    render(wrap(<SettingsScreen />));
+    fireEvent.press(screen.getByTestId("settings-row-impressum"));
+    expect(mockRouterPush).toHaveBeenCalledWith("/legal/impressum");
   });
 
   it("renders the Subscription section with the Restore purchases row (always visible)", () => {

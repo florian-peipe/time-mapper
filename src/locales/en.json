@@ -22,6 +22,8 @@
   "timeline.fab.addEntry": "Add manual entry",
   "timeline.fab.addEntry.hint": "Opens the entry editor for a manual time block.",
   "stats.title": "This week",
+  "stats.upsell.title": "Past weeks with Pro",
+  "stats.upsell.body": "Browse full history and export CSV.",
   "settings.title": "Settings",
   "settings.section.places": "Places",
   "settings.places.addFirst": "Add your first place",
