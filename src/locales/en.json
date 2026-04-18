@@ -26,5 +26,17 @@
   "onboarding.firstPlace.title": "Your first place",
   "onboarding.firstPlace.body": "Add one place — home, the office, your gym — and Time Mapper will log your visits automatically.",
   "onboarding.firstPlace.cta": "Add first place",
-  "onboarding.firstPlace.skip": "Skip for now"
+  "onboarding.firstPlace.skip": "Skip for now",
+  "notifier.opened.title": "Started tracking",
+  "notifier.opened.body": "You've arrived at {{name}}.",
+  "notifier.closed.title": "Stopped tracking",
+  "notifier.closed.body": "{{name}} · {{duration}}",
+  "notifier.consolidated.title": "{{count}} transitions",
+  "notifier.consolidated.body": "Recent activity around {{name}}",
+  "tracking.banner.foregroundOnly": "Auto-tracking is paused. Enable Always location in Settings.",
+  "tracking.banner.denied": "Auto-tracking is off. Turn on location access in Settings.",
+  "tracking.banner.cta": "Open Settings",
+  "tracking.placeLimit.title": "Limit reached",
+  "tracking.placeLimit.body": "Time Mapper currently supports up to 20 tracked places. Remove one to add another.",
+  "tracking.placeLimit.ok": "OK"
 }

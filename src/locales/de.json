@@ -26,5 +26,17 @@
   "onboarding.firstPlace.title": "Dein erster Ort",
   "onboarding.firstPlace.body": "Füge einen Ort hinzu — dein Zuhause, das Büro, dein Gym — und Time Mapper protokolliert deine Besuche automatisch.",
   "onboarding.firstPlace.cta": "Ort hinzufügen",
-  "onboarding.firstPlace.skip": "Später"
+  "onboarding.firstPlace.skip": "Später",
+  "notifier.opened.title": "Tracking gestartet",
+  "notifier.opened.body": "Du bist an {{name}} angekommen.",
+  "notifier.closed.title": "Tracking beendet",
+  "notifier.closed.body": "{{name}} · {{duration}}",
+  "notifier.consolidated.title": "{{count}} Wechsel",
+  "notifier.consolidated.body": "Bewegung rund um {{name}}",
+  "tracking.banner.foregroundOnly": "Auto-Tracking pausiert. Aktiviere Standort „Immer“ in den Einstellungen.",
+  "tracking.banner.denied": "Auto-Tracking deaktiviert. Erlaube Standortzugriff in den Einstellungen.",
+  "tracking.banner.cta": "Einstellungen öffnen",
+  "tracking.placeLimit.title": "Limit erreicht",
+  "tracking.placeLimit.body": "Time Mapper unterstützt derzeit bis zu 20 getrackte Orte. Entferne einen, um einen weiteren hinzuzufügen.",
+  "tracking.placeLimit.ok": "OK"
 }
