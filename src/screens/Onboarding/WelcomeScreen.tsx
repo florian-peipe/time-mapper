@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
 import { Button, Rings } from "@/components";
+import { StepIndicator } from "./StepIndicator";
 
 /**
  * Onboarding 1 / 3 — big Rings hero, product name, one-line pitch, primary CTA.
@@ -32,7 +33,26 @@ export function WelcomeScreen() {
       }}
       testID="onboarding-welcome-screen"
     >
-      {/* Decorative Rings, centered behind the headline. */}
+      {/*
+        Decorative Rings, centered behind the headline. Two-layer composition:
+        - a very large (580pt) ring at 5% opacity, anchored above the fold
+          so it dominates the top half without demanding attention; and
+        - the 320pt variant at 10% opacity on top, the familiar design-system
+          motif the user will recognize from AddPlaceSheet's map preview.
+        Both are pointerEvents="none" so the CTA stays fully tappable.
+      */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: -t.space[10],
+          left: 0,
+          right: 0,
+          alignItems: "center",
+        }}
+      >
+        <Rings size={580} opacity={0.05} />
+      </View>
       <View
         pointerEvents="none"
         style={{
@@ -81,15 +101,18 @@ export function WelcomeScreen() {
         </Text>
       </View>
 
-      <Button
-        variant="primary"
-        size="md"
-        full
-        onPress={handleContinue}
-        testID="onboarding-welcome-continue"
-      >
-        {i18n.t("onboarding.welcome.cta")}
-      </Button>
+      <View style={{ gap: t.space[4] }}>
+        <Button
+          variant="primary"
+          size="md"
+          full
+          onPress={handleContinue}
+          testID="onboarding-welcome-continue"
+        >
+          {i18n.t("onboarding.welcome.cta")}
+        </Button>
+        <StepIndicator current={1} total={3} testID="onboarding-steps" />
+      </View>
     </View>
   );
 }

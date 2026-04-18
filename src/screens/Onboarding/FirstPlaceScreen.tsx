@@ -7,6 +7,7 @@ import { i18n } from "@/lib/i18n";
 import { Button, Rings } from "@/components";
 import { useSheetStore } from "@/state/sheetStore";
 import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
+import { StepIndicator } from "./StepIndicator";
 
 /**
  * Onboarding 3 / 3 — final screen, primary CTA opens the AddPlaceSheet with
@@ -90,25 +91,28 @@ export function FirstPlaceScreen() {
         </Text>
       </View>
 
-      <View style={{ gap: t.space[2] }}>
-        <Button
-          variant="primary"
-          size="md"
-          full
-          onPress={handleAddFirst}
-          testID="onboarding-first-place-add"
-        >
-          {i18n.t("onboarding.firstPlace.cta")}
-        </Button>
-        <Button
-          variant="tertiary"
-          size="md"
-          full
-          onPress={handleSkip}
-          testID="onboarding-first-place-skip"
-        >
-          {i18n.t("onboarding.firstPlace.skip")}
-        </Button>
+      <View style={{ gap: t.space[4] }}>
+        <View style={{ gap: t.space[2] }}>
+          <Button
+            variant="primary"
+            size="md"
+            full
+            onPress={handleAddFirst}
+            testID="onboarding-first-place-add"
+          >
+            {i18n.t("onboarding.firstPlace.cta")}
+          </Button>
+          <Button
+            variant="tertiary"
+            size="md"
+            full
+            onPress={handleSkip}
+            testID="onboarding-first-place-skip"
+          >
+            {i18n.t("onboarding.firstPlace.skip")}
+          </Button>
+        </View>
+        <StepIndicator current={3} total={3} testID="onboarding-steps" />
       </View>
     </View>
   );

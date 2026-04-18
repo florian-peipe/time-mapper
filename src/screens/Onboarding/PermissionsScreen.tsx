@@ -10,6 +10,7 @@ import {
   requestBackgroundLocation,
   requestNotifications,
 } from "@/features/permissions";
+import { StepIndicator } from "./StepIndicator";
 
 /**
  * Onboarding 2 / 3 — real permission request flow. This is the "primer"
@@ -140,26 +141,29 @@ export function PermissionsScreen() {
         </View>
       </View>
 
-      <View style={{ gap: t.space[2] }}>
-        <Button
-          variant="primary"
-          size="md"
-          full
-          loading={busy}
-          onPress={handleEnable}
-          testID="onboarding-permissions-enable"
-        >
-          {i18n.t("onboarding.permissions.cta")}
-        </Button>
-        <Button
-          variant="tertiary"
-          size="md"
-          full
-          onPress={advance}
-          testID="onboarding-permissions-skip"
-        >
-          {i18n.t("onboarding.permissions.skip")}
-        </Button>
+      <View style={{ gap: t.space[4] }}>
+        <View style={{ gap: t.space[2] }}>
+          <Button
+            variant="primary"
+            size="md"
+            full
+            loading={busy}
+            onPress={handleEnable}
+            testID="onboarding-permissions-enable"
+          >
+            {i18n.t("onboarding.permissions.cta")}
+          </Button>
+          <Button
+            variant="tertiary"
+            size="md"
+            full
+            onPress={advance}
+            testID="onboarding-permissions-skip"
+          >
+            {i18n.t("onboarding.permissions.skip")}
+          </Button>
+        </View>
+        <StepIndicator current={2} total={3} testID="onboarding-steps" />
       </View>
     </View>
   );
