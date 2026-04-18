@@ -133,6 +133,7 @@ export function TimelineScreen() {
                 netMinutes={netMinutes(entry)}
                 onPress={handleOpenEntry}
                 last={index === entriesState.entries.length - 1}
+                testID={`entry-row-${entry.id}`}
               />
             );
           })
