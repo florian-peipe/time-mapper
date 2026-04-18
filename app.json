@@ -2,7 +2,7 @@
   "expo": {
     "name": "Time Mapper",
     "slug": "time-mapper",
-    "version": "0.5.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -19,6 +19,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.timemapper.app",
+      "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -35,11 +36,30 @@
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Time Mapper uses Always location so it can start and stop timers automatically when you enter or leave your saved places — even with the app closed. Your location never leaves your device.",
         "NSLocationAlwaysUsageDescription": "Time Mapper uses Always location so it can start and stop timers automatically when you enter or leave your saved places — even with the app closed. Your location never leaves your device.",
         "NSUserNotificationsUsageDescription": "Time Mapper sends a short confirmation when it starts or stops a timer automatically.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": ["35F9.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace",
+            "NSPrivacyAccessedAPITypeReasons": ["E174.1"]
+          }
+        ]
       }
     },
     "android": {
       "package": "com.timemapper.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAFAF8"
@@ -52,7 +72,8 @@
         "FOREGROUND_SERVICE_LOCATION",
         "POST_NOTIFICATIONS",
         "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
+        "VIBRATE",
+        "com.android.vending.BILLING"
       ]
     },
     "plugins": [
@@ -92,7 +113,9 @@
     },
     "extra": {
       "revenueCatIosKey": "${EXPO_PUBLIC_REVENUECAT_IOS_KEY}",
-      "revenueCatAndroidKey": "${EXPO_PUBLIC_REVENUECAT_ANDROID_KEY}"
+      "revenueCatAndroidKey": "${EXPO_PUBLIC_REVENUECAT_ANDROID_KEY}",
+      "googlePlacesKey": "${EXPO_PUBLIC_GOOGLE_PLACES_API_KEY}",
+      "sentryDsn": "${EXPO_PUBLIC_SENTRY_DSN}"
     }
   }
 }
