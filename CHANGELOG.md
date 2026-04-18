@@ -4,6 +4,101 @@ All notable changes to Time Mapper are documented here. Release tags are of
 the form `vMAJOR.MINOR-shortname` where the shortname traces back to the
 plan that shipped the work (`foundation`, `core-ui`, …).
 
+## v0.6.0-release-ready
+
+Release polish pass — everything between working billing and a
+submittable TestFlight / Play Internal build. Shipped in 14 commits.
+
+### Geocoding + map
+- **Google Places autocomplete wired**. `src/lib/geocode.ts` exposes
+  `autocomplete()`, `geocodePlace()`, `createSessionToken()`. Reads
+  `EXPO_PUBLIC_GOOGLE_PLACES_API_KEY`; missing key → demo suggestions
+  (three Cologne/Düsseldorf addresses) so dev flows keep working.
+- **Map preview in AddPlaceSheet** via `react-native-maps` — 180pt
+  non-interactive view with a pin + radius circle. Graceful fallback
+  banner when the native module isn't available.
+
+### Accessibility
+- Every primitive now supports `accessibilityLabel`, `accessibilityHint`,
+  `accessibilityState`, and composes sensible defaults (ListRow folds
+  title + string detail into a single label).
+- Headers, buttons, adjustable (slider), image roles added across
+  Timeline, Stats, Settings, Paywall, EntryEdit, AddPlace, Onboarding.
+- Sheet header X-button + scrim both meet the 44pt touch target.
+
+### i18n (German audit)
+- Every user-facing string routes through `i18n.t()`. 80+ new keys
+  covering Settings, Stats, Paywall, AddPlace, Onboarding, legal surfaces.
+- Strict coverage test: fails on inline English sentences in screen files,
+  enforces EN/DE key symmetry, and flags identical EN/DE values that
+  aren't brand strings or placeholder templates.
+
+### Crash reporting
+- `src/lib/crash.ts` — opt-in Sentry wrapper. Lazy-requires
+  `@sentry/react-native`, no-ops without DSN or module. Scrubs
+  location/lat/lng from breadcrumbs + extras before send.
+- Boot path in `_layout.tsx` routes errors through `captureException`.
+
+### Legal pages
+- `/legal/{privacy,terms,impressum}` routes with an accessibility-aware
+  `LegalScreen` renderer. Document content lives in
+  `src/screens/Legal/documents.ts` (runtime source of truth) and
+  `docs/legal/*-{en,de}.md` (version-controlled canonical copies).
+- Settings → About → Privacy/Terms/Impressum deep-link to each page.
+- Impressum carries placeholder tokens (`{{OWNER_NAME}}` etc.) that
+  developers must fill before ship — tracked in the README user
+  provides table.
+
+### EAS + app.json
+- Version bump **0.5.0 → 1.0.0**, `ios.buildNumber=1`,
+  `android.versionCode=1`.
+- Android: added `com.android.vending.BILLING` permission for IAP.
+- iOS: added the four required `NSPrivacyAccessedAPITypes` declarations
+  (UserDefaults, FileTimestamp, SystemBootTime, DiskSpace).
+- `eas.json` now has production-ready `development` / `preview` /
+  `production` profiles with all four env vars wired, plus a populated
+  `submit.production` block (Apple Team/ASC IDs, Play service account
+  path — with placeholder tokens and a `_submitNotes` array).
+
+### Store metadata
+- `store/ios/metadata.yaml` — app name, subtitle, EN+DE descriptions,
+  keywords, privacy labels, reviewer notes.
+- `store/android/metadata.yaml` — title, descriptions, Play Data Safety
+  answers, per-permission business rationale.
+- `store/screenshots/README.md` — size matrix and capture commands.
+
+### Diagnostics + developer tools
+- Settings → Developer → **Export diagnostic log** — shares a JSON
+  payload with app version, environment flags, and the last 50 pending
+  transitions from the DB.
+- `StepIndicator` primitive used on all 3 onboarding screens.
+- Welcome screen now layers two Rings at 5% + 10% opacity for a
+  richer hero backdrop.
+
+### Tests
+- **553 tests passing** (up from 454 at v0.5.0, +99 tests).
+- New files:
+  - `src/__tests__/a11y.test.tsx` — 29 assertions across primitives + screens.
+  - `src/__tests__/critical-flows.test.tsx` — 17 integration tests.
+  - `src/__tests__/snapshots.test.tsx` — 6 screen snapshots with
+    deterministic UUIDs + frozen system clock.
+  - `src/lib/__tests__/geocode.test.ts` — 17 tests for Places
+    autocomplete + details (both demo and live-API paths).
+  - `src/lib/__tests__/crash.test.ts` — 9 tests for Sentry wrapper +
+    PII scrubber.
+  - `src/screens/Legal/LegalScreen.test.tsx` — 7 tests for legal
+    rendering + back-button.
+  - `src/screens/Onboarding/StepIndicator.test.tsx` — 4 tests.
+  - `src/features/diagnostics/__tests__/exportLog.test.ts` — 3 tests.
+- Updated `i18n-coverage.test.ts` — now 6 assertions, including the
+  strict inline-English heuristic.
+
+### What the user still provides
+See the table in README.md — Apple Dev, Play Console, RevenueCat
+project + product configuration, Google Places API key, optional
+Sentry DSN, Impressum contact details, Apple/ASC/Team IDs, Play
+service account JSON, app icon + screenshots.
+
 ## v0.5.0-billing
 
 - Real RevenueCat SDK wired. `usePro()` replaces `useProMock()` everywhere,
