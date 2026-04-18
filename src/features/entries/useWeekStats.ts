@@ -11,6 +11,8 @@ export type UseWeekStatsResult = {
   byDay: DayBuckets[];
   /** Per-place totals for the whole week, sorted by totalMin desc. */
   byPlace: PlaceWeekTotal[];
+  /** Raw entries inside the current week, sorted by `startedAt` descending. */
+  entries: Entry[];
   /** Monday 00:00 local time of the currently observed week. */
   weekStart: Date;
   loading: boolean;
@@ -67,16 +69,19 @@ export function useWeekStats(): UseWeekStatsResult {
 
   const [byDay, setByDay] = useState<DayBuckets[]>(() => emptyWeek());
   const [byPlace, setByPlace] = useState<PlaceWeekTotal[]>([]);
+  const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(() => {
-    const entries = entriesRepo.listBetween(weekStartSeconds, weekEndSeconds);
+    // `listBetween` already returns results ordered by `startedAt DESC` — we
+    // surface the raw array for the Ledger while still computing aggregates.
+    const weekEntries = entriesRepo.listBetween(weekStartSeconds, weekEndSeconds);
     const placeIndex = indexPlacesById(placesRepo.list());
 
     const days: DayBuckets[] = emptyWeek();
     const totals = new Map<string, { name: string; color: string; totalMin: number }>();
 
-    for (const e of entries) {
+    for (const e of weekEntries) {
       const minutes = netMinutes(e);
       if (minutes <= 0) continue;
       const idx = dayIndex(e.startedAt, weekStartSeconds);
@@ -102,6 +107,7 @@ export function useWeekStats(): UseWeekStatsResult {
 
     setByDay(days);
     setByPlace([...totals.values()].sort((a, b) => b.totalMin - a.totalMin));
+    setEntries(weekEntries);
   }, [entriesRepo, placesRepo, weekStartSeconds, weekEndSeconds]);
 
   useEffect(() => {
@@ -109,7 +115,7 @@ export function useWeekStats(): UseWeekStatsResult {
     setLoading(false);
   }, [refresh]);
 
-  return { byDay, byPlace, weekStart, loading, refresh };
+  return { byDay, byPlace, entries, weekStart, loading, refresh };
 }
 
 function emptyWeek(): DayBuckets[] {

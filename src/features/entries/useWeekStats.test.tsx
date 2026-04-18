@@ -148,6 +148,48 @@ describe("useWeekStats", () => {
     expect(result.current.byPlace.map((p) => p.name)).toEqual(["Work", "Home"]);
   });
 
+  it("exposes the week's raw entries sorted by startedAt desc", async () => {
+    const fixed = new Date(2026, 3, 15, 12, 0, 0).getTime();
+    const { placesRepo, entriesRepo, wrapper } = setup(fixed);
+    const work = placesRepo.create({ name: "Work", address: "", latitude: 0, longitude: 0 });
+    const home = placesRepo.create({ name: "Home", address: "", latitude: 0, longitude: 0 });
+
+    // Mon morning Work — earliest.
+    const monWork = entriesRepo.createManual({
+      placeId: work.id,
+      startedAt: startOfDaySeconds(new Date(2026, 3, 13)) + 9 * 3600,
+      endedAt: startOfDaySeconds(new Date(2026, 3, 13)) + 10 * 3600,
+    });
+    // Wed evening Home — latest in the week.
+    const wedHome = entriesRepo.createManual({
+      placeId: home.id,
+      startedAt: startOfDaySeconds(new Date(2026, 3, 15)) + 20 * 3600,
+      endedAt: startOfDaySeconds(new Date(2026, 3, 15)) + 21 * 3600,
+    });
+    // Previous-week entry must be excluded.
+    entriesRepo.createManual({
+      placeId: work.id,
+      startedAt: startOfDaySeconds(new Date(2026, 3, 12)) + 12 * 3600,
+      endedAt: startOfDaySeconds(new Date(2026, 3, 12)) + 14 * 3600,
+    });
+
+    const { result } = renderHook(() => useWeekStats(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.entries).toHaveLength(2);
+    // Sorted desc on startedAt — wedHome first, monWork second.
+    expect(result.current.entries[0]?.id).toBe(wedHome.id);
+    expect(result.current.entries[1]?.id).toBe(monWork.id);
+  });
+
+  it("entries remains empty when the week has no entries", async () => {
+    const fixed = new Date(2026, 3, 15, 12, 0, 0).getTime();
+    const { wrapper } = setup(fixed);
+    const { result } = renderHook(() => useWeekStats(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.entries).toEqual([]);
+  });
+
   it("clamps net minutes to 0 when pause exceeds gross duration", async () => {
     const fixed = new Date(2026, 3, 15, 12, 0, 0).getTime();
     const { placesRepo, entriesRepo, wrapper } = setup(fixed);
