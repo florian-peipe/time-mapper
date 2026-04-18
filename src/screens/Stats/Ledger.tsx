@@ -164,6 +164,33 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
             ) : null}
           </View>
         </ScrollView>
+        {/*
+          v0.3 polish: when the ledger is empty, the user's screenshot showed
+          just column headers floating above a blank bar — reads as broken.
+          A single muted "No entries yet" row below the headers makes the
+          zero state legible without breaking the mono grid.
+        */}
+        {rows.length === 0 ? (
+          <View
+            testID="ledger-empty"
+            style={{
+              paddingVertical: t.space[6],
+              alignItems: "center",
+              borderTopWidth: 1,
+              borderTopColor: t.color("color.border"),
+            }}
+          >
+            <Text
+              style={{
+                fontSize: t.type.size.s,
+                color: t.color("color.fg3"),
+                fontFamily: t.type.family.sans,
+              }}
+            >
+              No entries yet
+            </Text>
+          </View>
+        ) : null}
       </View>
     </View>
   );

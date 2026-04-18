@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
-import { Button, Card } from "@/components";
+import { Button, Card, TrackingDot } from "@/components";
 
 type Props = {
   /** Place display name, shown inline after "Tracking". */
@@ -29,7 +29,16 @@ export function RunningTimerCard({ placeName, startedAt, onStop, testID }: Props
   const elapsed = useElapsed(startedAt);
 
   return (
-    <Card variant="tile" padding={4} testID={testID}>
+    // v0.3 polish: subtle accent.soft background tints the running card so
+    // it stands out from the neutral list rhythm below — "this is the active
+    // session" reads at a glance. Card primitive owns radius + shadow; the
+    // fill override layers on top.
+    <Card
+      variant="tile"
+      padding={4}
+      testID={testID}
+      style={{ backgroundColor: t.color("color.accent.soft") }}
+    >
       <View
         style={{
           flexDirection: "row",
@@ -37,16 +46,12 @@ export function RunningTimerCard({ placeName, startedAt, onStop, testID }: Props
           gap: t.space[3],
         }}
       >
-        {/* 10px accent dot per design-system Screens.jsx running block. */}
-        <View
-          accessible={false}
-          style={{
-            width: 10, // static dot, design-system 10x10
-            height: 10, // static dot, design-system 10x10
-            borderRadius: t.radius.pill,
-            backgroundColor: t.color("color.accent"),
-          }}
-        />
+        {/*
+          v0.3 polish: pulsing success-green TrackingDot replaces the static
+          accent dot. Reads as "live, currently tracking" more than a solid
+          circle. Size 10 matches the original design-system spec.
+        */}
+        <TrackingDot size={10} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text
             style={{

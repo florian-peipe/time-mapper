@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
-import { PlaceBubble, SourceChip } from "@/components";
+import { Icon, PlaceBubble, SourceChip } from "@/components";
 import type { IconName, SourceKind } from "@/components";
 
 type Props = {
@@ -114,6 +114,12 @@ export function EntryRow({
       >
         {hours}h {String(minutes).padStart(2, "0")}m
       </Text>
+      {/*
+        v0.3 polish: chevron-right trailing accessory signals "this row is
+        tappable → opens the edit sheet". Same affordance ListRow uses in
+        Settings so the gesture vocabulary stays consistent.
+      */}
+      <Icon name="chevron-right" size={18} color={t.color("color.fg3")} />
     </Pressable>
   );
 }

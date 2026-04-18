@@ -10,6 +10,12 @@ type Props = {
   /** Spacing token key for inner padding. Defaults: tile=4, hero/elevated=5. */
   padding?: keyof (typeof tokens)["space"];
   onPress?: () => void;
+  /**
+   * Optional style overlay — lets callers layer a background tint, margin, or
+   * explicit dimensions on top of the variant's computed base. Kept last in
+   * the style array so it wins any conflict with the base.
+   */
+  style?: StyleProp<ViewStyle>;
   children: React.ReactNode;
   testID?: string;
 };
@@ -53,20 +59,21 @@ function buildStyle(t: Theme, variant: CardVariant, padding: number): ViewStyle 
   };
 }
 
-export function Card({ variant, padding, onPress, children, testID }: Props) {
+export function Card({ variant, padding, onPress, style, children, testID }: Props) {
   const t = useTheme();
   const padPx = t.space[padding ?? (variant === "tile" ? 4 : 5)];
-  const style: StyleProp<ViewStyle> = buildStyle(t, variant, padPx);
+  const base: StyleProp<ViewStyle> = buildStyle(t, variant, padPx);
+  const combined: StyleProp<ViewStyle> = style ? [base, style] : base;
 
   if (onPress) {
     return (
-      <Pressable testID={testID} onPress={onPress} style={style} accessibilityRole="button">
+      <Pressable testID={testID} onPress={onPress} style={combined} accessibilityRole="button">
         {children}
       </Pressable>
     );
   }
   return (
-    <View testID={testID} style={style}>
+    <View testID={testID} style={combined}>
       {children}
     </View>
   );

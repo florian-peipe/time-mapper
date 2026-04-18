@@ -212,4 +212,14 @@ describe("Ledger", () => {
     // Second entry is silently dropped.
     expect(screen.queryByTestId("ledger-row-1")).toBeNull();
   });
+
+  it("renders 'No entries yet' muted empty state when there are no rows", () => {
+    wrap(
+      <Ledger entries={[]} placesById={new Map()} onOpenEntry={jest.fn()} onAddRow={jest.fn()} />,
+    );
+    expect(screen.getByTestId("ledger-empty")).toBeTruthy();
+    expect(screen.getByText("No entries yet")).toBeTruthy();
+    // Sum row is NOT rendered for an empty ledger (nothing to total).
+    expect(screen.queryByTestId("ledger-sum-row")).toBeNull();
+  });
 });

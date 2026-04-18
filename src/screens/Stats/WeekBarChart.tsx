@@ -149,7 +149,23 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
             </View>
           ))}
         </View>
-      ) : null}
+      ) : (
+        // v0.3 polish: an empty bar chart with no legend reads "broken"
+        // without copy. Soft muted line below the (empty) columns so users
+        // know it's a zero state, not a fetch failure.
+        <View style={{ marginTop: t.space[5], alignItems: "center" }}>
+          <Text
+            testID="week-bar-chart-empty"
+            style={{
+              fontSize: t.type.size.s,
+              color: t.color("color.fg3"),
+              fontFamily: t.type.family.sans,
+            }}
+          >
+            No tracked time yet this week
+          </Text>
+        </View>
+      )}
     </Card>
   );
 }
