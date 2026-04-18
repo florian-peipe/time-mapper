@@ -24,6 +24,13 @@ type Props = {
   children: React.ReactNode;
   /** Optional sticky footer with a top hairline and padding. */
   footer?: React.ReactNode;
+  /**
+   * Optional header accessory rendered in the right slot that would otherwise
+   * be an empty spacer balancing the close button. Used by EntryEditSheet for
+   * its inline `Save` pill. When omitted the slot falls back to an invisible
+   * 36px spacer so the title remains visually centered.
+   */
+  rightAccessory?: React.ReactNode;
   testID?: string;
 };
 
@@ -48,6 +55,7 @@ export function Sheet({
   title,
   children,
   footer,
+  rightAccessory,
   testID,
 }: Props) {
   const t = useTheme();
@@ -147,8 +155,13 @@ export function Sheet({
                 </Text>
               ) : null}
             </View>
-            {/* Right spacer to balance the left close button so the title stays centered. */}
-            <View style={{ width: 36 }} />
+            {/* Right slot: hosts an optional accessory (e.g. EntryEditSheet's
+                Save pill); otherwise a 36×36 spacer keeps the title centered. */}
+            {rightAccessory ? (
+              <View style={{ minWidth: 36, alignItems: "flex-end" }}>{rightAccessory}</View>
+            ) : (
+              <View style={{ width: 36 }} />
+            )}
           </View>
 
           {/* Body */}

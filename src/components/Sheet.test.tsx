@@ -85,4 +85,26 @@ describe("Sheet", () => {
     expect(screen.getByTestId("foot")).toBeTruthy();
     expect(screen.getByText("Save")).toBeTruthy();
   });
+
+  it("renders a rightAccessory in the header when provided", () => {
+    render(
+      wrap(
+        <Sheet
+          visible={true}
+          onClose={() => {}}
+          title="Edit entry"
+          rightAccessory={
+            <View testID="header-save">
+              <Text>Save</Text>
+            </View>
+          }
+        >
+          <Text>body</Text>
+        </Sheet>,
+      ),
+    );
+    expect(screen.getByTestId("header-save")).toBeTruthy();
+    // Title still centered alongside the accessory.
+    expect(screen.getByText("Edit entry")).toBeTruthy();
+  });
 });
