@@ -20,6 +20,7 @@ export function ThemeProvider({ children, schemeOverride }: Props) {
       type: tokens.type,
       space: tokens.space,
       radius: tokens.radius,
+      motion: tokens.motion,
       minTouchTarget: tokens.minTouchTarget,
     };
   }, [scheme]);

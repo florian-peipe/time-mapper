@@ -9,6 +9,11 @@ function Probe() {
   return <Text testID="probe">{theme.color("color.accent")}</Text>;
 }
 
+function MotionProbe() {
+  const theme = useTheme();
+  return <Text testID="motion-probe">{theme.motion.duration.base}</Text>;
+}
+
 describe("useTheme", () => {
   it("returns light accent when scheme is light", () => {
     render(
@@ -26,5 +31,14 @@ describe("useTheme", () => {
       </ThemeProvider>,
     );
     expect(screen.getByTestId("probe")).toHaveTextContent("#FF7B52");
+  });
+
+  it("exposes motion tokens with the default 200ms base duration", () => {
+    render(
+      <ThemeProvider schemeOverride="light">
+        <MotionProbe />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId("motion-probe")).toHaveTextContent("200");
   });
 });

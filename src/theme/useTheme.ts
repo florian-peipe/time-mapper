@@ -9,6 +9,7 @@ export type Theme = {
   type: Tokens["type"];
   space: Tokens["space"];
   radius: Tokens["radius"];
+  motion: Tokens["motion"];
   minTouchTarget: number;
 };
 
