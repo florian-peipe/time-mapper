@@ -7,11 +7,6 @@ import { useProMock } from "@/features/billing/useProMock";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore, type ThemeOverride } from "@/state/uiStore";
 import { i18n } from "@/lib/i18n";
-import { PlacesRepo } from "@/db/repository/places";
-import { EntriesRepo } from "@/db/repository/entries";
-import { KvRepo } from "@/db/repository/kv";
-import { resetAndSeed } from "@/db/seed";
-import type * as DbClientModule from "@/db/client";
 import { ProUpsellCard } from "./ProUpsellCard";
 
 /**
@@ -64,23 +59,6 @@ export function SettingsScreen() {
     if (isPro) revoke();
     else grant();
   }, [isPro, grant, revoke]);
-
-  const handleReseedDemo = useCallback(() => {
-    // Dev-only action — wipes every user-facing table and replays
-    // `seedDemoData`. The `db` client is `require()`-d lazily so the test
-    // import graph stays free of the `expo-sqlite` native binding until the
-    // button is actually pressed on-device. Repos are constructed inline
-    // (rather than via `usePlacesRepo`/`useEntriesRepo`) so mounting the
-    // Settings screen in Jest doesn't trigger the device binding eagerly.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { db } = require("@/db/client") as typeof DbClientModule;
-    resetAndSeed(db, new PlacesRepo(db), new EntriesRepo(db), new KvRepo(db));
-  }, []);
-
-  const handleClearAll = useCallback(() => {
-    // eslint-disable-next-line no-console
-    console.log("[settings] clear all data");
-  }, []);
 
   return (
     <ScrollView
@@ -193,21 +171,9 @@ export function SettingsScreen() {
             icon="settings"
             title="Toggle Pro (mock)"
             detail={isPro ? "On" : "Off"}
+            last
             onPress={handleToggleProMock}
             testID="settings-row-toggle-pro"
-          />
-          <ListRow
-            icon="repeat"
-            title="Re-seed demo data"
-            onPress={handleReseedDemo}
-            testID="settings-row-reseed"
-          />
-          <ListRow
-            icon="trash-2"
-            title="Clear all data"
-            last
-            onPress={handleClearAll}
-            testID="settings-row-clear"
           />
         </Section>
       ) : null}

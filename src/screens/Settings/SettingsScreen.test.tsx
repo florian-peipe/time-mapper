@@ -115,12 +115,13 @@ describe("SettingsScreen", () => {
     spy.mockRestore();
   });
 
-  it("renders the Developer section under __DEV__", () => {
+  it("renders the Developer section under __DEV__ with only the Pro toggle", () => {
     render(wrap(<SettingsScreen />));
     expect(screen.getByTestId("settings-section-dev")).toBeTruthy();
     expect(screen.getByText("Toggle Pro (mock)")).toBeTruthy();
-    expect(screen.getByText("Re-seed demo data")).toBeTruthy();
-    expect(screen.getByText("Clear all data")).toBeTruthy();
+    // v0.3: auto-seed is gone, so the Re-seed and Clear rows were removed.
+    expect(screen.queryByText("Re-seed demo data")).toBeNull();
+    expect(screen.queryByText("Clear all data")).toBeNull();
   });
 
   it("Toggle Pro row reflects current state and flips it on tap (Off → On → Off)", () => {
