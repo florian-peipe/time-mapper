@@ -8,6 +8,7 @@
 // the console instead.
 
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 
 export type DiagnosticPayload = {
   generatedAt: string;
@@ -30,12 +31,14 @@ export type DiagnosticPayload = {
  */
 export function buildDiagnosticPayload(extra: Partial<DiagnosticPayload> = {}): DiagnosticPayload {
   const now = new Date().toISOString();
+  const manifestVersion =
+    (Constants.expoConfig as { version?: string } | null | undefined)?.version ?? "unknown";
   return {
     generatedAt: now,
     platform: Platform.OS,
-    appVersion: extra.appVersion ?? "1.0.0",
+    appVersion: extra.appVersion ?? manifestVersion,
     anonUserId: extra.anonUserId,
-    pendingTransitions: extra.pendingTransitions ?? [],
+    pendingTransitions: extra.pendingTransitions ?? loadPendingTransitionsSafely(),
     recentEvents: extra.recentEvents ?? [],
     environment: extra.environment ?? {
       hasPlacesKey: !!process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY,
@@ -44,6 +47,28 @@ export function buildDiagnosticPayload(extra: Partial<DiagnosticPayload> = {}): 
       hasSentryDsn: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
     },
   };
+}
+
+/**
+ * Best-effort read of the latest pending transitions from the device repo.
+ * On test/Expo-Go paths where the SQLite binding is unavailable we return
+ * an empty array — the diagnostic still exports something useful
+ * (platform, env, app version).
+ */
+function loadPendingTransitionsSafely(): unknown[] {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { PendingTransitionsRepo } = require("@/db/repository/pending") as {
+      PendingTransitionsRepo: new (db: unknown) => { listAll: () => unknown[] };
+    };
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { db } = require("@/db/client") as { db: unknown };
+    const repo = new PendingTransitionsRepo(db);
+    // Cap at 50 rows — diagnostic files stay human-readable.
+    return repo.listAll().slice(0, 50);
+  } catch {
+    return [];
+  }
 }
 
 /**
