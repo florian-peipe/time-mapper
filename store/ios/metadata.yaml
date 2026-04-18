@@ -1,0 +1,125 @@
+# App Store Connect metadata for Time Mapper
+# Paste these into App Store Connect → My Apps → your app → App Information
+# (and the individual localized "App Info" entries).
+
+app:
+  name: "Time Mapper"
+  bundleId: "com.timemapper.app"
+  sku: "timemapper-v1"
+  primaryCategory: "PRODUCTIVITY"
+  secondaryCategory: "LIFESTYLE"
+  contentRating: "4+"
+  # 4+ is appropriate — no mature content, no user-generated content, no
+  # untranslated web views. Location tracking alone doesn't bump the rating.
+
+pricing:
+  - tier: "free"
+
+localizations:
+  en-US:
+    subtitle: "Automatic place-based time tracking"
+    description: |
+      Time Mapper quietly tracks how long you spend at the places that
+      matter — home, the office, the gym, your favorite coffee shop.
+
+      Add a place, set a radius, and Time Mapper does the rest. When you
+      arrive, it starts a timer. When you leave, it stops. No tapping,
+      no forgetting, no friction.
+
+      PRIVATE BY DESIGN
+      • Your location never leaves your device.
+      • Nothing is uploaded to any server.
+      • No analytics, no ads, no tracking pixels.
+
+      HOW IT WORKS
+      • Tap "Add place" and search an address or tap on the map.
+      • Choose a geofence radius (50–300 m) and a color/icon.
+      • Grant "Always" location so tracking keeps working in the background.
+      • See today, yesterday, last week on the Timeline + Stats tabs.
+
+      PRO FEATURES
+      • Unlimited places (free plan includes your first one)
+      • Full history beyond 14 days
+      • Weekly reports for past weeks
+      • CSV export for your own records
+      • Categories for grouping places
+
+      Auto-renewable subscription: monthly or yearly. Cancel anytime in
+      the App Store settings.
+
+    keywords: "time tracker,geofence,location,hours,productivity,automatic,work,home,office,gym,places,visits,privacy,offline"
+    promotionalText: "Automatic time tracking for the places that matter. Private, on-device, no taps required."
+    supportUrl: "https://timemapper.app/support"
+    marketingUrl: "https://timemapper.app"
+    privacyPolicyUrl: "https://timemapper.app/privacy"
+    whatsNew: "Time Mapper 1.0 — first public release. Add places, track time automatically, stay private."
+
+  de-DE:
+    subtitle: "Automatisches ort-basiertes Zeittracking"
+    description: |
+      Time Mapper verfolgt im Hintergrund, wie viel Zeit du an den Orten
+      verbringst, die dir wichtig sind — zuhause, im Büro, im Gym, in
+      deinem Lieblingscafé.
+
+      Füge einen Ort hinzu, setze einen Radius, und Time Mapper
+      erledigt den Rest. Wenn du ankommst, startet ein Timer. Wenn du
+      gehst, stoppt er. Kein Antippen, kein Vergessen, keine Reibung.
+
+      PRIVAT VON GRUND AUF
+      • Dein Standort verlässt niemals dein Gerät.
+      • Nichts wird zu einem Server hochgeladen.
+      • Keine Analytics, keine Werbung, keine Tracking-Pixel.
+
+      SO FUNKTIONIERT'S
+      • Tippe "Ort hinzufügen", suche eine Adresse oder wähle auf der Karte.
+      • Wähle einen Geofence-Radius (50–300 m) sowie Farbe & Symbol.
+      • Gewähre "Immer"-Standort, damit das Tracking im Hintergrund
+        weiterläuft.
+      • Siehe heute, gestern, letzte Woche im Verlauf + Statistik.
+
+      PRO-FUNKTIONEN
+      • Unbegrenzt viele Orte (Gratis-Plan enthält deinen ersten)
+      • Vollständiger Verlauf über 14 Tage hinaus
+      • Wochenberichte für vergangene Wochen
+      • CSV-Export für deine eigenen Aufzeichnungen
+      • Kategorien zum Gruppieren von Orten
+
+      Automatisch verlängerndes Abonnement: monatlich oder jährlich.
+      Jederzeit in den App-Store-Einstellungen kündbar.
+
+    keywords: "Zeittracking,Geofence,Standort,Stunden,Produktivität,automatisch,Arbeit,zuhause,Büro,Gym,Orte,Besuche,Datenschutz,offline"
+    promotionalText: "Automatisches Zeittracking für die Orte, die zählen. Privat, auf dem Gerät, ohne Antippen."
+    supportUrl: "https://timemapper.app/support"
+    marketingUrl: "https://timemapper.app"
+    privacyPolicyUrl: "https://timemapper.app/privacy"
+    whatsNew: "Time Mapper 1.0 — erste öffentliche Version. Orte hinzufügen, Zeit automatisch verfolgen, privat bleiben."
+
+# App privacy labels — fill these in App Store Connect → App Privacy.
+# Apple translates these to the user-visible "Data Not Collected" / "Data Linked to You" cards.
+privacyLabels:
+  dataNotCollected: true
+  # If Sentry DSN is set AND the developer enables PII:
+  # dataCollected:
+  #   - category: "Diagnostics / Crash Data"
+  #     linked: false
+  #     tracking: false
+  #     purpose: "AppFunctionality"
+
+contact:
+  # ASC requires a contact for review rejections.
+  firstName: "YOUR_FIRST_NAME"
+  lastName: "YOUR_LAST_NAME"
+  email: "support@timemapper.app"
+  phone: "+49_XXX_XXXXXXX"
+
+reviewNotes: |
+  Time Mapper is a location-based time tracker. To test the full flow:
+  1. Complete the 3-screen onboarding (Welcome → Permissions → First place).
+  2. Grant "Always" location and notifications when prompted.
+  3. On the "First place" screen, add "Apple Park, Cupertino" (or any address).
+  4. Walk/drive through the geofence to trigger auto-tracking (or use the
+     Settings → Developer → "Simulate visit" entry in a dev build).
+  5. Attempt to add a second place — the paywall triggers.
+  6. Purchase via sandbox account, then confirm the CTA becomes "Save place".
+
+  There is no account system. All data is stored locally via SQLite.

@@ -1,0 +1,145 @@
+# Google Play Console metadata for Time Mapper
+# Paste these into Play Console → your app → Store listing and Data safety.
+
+app:
+  name: "Time Mapper"
+  packageName: "com.timemapper.app"
+  defaultLanguage: "en-US"
+  category: "PRODUCTIVITY"
+  contentRating: "EVERYONE"  # IARC — equivalent to iOS 4+
+
+pricing:
+  - model: "FREE_WITH_IN_APP_PURCHASES"
+
+localizations:
+  en-US:
+    # Max 30 chars — shows in Play Store search results.
+    shortDescription: "Private, automatic time tracking for the places you visit."
+    # Max 80 chars — store listing title.
+    title: "Time Mapper: Auto place tracker"
+    # Max 4000 chars.
+    fullDescription: |
+      Time Mapper quietly tracks how long you spend at the places that
+      matter — home, the office, the gym, your favorite coffee shop.
+
+      Add a place, set a radius, and Time Mapper does the rest. When
+      you arrive, it starts a timer. When you leave, it stops. No
+      tapping, no forgetting, no friction.
+
+      PRIVATE BY DESIGN
+      • Your location never leaves your device.
+      • Nothing is uploaded to any server.
+      • No analytics, no ads, no tracking pixels.
+
+      HOW IT WORKS
+      • Tap "Add place" and search an address or tap on the map.
+      • Choose a geofence radius (50–300 m) and a color/icon.
+      • Grant "Allow all the time" location so tracking keeps working.
+      • See today, yesterday, last week on the Timeline + Stats tabs.
+
+      PRO FEATURES
+      • Unlimited places (free plan includes your first one)
+      • Full history beyond 14 days
+      • Weekly reports for past weeks
+      • CSV export for your own records
+      • Categories for grouping places
+
+      Auto-renewing subscription: monthly or yearly. Cancel anytime in
+      Google Play account settings.
+
+  de-DE:
+    shortDescription: "Privates, automatisches Zeittracking für deine Orte."
+    title: "Time Mapper: Orte automatisch"
+    fullDescription: |
+      Time Mapper verfolgt im Hintergrund, wie viel Zeit du an den Orten
+      verbringst, die dir wichtig sind — zuhause, im Büro, im Gym, in
+      deinem Lieblingscafé.
+
+      Füge einen Ort hinzu, setze einen Radius, und Time Mapper
+      erledigt den Rest. Wenn du ankommst, startet ein Timer. Wenn du
+      gehst, stoppt er. Kein Antippen, kein Vergessen, keine Reibung.
+
+      PRIVAT VON GRUND AUF
+      • Dein Standort verlässt niemals dein Gerät.
+      • Nichts wird zu einem Server hochgeladen.
+      • Keine Analytics, keine Werbung, keine Tracking-Pixel.
+
+      SO FUNKTIONIERT'S
+      • Tippe "Ort hinzufügen", suche eine Adresse oder wähle auf der Karte.
+      • Wähle einen Geofence-Radius (50–300 m) sowie Farbe & Symbol.
+      • Gewähre "Immer erlauben" für den Standort, damit das Tracking
+        im Hintergrund weiterläuft.
+      • Siehe heute, gestern, letzte Woche im Verlauf + Statistik.
+
+      PRO-FUNKTIONEN
+      • Unbegrenzt viele Orte (Gratis-Plan enthält deinen ersten)
+      • Vollständiger Verlauf über 14 Tage hinaus
+      • Wochenberichte für vergangene Wochen
+      • CSV-Export für deine eigenen Aufzeichnungen
+      • Kategorien zum Gruppieren von Orten
+
+      Automatisch verlängerndes Abonnement: monatlich oder jährlich.
+      Jederzeit in den Google Play-Kontoeinstellungen kündbar.
+
+# Play Console → Data safety form. Values match iOS privacy labels.
+dataSafety:
+  dataCollected:
+    location:
+      approximate:
+        collected: false
+        shared: false
+      precise:
+        collected: true
+        shared: false
+        purpose: "App functionality"
+        # Collection happens ON-DEVICE via OS geofence APIs; nothing is
+        # transmitted off-device. Play's data-safety form still asks
+        # whether the app "accesses" the data, which we do — answer YES to
+        # precise location, NO to sharing.
+        processingLocation: "device"
+    financial:
+      purchaseHistory:
+        collected: true
+        shared: false
+        purpose: "In-app purchases handled by Google Play"
+        processingLocation: "device"
+  dataNotCollectedExplicitly:
+    - "Personal info"
+    - "Contacts"
+    - "Photos"
+    - "Messages"
+    - "Audio"
+    - "Files and docs"
+    - "Calendar"
+    - "Health"
+    - "App activity"
+    - "Web browsing"
+  securityPractices:
+    encryptedInTransit: true  # any Places/RevenueCat calls use HTTPS
+    userCanRequestDeletion: true  # uninstall = delete
+
+permissions:
+  # These match the declarations in app.json → expo.android.permissions.
+  # Document the business rationale for each in the Play review notes.
+  - id: "ACCESS_FINE_LOCATION"
+    rationale: "Required to detect entry/exit of user-saved geofences."
+  - id: "ACCESS_BACKGROUND_LOCATION"
+    rationale: "Required so tracking continues when the app is backgrounded. Without this, users must keep the app open to log visits."
+  - id: "FOREGROUND_SERVICE_LOCATION"
+    rationale: "Required on Android 14+ for background geofence callbacks."
+  - id: "POST_NOTIFICATIONS"
+    rationale: "Used to show optional 'arrived' / 'left' confirmations so users know tracking started."
+  - id: "RECEIVE_BOOT_COMPLETED"
+    rationale: "Re-registers geofences after device reboot so auto-tracking survives restarts."
+
+releaseNotes:
+  en-US: |
+    Time Mapper 1.0 — first public release. Add places, track time
+    automatically, stay private.
+  de-DE: |
+    Time Mapper 1.0 — erste öffentliche Version. Orte hinzufügen, Zeit
+    automatisch verfolgen, privat bleiben.
+
+contact:
+  email: "support@timemapper.app"
+  website: "https://timemapper.app"
