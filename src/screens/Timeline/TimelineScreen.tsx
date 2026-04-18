@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Icon, Rings } from "@/components";
+import { Button, Icon, Rings } from "@/components";
 import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
 import { useEntries } from "@/features/entries/useEntries";
@@ -66,10 +66,17 @@ export function TimelineScreen() {
     openSheet("entryEdit", { entryId: null });
   }, [openSheet]);
 
+  const handleAddPlace = useCallback(() => {
+    openSheet("addPlace", { placeId: null });
+  }, [openSheet]);
+
   const handleStopOngoing = useCallback(() => {
     ongoingState.stop();
     handleRefresh();
   }, [ongoingState, handleRefresh]);
+
+  const noPlaces = placesState.places.length === 0;
+  const noEntries = entriesState.entries.length === 0 && !showRunning;
 
   return (
     <View style={{ flex: 1, backgroundColor: t.color("color.bg") }}>
@@ -82,7 +89,9 @@ export function TimelineScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingHorizontal: t.space[5],
-          // Leave room for the FAB so the last row isn't obscured.
+          // Leave room for the small FAB so the last row isn't obscured. No FAB
+          // in the zero-places state, but leaving the padding keeps the empty
+          // state visually centered.
           paddingBottom: t.space[10] + t.space[5],
         }}
       >
@@ -97,8 +106,10 @@ export function TimelineScreen() {
           </View>
         ) : null}
 
-        {entriesState.entries.length === 0 && !showRunning ? (
-          <EmptyState />
+        {noPlaces ? (
+          <NoPlacesEmptyState onAddPlace={handleAddPlace} />
+        ) : noEntries ? (
+          <NoEntriesEmptyState onAddAnotherPlace={handleAddPlace} />
         ) : (
           entriesState.entries.map((entry, index) => {
             const place = placesById.get(entry.placeId);
@@ -122,45 +133,120 @@ export function TimelineScreen() {
         )}
       </ScrollView>
 
-      {/* FAB — accent circle, bottom-right, 20/20 from the safe-area edge. */}
-      <Pressable
-        onPress={handleAddManual}
-        accessibilityRole="button"
-        accessibilityLabel="Add entry"
-        testID="timeline-fab"
-        style={{
-          position: "absolute",
-          right: t.space[5],
-          bottom: t.space[5] + insets.bottom,
-          width: t.space[14], // 56 — design-system FAB size (space[14] = 56)
-          height: t.space[14],
-          borderRadius: t.radius.pill,
-          backgroundColor: t.color("color.accent"),
-          alignItems: "center",
-          justifyContent: "center",
-          // FAB accent drop-shadow (design-system Screens.jsx boxShadow uses
-          // rgba(255,106,61,0.4)). We tint the shadow with the accent color
-          // for the same effect while keeping the color tokenized.
-          shadowColor: t.color("color.accent"),
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 12,
-          elevation: 6,
-        }}
-      >
-        <Icon name="plus" size={26} color={t.color("color.accent.contrast")} />
-      </Pressable>
+      {/*
+        Manual-entry FAB — place-first pivot means this is now de-emphasized:
+          - hidden entirely when there are no places (hero CTA takes over)
+          - small icon-only (40×40) elsewhere so the eye goes to the primary
+            auto-tracked content first. Accessibility label signals purpose.
+      */}
+      {!noPlaces ? (
+        <Pressable
+          onPress={handleAddManual}
+          accessibilityRole="button"
+          accessibilityLabel="Add manual entry"
+          testID="timeline-fab"
+          style={{
+            position: "absolute",
+            right: t.space[5],
+            bottom: t.space[5] + insets.bottom,
+            // design-source: de-emphasized small FAB — 40px circle (space[10]).
+            width: t.space[10],
+            height: t.space[10],
+            borderRadius: t.radius.pill,
+            backgroundColor: t.color("color.surface"),
+            borderWidth: 1,
+            borderColor: t.color("color.border.strong"),
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: t.color("color.fg"),
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 6,
+            elevation: 2,
+          }}
+        >
+          <Icon name="plus" size={20} color={t.color("color.fg2")} />
+        </Pressable>
+      ) : null}
     </View>
   );
 }
 
-function EmptyState() {
+/**
+ * Hero empty state for when the user has NO places yet. This is the
+ * "place-first" primary CTA — adding a place is the only thing to do,
+ * and manual entry is hidden entirely (no FAB) so it doesn't compete.
+ */
+function NoPlacesEmptyState({ onAddPlace }: { onAddPlace: () => void }) {
   const t = useTheme();
   return (
     <View
       style={{
         alignItems: "center",
-        paddingVertical: t.space[10] + t.space[5], // 60 matches Screens.jsx
+        paddingVertical: t.space[10] + t.space[5],
+        position: "relative",
+      }}
+    >
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          alignItems: "center",
+        }}
+      >
+        <Rings size={260} opacity={0.07} />
+      </View>
+      <View style={{ marginTop: t.space[10], alignItems: "center", gap: t.space[3] }}>
+        <Text
+          style={{
+            fontSize: t.type.size.l,
+            fontWeight: t.type.weight.bold,
+            color: t.color("color.fg"),
+            fontFamily: t.type.family.sans,
+            textAlign: "center",
+            letterSpacing: -0.3,
+          }}
+        >
+          {i18n.t("timeline.emptyNoPlaces.title")}
+        </Text>
+        <Text
+          style={{
+            fontSize: t.type.size.body,
+            color: t.color("color.fg3"),
+            fontFamily: t.type.family.sans,
+            textAlign: "center",
+            maxWidth: 280,
+            lineHeight: t.type.size.body * t.type.lineHeight.body,
+          }}
+        >
+          {i18n.t("timeline.emptyNoPlaces.body")}
+        </Text>
+        <View style={{ marginTop: t.space[3] }}>
+          <Button variant="primary" size="md" onPress={onAddPlace} testID="timeline-add-place-cta">
+            {i18n.t("timeline.emptyNoPlaces.cta")}
+          </Button>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Empty state for when the user HAS places but no entries today (and
+ * nothing is currently tracking). Copy reassures them tracking is
+ * armed, and offers a tertiary "Add another place" nudge so the path
+ * to growing their place list stays visible.
+ */
+function NoEntriesEmptyState({ onAddAnotherPlace }: { onAddAnotherPlace: () => void }) {
+  const t = useTheme();
+  return (
+    <View
+      style={{
+        alignItems: "center",
+        paddingVertical: t.space[10] + t.space[5],
         position: "relative",
       }}
     >
@@ -176,17 +262,41 @@ function EmptyState() {
       >
         <Rings size={240} opacity={0.07} />
       </View>
-      <Text
-        style={{
-          fontSize: t.type.size.body,
-          color: t.color("color.fg3"),
-          fontFamily: t.type.family.sans,
-          textAlign: "center",
-          marginTop: t.space[8],
-        }}
-      >
-        {i18n.t("timeline.empty.title")}
-      </Text>
+      <View style={{ marginTop: t.space[10], alignItems: "center", gap: t.space[2] }}>
+        <Text
+          style={{
+            fontSize: t.type.size.m,
+            fontWeight: t.type.weight.semibold,
+            color: t.color("color.fg"),
+            fontFamily: t.type.family.sans,
+            textAlign: "center",
+          }}
+        >
+          {i18n.t("timeline.emptyTrackedReady.title")}
+        </Text>
+        <Text
+          style={{
+            fontSize: t.type.size.body,
+            color: t.color("color.fg3"),
+            fontFamily: t.type.family.sans,
+            textAlign: "center",
+            maxWidth: 300,
+            lineHeight: t.type.size.body * t.type.lineHeight.body,
+          }}
+        >
+          {i18n.t("timeline.emptyTrackedReady.body")}
+        </Text>
+        <View style={{ marginTop: t.space[2] }}>
+          <Button
+            variant="tertiary"
+            size="sm"
+            onPress={onAddAnotherPlace}
+            testID="timeline-add-another-place"
+          >
+            {i18n.t("timeline.emptyTrackedReady.cta")}
+          </Button>
+        </View>
+      </View>
     </View>
   );
 }

@@ -115,13 +115,45 @@ afterEach(() => {
 });
 
 describe("TimelineScreen", () => {
-  it("renders the empty state when there are no entries for today", () => {
+  it("renders the zero-places hero empty state (place-first primary CTA)", () => {
     // Noon local April 17, 2026 — deterministic.
     const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
+    // Explicit empty places array to bypass the default Home seed and
+    // trigger the zero-places hero.
+    setup({ nowMs, places: [] });
+    // New copy: "Add a place to start tracking" is the primary hero.
+    expect(screen.getByText("Add a place to start tracking")).toBeTruthy();
+    expect(screen.getByTestId("timeline-add-place-cta")).toBeTruthy();
+    // And the manual-entry FAB is hidden — manual is the escape hatch, not
+    // the hero, when no place exists to auto-track against.
+    expect(screen.queryByTestId("timeline-fab")).toBeNull();
+  });
+
+  it("zero-places CTA opens the AddPlaceSheet with placeId=null", () => {
+    const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
+    setup({ nowMs, places: [] });
+    fireEvent.press(screen.getByTestId("timeline-add-place-cta"));
+    expect(useSheetStore.getState().active).toBe("addPlace");
+    expect(useSheetStore.getState().payload).toEqual({ placeId: null });
+  });
+
+  it("renders the 'You're set up.' empty state when places exist but no entries today", () => {
+    const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
     setup({ nowMs });
-    expect(
-      screen.getByText(/No entries yet\. Add a place to start tracking automatically\./),
-    ).toBeTruthy();
+    // Second-state copy.
+    expect(screen.getByText("You're set up.")).toBeTruthy();
+    expect(screen.getByText("Visits to your places will appear here automatically.")).toBeTruthy();
+    expect(screen.getByTestId("timeline-add-another-place")).toBeTruthy();
+    // Small manual-entry FAB IS present once a place exists.
+    expect(screen.getByTestId("timeline-fab")).toBeTruthy();
+  });
+
+  it("'Add another place' tertiary button opens AddPlaceSheet", () => {
+    const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
+    setup({ nowMs });
+    fireEvent.press(screen.getByTestId("timeline-add-another-place"));
+    expect(useSheetStore.getState().active).toBe("addPlace");
+    expect(useSheetStore.getState().payload).toEqual({ placeId: null });
   });
 
   it("renders a row per entry with place name and tabular duration", () => {
@@ -194,6 +226,8 @@ describe("TimelineScreen", () => {
 
   it("FAB press opens the entryEdit sheet with entryId: null", () => {
     const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
+    // FAB only renders once at least one place exists (place-first pivot) —
+    // the default `setup` seeds Home, so the FAB is present.
     setup({ nowMs });
     fireEvent.press(screen.getByTestId("timeline-fab"));
     expect(useSheetStore.getState().active).toBe("entryEdit");
@@ -227,7 +261,8 @@ describe("TimelineScreen", () => {
   it("totalMin header updates when switching between days", () => {
     const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
     const nowSeconds = Math.floor(nowMs / 1000);
-    // Add an entry yesterday: 2h long.
+    // Add an entry yesterday: 2h long. Seeding a place is implicit via the
+    // `places` default in `setup`, so the "You're set up." state renders today.
     setup({
       nowMs,
       entries: [
@@ -238,7 +273,7 @@ describe("TimelineScreen", () => {
         },
       ],
     });
-    // Sanity: today renders empty.
+    // Sanity: today renders empty (but "You're set up." state now, not zero-places).
     expect(screen.getByText(/0h 0m tracked/)).toBeTruthy();
     fireEvent.press(screen.getByLabelText("Previous day"));
     expect(screen.getByText(/2h 0m tracked/)).toBeTruthy();
@@ -247,11 +282,11 @@ describe("TimelineScreen", () => {
 
   it("re-fetches entries after the entryEdit sheet closes", () => {
     const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
+    // Default seed (one Home place) gives us the "You're set up." state
+    // which is what we want — the zero-places hero has no entry list to
+    // refresh into.
     const { entriesRepo, places } = setup({ nowMs });
-    // Initially empty.
-    expect(
-      screen.getByText(/No entries yet\. Add a place to start tracking automatically\./),
-    ).toBeTruthy();
+    expect(screen.getByText("You're set up.")).toBeTruthy();
     // Open then close the sheet, with a new entry having been inserted in between.
     act(() => {
       useSheetStore.getState().openSheet("entryEdit", { entryId: null });
