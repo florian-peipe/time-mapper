@@ -54,6 +54,31 @@ jest.mock("expo-notifications", () => ({
   AndroidImportance: { LOW: 2, DEFAULT: 3, HIGH: 4 },
 }));
 
+// react-native-maps ships a native binding that Jest can't load through
+// node_modules. We only need MapView/Marker/Circle to RENDER in UI tests —
+// not to actually display tiles — so stub the exports with passthrough Views.
+// Individual test files can override this mock if they need to verify
+// specific map props.
+jest.mock("react-native-maps", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const R = require("react");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require("react-native");
+  const MapView = (props: { children?: unknown; testID?: string }) =>
+    R.createElement(View, { testID: props.testID ?? "mock-mapview" }, props.children);
+  const Marker = (props: { testID?: string }) =>
+    R.createElement(View, { testID: props.testID ?? "mock-marker" });
+  const Circle = (props: { testID?: string }) =>
+    R.createElement(View, { testID: props.testID ?? "mock-circle" });
+  return {
+    __esModule: true,
+    default: MapView,
+    Marker,
+    Circle,
+    PROVIDER_DEFAULT: undefined,
+  };
+});
+
 // react-native-purchases pulls in @revenuecat/purchases-js-hybrid-mappings at
 // require-time, which ships ESM that jest can't parse. Screens that use
 // `usePro` only care about the entitlement state, not the SDK plumbing —

@@ -15,6 +15,7 @@ import {
   createSessionToken,
   type PlaceSuggestion,
 } from "@/lib/geocode";
+import { MapPreview } from "./MapPreview";
 
 export type AddPlaceSheetProps = {
   visible: boolean;
@@ -464,6 +465,23 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
               {selected.description}
             </Text>
           </View>
+
+          {/*
+            Map preview — only rendered when we have real coordinates.
+            Demo-mode picks (free-mock path) + freshly-resolved Google Places
+            picks both carry lat/lng; but a legacy edited place from pre-v0.6
+            might have lat=lng=0 and we'd rather hide the preview than draw a
+            pin in the middle of the Atlantic.
+          */}
+          {selected.latitude !== 0 || selected.longitude !== 0 ? (
+            <MapPreview
+              latitude={selected.latitude}
+              longitude={selected.longitude}
+              radiusM={radius}
+              color={PLACE_COLORS[colorIdx] ?? PLACE_COLORS[0]!}
+              testID="add-place-map-preview"
+            />
+          ) : null}
 
           {/* Radius section. */}
           <View>
