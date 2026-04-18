@@ -19,13 +19,16 @@ type Props = {
   testID?: string;
 };
 
+// Column widths are the design-system spec for the mono-grid spreadsheet —
+// they must match across the header, body, and sum rows exactly, so we keep
+// them as literals with one place to edit.
 const COLUMNS = [
-  { key: "place", label: "PLACE", letter: "A", width: 108, align: "left" },
-  { key: "start", label: "START", letter: "B", width: 64, align: "right" },
-  { key: "pause", label: "PAUSE", letter: "C", width: 52, align: "right" },
-  { key: "end", label: "END", letter: "D", width: 64, align: "right" },
-  { key: "duration", label: "DURATION", letter: "E", width: 72, align: "right" },
-  { key: "note", label: "NOTE", letter: "F", width: 180, align: "left" },
+  { key: "place", label: "PLACE", letter: "A", width: 108, align: "left" }, // column width, mono grid
+  { key: "start", label: "START", letter: "B", width: 64, align: "right" }, // column width, mono grid
+  { key: "pause", label: "PAUSE", letter: "C", width: 52, align: "right" }, // column width, mono grid
+  { key: "end", label: "END", letter: "D", width: 64, align: "right" }, // column width, mono grid
+  { key: "duration", label: "DURATION", letter: "E", width: 72, align: "right" }, // column width, mono grid
+  { key: "note", label: "NOTE", letter: "F", width: 180, align: "left" }, // column width, mono grid
 ] as const;
 
 // `#` row-number gutter column width — design-system 38px. No token fits;
