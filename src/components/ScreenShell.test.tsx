@@ -6,7 +6,12 @@ import { ThemeProvider } from "@/theme/ThemeProvider";
 import { ScreenShell } from "./ScreenShell";
 
 const wrap = (ui: React.ReactNode) => (
-  <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 320, height: 640 }, insets: { top: 47, left: 0, right: 0, bottom: 34 } }}>
+  <SafeAreaProvider
+    initialMetrics={{
+      frame: { x: 0, y: 0, width: 320, height: 640 },
+      insets: { top: 47, left: 0, right: 0, bottom: 34 },
+    }}
+  >
     <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>
   </SafeAreaProvider>
 );
@@ -21,12 +26,24 @@ function flat(style: unknown): Record<string, unknown> {
 
 describe("ScreenShell", () => {
   it("renders children", () => {
-    render(wrap(<ScreenShell><Text>Body</Text></ScreenShell>));
+    render(
+      wrap(
+        <ScreenShell>
+          <Text>Body</Text>
+        </ScreenShell>,
+      ),
+    );
     expect(screen.getByText("Body")).toBeTruthy();
   });
 
   it("applies horizontal padding from theme by default", () => {
-    const { UNSAFE_root } = render(wrap(<ScreenShell><Text testID="child">x</Text></ScreenShell>));
+    const { UNSAFE_root } = render(
+      wrap(
+        <ScreenShell>
+          <Text testID="child">x</Text>
+        </ScreenShell>,
+      ),
+    );
     // Find the immediate parent of our text child
     const child = UNSAFE_root.findByProps({ testID: "child" });
     // Walk up to the View added by ScreenShell (parent of the Text wrapper chain)
@@ -38,7 +55,13 @@ describe("ScreenShell", () => {
   });
 
   it("respects safe-area top inset when padding is on", () => {
-    const { UNSAFE_root } = render(wrap(<ScreenShell><Text testID="child">x</Text></ScreenShell>));
+    const { UNSAFE_root } = render(
+      wrap(
+        <ScreenShell>
+          <Text testID="child">x</Text>
+        </ScreenShell>,
+      ),
+    );
     const child = UNSAFE_root.findByProps({ testID: "child" });
     let node = child.parent;
     while (node && !(node.props as { style?: unknown }).style) node = node.parent;
@@ -48,7 +71,13 @@ describe("ScreenShell", () => {
   });
 
   it("uses theme bg color", () => {
-    const { UNSAFE_root } = render(wrap(<ScreenShell><Text testID="child">x</Text></ScreenShell>));
+    const { UNSAFE_root } = render(
+      wrap(
+        <ScreenShell>
+          <Text testID="child">x</Text>
+        </ScreenShell>,
+      ),
+    );
     const child = UNSAFE_root.findByProps({ testID: "child" });
     let node = child.parent;
     while (node && !(node.props as { style?: unknown }).style) node = node.parent;
@@ -58,7 +87,13 @@ describe("ScreenShell", () => {
   });
 
   it("renders ScrollView when scroll prop set", () => {
-    const { UNSAFE_root } = render(wrap(<ScreenShell scroll><Text>x</Text></ScreenShell>));
+    const { UNSAFE_root } = render(
+      wrap(
+        <ScreenShell scroll>
+          <Text>x</Text>
+        </ScreenShell>,
+      ),
+    );
     // ScrollView root is identifiable by its testable host — easiest: type name "RCTScrollView"
     // But across RN versions it can vary. Just confirm tree renders without error.
     expect(UNSAFE_root).toBeTruthy();

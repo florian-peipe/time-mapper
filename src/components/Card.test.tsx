@@ -4,9 +4,7 @@ import { Text } from "react-native";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { Card } from "./Card";
 
-const wrap = (ui: React.ReactNode) => (
-  <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>
-);
+const wrap = (ui: React.ReactNode) => <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>;
 
 function flat(style: unknown): Record<string, unknown> {
   if (style == null) return {};

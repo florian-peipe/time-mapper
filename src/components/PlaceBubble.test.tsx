@@ -3,9 +3,7 @@ import { render } from "@testing-library/react-native";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { PlaceBubble } from "./PlaceBubble";
 
-const wrap = (ui: React.ReactNode) => (
-  <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>
-);
+const wrap = (ui: React.ReactNode) => <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>;
 
 function flat(style: unknown): Record<string, unknown> {
   if (style == null) return {};
@@ -28,9 +26,11 @@ describe("PlaceBubble", () => {
   });
 
   it("uses custom size when provided", () => {
-    const { toJSON } = render(<ThemeProvider schemeOverride="light">
-      <PlaceBubble icon="briefcase" color="#1D7FD1" size={64} />
-    </ThemeProvider>);
+    const { toJSON } = render(
+      <ThemeProvider schemeOverride="light">
+        <PlaceBubble icon="briefcase" color="#1D7FD1" size={64} />
+      </ThemeProvider>,
+    );
     const tree = toJSON();
     const root = Array.isArray(tree) ? tree[0] : tree;
     const s = flat(root && (root as { props: { style: unknown } }).props.style);

@@ -3,9 +3,7 @@ import { render } from "@testing-library/react-native";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { Icon } from "./Icon";
 
-const wrap = (ui: React.ReactNode) => (
-  <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>
-);
+const wrap = (ui: React.ReactNode) => <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>;
 
 describe("Icon", () => {
   it("renders a known place icon (home)", () => {

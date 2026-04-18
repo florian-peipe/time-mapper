@@ -4,9 +4,7 @@ import { AccessibilityInfo } from "react-native";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { TrackingDot } from "./TrackingDot";
 
-const wrap = (ui: React.ReactNode) => (
-  <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>
-);
+const wrap = (ui: React.ReactNode) => <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>;
 
 function flat(style: unknown): Record<string, unknown> {
   if (style == null) return {};
@@ -18,9 +16,7 @@ function flat(style: unknown): Record<string, unknown> {
 
 describe("TrackingDot", () => {
   beforeEach(() => {
-    jest
-      .spyOn(AccessibilityInfo, "isReduceMotionEnabled")
-      .mockResolvedValue(false);
+    jest.spyOn(AccessibilityInfo, "isReduceMotionEnabled").mockResolvedValue(false);
   });
 
   afterEach(() => {
@@ -51,9 +47,7 @@ describe("TrackingDot", () => {
   });
 
   it("renders a static dot when reduce-motion is enabled", async () => {
-    jest
-      .spyOn(AccessibilityInfo, "isReduceMotionEnabled")
-      .mockResolvedValue(true);
+    jest.spyOn(AccessibilityInfo, "isReduceMotionEnabled").mockResolvedValue(true);
     const result = render(wrap(<TrackingDot />));
     await act(async () => {});
     const tree = result.toJSON();

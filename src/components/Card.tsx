@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  Pressable,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
+import { Pressable, View, type StyleProp, type ViewStyle } from "react-native";
 import { useTheme, type Theme } from "@/theme/useTheme";
 import { tokens } from "@/theme/tokens";
 

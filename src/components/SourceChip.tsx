@@ -12,10 +12,8 @@ type Props = {
 
 export function SourceChip({ kind, label }: Props) {
   const t = useTheme();
-  const bg =
-    kind === "auto" ? t.color("color.chip.auto.bg") : t.color("color.chip.manual.bg");
-  const fg =
-    kind === "auto" ? t.color("color.chip.auto.fg") : t.color("color.chip.manual.fg");
+  const bg = kind === "auto" ? t.color("color.chip.auto.bg") : t.color("color.chip.manual.bg");
+  const fg = kind === "auto" ? t.color("color.chip.auto.fg") : t.color("color.chip.manual.fg");
   const text = label ?? (kind === "auto" ? "AUTO" : "MANUAL");
 
   return (
