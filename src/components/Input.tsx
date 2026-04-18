@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from "react-native";
+import {
+  Text,
+  TextInput,
+  View,
+  type StyleProp,
+  type TextInputProps,
+  type ViewStyle,
+} from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Icon, type IconName } from "./Icon";
 
@@ -10,6 +17,13 @@ type Props = TextInputProps & {
   leading?: IconName;
   /** Optional container style — rarely needed; most sizing is fixed by tokens. */
   containerStyle?: StyleProp<ViewStyle>;
+  /**
+   * Inline validation message. When a non-empty string is passed the input
+   * renders with the danger border (equivalent to `invalid`) and a small
+   * danger-coloured line of text below it. Used by EntryEditSheet to flag
+   * invalid HH:MM values without needing a separate helper component.
+   */
+  error?: string;
 };
 
 /**
@@ -29,16 +43,20 @@ export function Input({
   onFocus,
   onBlur,
   placeholderTextColor,
+  error,
+  testID,
   ...rest
 }: Props) {
   const t = useTheme();
   const [focused, setFocused] = useState(false);
 
-  const borderColor = invalid
-    ? t.color("color.danger")
-    : focused
-      ? t.color("color.border.strong")
-      : t.color("color.border");
+  const hasError = !!error;
+  const borderColor =
+    invalid || hasError
+      ? t.color("color.danger")
+      : focused
+        ? t.color("color.border.strong")
+        : t.color("color.border");
 
   type FocusHandler = NonNullable<TextInputProps["onFocus"]>;
   type BlurHandler = NonNullable<TextInputProps["onBlur"]>;
@@ -55,6 +73,7 @@ export function Input({
   const input = (
     <TextInput
       {...rest}
+      testID={testID}
       onFocus={handleFocus}
       onBlur={handleBlur}
       placeholderTextColor={placeholderTextColor ?? t.color("color.fg3")}
@@ -77,25 +96,51 @@ export function Input({
     />
   );
 
-  if (!leading) return input;
+  const errorLine = hasError ? (
+    <Text
+      testID={testID ? `${testID}-error` : undefined}
+      style={{
+        color: t.color("color.danger"),
+        fontSize: t.type.size.xs,
+        fontFamily: t.type.family.sans,
+        // design-source: 4px gap between field and inline validation text.
+        marginTop: t.space[1],
+      }}
+    >
+      {error}
+    </Text>
+  ) : null;
+
+  if (!leading) {
+    if (!errorLine) return input;
+    return (
+      <View style={containerStyle}>
+        {input}
+        {errorLine}
+      </View>
+    );
+  }
 
   return (
-    <View style={[{ position: "relative" }, containerStyle]}>
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          // 14 matches Screens.jsx AddPlaceSheet search-icon left offset
-          left: 14,
-          top: 0,
-          bottom: 0,
-          justifyContent: "center",
-          zIndex: 1,
-        }}
-      >
-        <Icon name={leading} size={18} color={t.color("color.fg3")} />
+    <View style={containerStyle}>
+      <View style={{ position: "relative" }}>
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            // 14 matches Screens.jsx AddPlaceSheet search-icon left offset
+            left: 14,
+            top: 0,
+            bottom: 0,
+            justifyContent: "center",
+            zIndex: 1,
+          }}
+        >
+          <Icon name={leading} size={18} color={t.color("color.fg3")} />
+        </View>
+        {input}
       </View>
-      {input}
+      {errorLine}
     </View>
   );
 }

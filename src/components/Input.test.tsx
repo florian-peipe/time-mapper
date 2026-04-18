@@ -62,4 +62,23 @@ describe("Input", () => {
     // 42 matches Screens.jsx AddPlaceSheet search paddingLeft: 42
     expect(s.paddingLeft).toBe(42);
   });
+
+  it("renders the error message when error prop is provided", () => {
+    render(wrap(<Input testID="field" error="Invalid time format" />));
+    expect(screen.getByText("Invalid time format")).toBeTruthy();
+  });
+
+  it("applies the danger border when error is a non-empty string", () => {
+    render(wrap(<Input testID="field" error="bad" />));
+    const input = screen.getByTestId("field");
+    const s = flat(input.props.style);
+    // tokens.light["color.danger"] = #C4361E
+    expect(s.borderColor).toBe("#C4361E");
+  });
+
+  it("does not render error text when error is undefined", () => {
+    render(wrap(<Input testID="field" />));
+    // No error region should appear — the message is absent.
+    expect(screen.queryByTestId("field-error")).toBeNull();
+  });
 });
