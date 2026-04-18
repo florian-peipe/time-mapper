@@ -54,6 +54,17 @@ function makeInfo(active: Record<string, unknown>): CustomerInfo {
   } as unknown as CustomerInfo;
 }
 
+// Mock the appUserId resolver too — the real one reaches into the device
+// KV repo (via @/db/client) which we don't want to spin up in unit tests.
+// usePro should still pass the resolved id through to configureRevenueCat,
+// which we assert below via the configureCalls log.
+jest.mock("./appUserId", () => ({
+  REVENUECAT_USER_ID_KEY: "revenuecat.user_id",
+  getOrCreateRevenueCatUserId: jest.fn(() => "test-user-uuid"),
+  getOrCreateRevenueCatUserIdFromDevice: jest.fn(() => "test-user-uuid"),
+  _resetDeviceKvCacheForTest: jest.fn(),
+}));
+
 jest.mock("./revenuecat", () => ({
   PRO_ENTITLEMENT_ID: "pro",
   configureRevenueCat: jest.fn((userId?: string) => {
@@ -97,6 +108,11 @@ describe("usePro — real mode (SDK keys present)", () => {
   it("calls configureRevenueCat() once on mount", async () => {
     renderHook(() => usePro());
     await waitFor(() => expect(mockConfigure).toHaveBeenCalledTimes(1));
+  });
+
+  it("forwards the persisted anon user-id to configureRevenueCat", async () => {
+    renderHook(() => usePro());
+    await waitFor(() => expect(mockState.configureCalls).toEqual([{ args: ["test-user-uuid"] }]));
   });
 
   it("derives isPro=false from a free CustomerInfo", async () => {

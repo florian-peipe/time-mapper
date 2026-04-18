@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PurchasesOffering, PurchasesPackage } from "react-native-purchases";
 
+import { getOrCreateRevenueCatUserIdFromDevice } from "./appUserId";
 import {
   configureRevenueCat,
   getCustomerInfo,
@@ -106,9 +107,22 @@ function useRealPro(): UseProResult {
   useEffect(() => {
     mounted.current = true;
 
+    // Resolve a stable anon user-id from the KV store (or mint one on
+    // first launch) and feed it to RC so entitlements survive reinstalls
+    // on the same Apple/Google account. Wrapped in try/catch because the
+    // device DB may not yet be migrated in degenerate boot orders — we
+    // fall back to anonymous configure rather than blocking billing on
+    // a fixable infra hiccup.
+    let userId: string | undefined;
+    try {
+      userId = getOrCreateRevenueCatUserIdFromDevice();
+    } catch (err) {
+      console.warn("usePro: anon user-id resolve failed, using anonymous", err);
+    }
+
     // Configure is idempotent — safe to call from every consumer's effect.
     // The actual SDK init runs at most once per process.
-    configureRevenueCat();
+    configureRevenueCat(userId);
 
     // After configure, we may now be in mock mode. Skip the SDK round-trip
     // entirely so the hook produces no extra state writes (cleaner test
