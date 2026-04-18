@@ -81,6 +81,23 @@ export class EntriesRepo {
     return row;
   }
 
+  /**
+   * Close an entry with an explicit end timestamp. Used by the tracking
+   * persistence layer so the recorded `endedAt` matches the geofence exit
+   * event time (not the time the background task happened to wake).
+   */
+  closeAt(id: string, endedAtS: number): Entry {
+    const now = this.clock.now();
+    this.db
+      .update(entries)
+      .set({ endedAt: endedAtS, updatedAt: now })
+      .where(eq(entries.id, id))
+      .run();
+    const row = this.get(id);
+    if (!row) throw new Error(`Entry ${id} not found after closeAt`);
+    return row;
+  }
+
   get(id: string): Entry | null {
     const row = this.db.select().from(entries).where(eq(entries.id, id)).get();
     return (row as Entry) ?? null;
