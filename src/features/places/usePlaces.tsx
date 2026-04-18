@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import type * as DbClientModule from "@/db/client";
 import { PlacesRepo, type CreatePlaceInput } from "@/db/repository/places";
 import type { Place } from "@/db/schema";
+import { reconcileAfterPlaceChange } from "@/features/tracking/bootstrap";
 
 /**
  * Context for injecting a `PlacesRepo` instance. Tests wrap `renderHook` with
@@ -72,6 +73,9 @@ export function usePlaces(): UsePlacesResult {
     (input: CreatePlaceInput) => {
       const p = repo.create(input);
       refresh();
+      // Fire-and-forget: geofence registration is eventual, the UI shouldn't
+      // block on a native bridge hop. Errors are swallowed inside.
+      void reconcileAfterPlaceChange();
       return p;
     },
     [repo, refresh],
@@ -81,6 +85,16 @@ export function usePlaces(): UsePlacesResult {
     (id: string, patch: Partial<CreatePlaceInput>) => {
       const p = repo.update(id, patch);
       refresh();
+      // Only re-register when a geofence-relevant field changed. Radius /
+      // lat / lng all matter; name / color / icon don't. Checking narrowly
+      // avoids pointless native calls on a "rename" tap.
+      if (
+        patch.latitude !== undefined ||
+        patch.longitude !== undefined ||
+        patch.radiusM !== undefined
+      ) {
+        void reconcileAfterPlaceChange();
+      }
       return p;
     },
     [repo, refresh],
@@ -90,6 +104,7 @@ export function usePlaces(): UsePlacesResult {
     (id: string) => {
       repo.softDelete(id);
       refresh();
+      void reconcileAfterPlaceChange();
     },
     [repo, refresh],
   );

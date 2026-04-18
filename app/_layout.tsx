@@ -26,6 +26,11 @@ import { initI18n } from "@/lib/i18n";
 import { runMigrations } from "@/db/client";
 import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
 import { SheetHost } from "@/screens/SheetHost";
+// Side-effect import: registers the geofence task at module-eval time, which
+// is a hard requirement of expo-task-manager (OS cold-wakes run only JS
+// module init, not React render). Must come before bootstrapTracking().
+import "@/background/tasks";
+import { bootstrapTracking } from "@/features/tracking/bootstrap";
 
 function pickInitialLocale(override: string | null): string {
   if (override) return override;
@@ -55,6 +60,11 @@ export default function RootLayout() {
       // "add your first place"). `seedDemoData` still exists in `db/seed.ts`
       // for manual dev use, just nobody calls it from the boot path.
       setDbReady(true);
+      // v0.4: tracking engine bootstrap runs post-migrations.
+      // Fire-and-forget — the UI is already releasing. Bootstrapping
+      // reconciles OS geofences with our DB and catches up any pending
+      // transition left behind from a previous app session.
+      void bootstrapTracking();
     })().catch((err) => {
       console.error("Boot failure", err);
       setDbReady(true); // fail-open rather than hang — UI can show error later
