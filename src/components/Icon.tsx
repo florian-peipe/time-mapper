@@ -34,6 +34,9 @@ import {
   Lock,
   ChartBar,
   Settings,
+  Info,
+  TriangleAlert,
+  CircleAlert,
   type LucideProps,
 } from "lucide-react-native";
 import { useTheme } from "@/theme/useTheme";
@@ -78,6 +81,9 @@ const ICONS = {
   lock: Lock,
   "bar-chart": ChartBar,
   settings: Settings,
+  info: Info,
+  "alert-triangle": TriangleAlert,
+  "alert-circle": CircleAlert,
 } as const;
 
 export type IconName = keyof typeof ICONS;
