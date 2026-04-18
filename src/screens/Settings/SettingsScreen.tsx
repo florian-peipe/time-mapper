@@ -7,6 +7,11 @@ import { useProMock } from "@/features/billing/useProMock";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore, type ThemeOverride } from "@/state/uiStore";
 import { i18n } from "@/lib/i18n";
+import { PlacesRepo } from "@/db/repository/places";
+import { EntriesRepo } from "@/db/repository/entries";
+import { KvRepo } from "@/db/repository/kv";
+import { resetAndSeed } from "@/db/seed";
+import type * as DbClientModule from "@/db/client";
 import { ProUpsellCard } from "./ProUpsellCard";
 
 /**
@@ -61,9 +66,15 @@ export function SettingsScreen() {
   }, [isPro, grant, revoke]);
 
   const handleReseedDemo = useCallback(() => {
-    // Plan 2 stub — actual re-seed lives in Chunk E once seed.ts is wired.
-    // eslint-disable-next-line no-console
-    console.log("[settings] re-seed demo data");
+    // Dev-only action — wipes every user-facing table and replays
+    // `seedDemoData`. The `db` client is `require()`-d lazily so the test
+    // import graph stays free of the `expo-sqlite` native binding until the
+    // button is actually pressed on-device. Repos are constructed inline
+    // (rather than via `usePlacesRepo`/`useEntriesRepo`) so mounting the
+    // Settings screen in Jest doesn't trigger the device binding eagerly.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { db } = require("@/db/client") as typeof DbClientModule;
+    resetAndSeed(db, new PlacesRepo(db), new EntriesRepo(db), new KvRepo(db));
   }, []);
 
   const handleClearAll = useCallback(() => {

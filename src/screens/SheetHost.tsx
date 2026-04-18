@@ -31,8 +31,7 @@ export function SheetHost() {
 
   const entryId =
     active === "entryEdit" && payload && "entryId" in payload ? payload.entryId : null;
-  const placeId =
-    active === "addPlace" && payload && "placeId" in payload ? payload.placeId : null;
+  const placeId = active === "addPlace" && payload && "placeId" in payload ? payload.placeId : null;
 
   return (
     <>

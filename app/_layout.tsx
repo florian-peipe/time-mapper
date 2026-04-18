@@ -18,7 +18,11 @@ import {
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { useUiStore } from "@/state/uiStore";
 import { initI18n } from "@/lib/i18n";
-import { runMigrations } from "@/db/client";
+import { db, runMigrations } from "@/db/client";
+import { PlacesRepo } from "@/db/repository/places";
+import { EntriesRepo } from "@/db/repository/entries";
+import { KvRepo } from "@/db/repository/kv";
+import { seedDemoData } from "@/db/seed";
 import { SheetHost } from "@/screens/SheetHost";
 
 function pickInitialLocale(override: string | null): string {
@@ -44,6 +48,9 @@ export default function RootLayout() {
     (async () => {
       initI18n(pickInitialLocale(localeOverride));
       await runMigrations();
+      // Seed once, guarded by `kv.onboarding.seeded` — makes the first
+      // launch feel alive instead of empty-state everywhere.
+      seedDemoData(new PlacesRepo(db), new EntriesRepo(db), new KvRepo(db));
       setDbReady(true);
     })().catch((err) => {
       console.error("Boot failure", err);
