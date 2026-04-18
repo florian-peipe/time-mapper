@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { Linking, ScrollView, Text, View } from "react-native";
+import { Alert, Linking, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/useTheme";
 import { ListRow, Section, type IconName } from "@/components";
@@ -9,6 +9,7 @@ import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore, type ThemeOverride } from "@/state/uiStore";
 import { i18n } from "@/lib/i18n";
 import { ProUpsellCard } from "./ProUpsellCard";
+import { simulatePassage } from "@/features/tracking/devSim";
 
 /**
  * Settings tab — vertical list of grouped sections, with a Pro upsell banner
@@ -72,6 +73,28 @@ export function SettingsScreen() {
     if (isPro) revoke();
     else grant();
   }, [isPro, grant, revoke]);
+
+  const handleSimulateVisit = useCallback(() => {
+    if (places.length === 0) {
+      Alert.alert("No places yet", "Add a place first, then come back to simulate a visit.", [
+        { text: "OK" },
+      ]);
+      return;
+    }
+    // Show a picker via Alert buttons — good enough for dev-only UI. Each
+    // button triggers a 30-second passage through that place, so the
+    // Timeline updates twice (started + stopped) in quick succession.
+    const buttons = places.slice(0, 10).map((p) => ({
+      text: p.name,
+      onPress: () => {
+        void simulatePassage(p.id, 30);
+      },
+    }));
+    Alert.alert("Simulate a 30s visit", "Pick a place", [
+      ...buttons,
+      { text: "Cancel", style: "cancel" as const },
+    ]);
+  }, [places]);
 
   return (
     <ScrollView
@@ -220,9 +243,16 @@ export function SettingsScreen() {
             icon="settings"
             title="Toggle Pro (mock)"
             detail={isPro ? "On" : "Off"}
-            last
             onPress={handleToggleProMock}
             testID="settings-row-toggle-pro"
+          />
+          <ListRow
+            icon="repeat"
+            title="Simulate visit"
+            detail="30s passage"
+            last
+            onPress={handleSimulateVisit}
+            testID="settings-row-simulate-visit"
           />
         </Section>
       ) : null}
