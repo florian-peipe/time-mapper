@@ -1,3 +1,8 @@
+// Polyfill Hermes' missing `crypto.getRandomValues` before we reference it.
+// Top-level import means any module importing `uuid` gets the polyfill for
+// free (belt-and-braces with the boot-time import in app/_layout.tsx).
+import "react-native-get-random-values";
+
 // RFC4122-ish v4 using crypto.getRandomValues (available in RN 0.72+ and Node 19+)
 export function uuid(): string {
   const bytes = new Uint8Array(16);

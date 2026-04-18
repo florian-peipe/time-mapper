@@ -1,3 +1,8 @@
+// CRITICAL: this polyfill MUST be the very first import — it installs
+// `crypto.getRandomValues` on the Hermes global before any module touches
+// `uuid()` (PlacesRepo, seedDemoData, etc.). Without it, Hermes throws
+// "Property 'crypto' doesn't exist" on iOS/Android and the app fails to boot.
+import "react-native-get-random-values";
 import React, { useEffect, useState } from "react";
 import { Stack } from "expo-router";
 import { getLocales } from "expo-localization";
