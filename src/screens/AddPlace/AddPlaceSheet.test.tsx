@@ -329,3 +329,34 @@ describe("AddPlaceSheet — Pro gate", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 });
+
+describe("AddPlaceSheet — 20-place soft cap (iOS geofence limit)", () => {
+  it("blocks creating a 21st place with an Alert and does NOT create", () => {
+    grantProMock(); // bypass the 2nd-place paywall
+    const preSeeded = Array.from({ length: 20 }, (_, i) => ({ name: `Place-${i}` }));
+    const onClose = jest.fn();
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    const { placesRepo } = setup({ onClose, preSeeded });
+    fireEvent.press(screen.getByText(/Kinkelstr\. 3/));
+    fireEvent.press(screen.getByTestId("add-place-save"));
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Limit reached",
+      expect.stringContaining("20 tracked places"),
+      expect.any(Array),
+    );
+    expect(placesRepo.list()).toHaveLength(20);
+    expect(onClose).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
+  });
+
+  it("allows editing the 20th place (edit mode is not gated)", () => {
+    grantProMock();
+    const preSeeded = Array.from({ length: 20 }, (_, i) => ({ name: `Place-${i}` }));
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    setup({ preSeeded, editingIndex: 0 });
+    fireEvent.press(screen.getByTestId("add-place-save"));
+    expect(alertSpy).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
+  });
+});

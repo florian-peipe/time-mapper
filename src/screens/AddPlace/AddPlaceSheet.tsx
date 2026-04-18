@@ -7,6 +7,8 @@ import { Button, Icon, Input, Sheet, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { useProMock } from "@/features/billing/useProMock";
 import { useSheetStore, type AddPlaceSource } from "@/state/sheetStore";
+import { MAX_PLACES } from "@/features/tracking/geofenceService";
+import { i18n } from "@/lib/i18n";
 
 export type AddPlaceSheetProps = {
   visible: boolean;
@@ -161,6 +163,16 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   const handleSave = () => {
     if (shouldPaywall) {
       openSheet("paywall", { source: "2nd-place" });
+      return;
+    }
+    // iOS caps geofence regions at 20. We enforce the same limit on Android
+    // for consistency and because the state machine + reconcile loop both
+    // assume a bounded set. Edit mode is never gated (the place already
+    // exists, we're not adding one).
+    if (!editing && count >= MAX_PLACES) {
+      Alert.alert(i18n.t("tracking.placeLimit.title"), i18n.t("tracking.placeLimit.body"), [
+        { text: i18n.t("tracking.placeLimit.ok") },
+      ]);
       return;
     }
     if (!selected) return;
