@@ -4,6 +4,35 @@ All notable changes to Time Mapper are documented here. Release tags are of
 the form `vMAJOR.MINOR-shortname` where the shortname traces back to the
 plan that shipped the work (`foundation`, `core-ui`, …).
 
+## v0.4.0-location-engine
+
+- **Core auto-tracking engine**: buffer state machine (IDLE → PENDING_ENTER
+  → ACTIVE → PENDING_EXIT → IDLE) + geofence service + expo-task-manager
+  background task + local notifications. Works when the app is fully
+  closed on real devices with EAS dev builds.
+- **Real permission flow**: onboarding now requests foreground → background
+  location → notifications, with graceful degradation on any denial.
+- **Opportunistic resolution**: every location wake scans
+  `pending_transitions WHERE confirm_at <= now` — never wrong, may be late.
+  Exactly-once semantics via the primary-key idempotency guard.
+- **20-place soft cap** (iOS geofence region limit) with a friendly Alert.
+- **Notifier with consolidation + quiet hours**: 3+ events within 10 min
+  collapse into a single bundle; quiet-hours window suppresses
+  notifications (entries still tracked) and supports windows that wrap
+  midnight.
+- **Timeline banner** surfaces auto-tracking status
+  (enabled / foreground-only / denied) with a deep-link to OS settings.
+- **Dev-only "Simulate visit" helper** in Settings → Developer for testing
+  without real movement.
+- New `PendingTransitionsRepo` and `EntriesRepo.closeAt(id, endedAtS)` so
+  an auto-entry's `endedAt` matches the geofence exit time (not task
+  wake time).
+
+**Note on builds:** Full auto-tracking requires an **EAS dev build** or a
+production build — Expo Go does NOT execute background tasks. In Expo Go
+you can still exercise the state machine + UI via the dev-sim button in
+Settings. Ship to TestFlight / Play Internal for real-world validation.
+
 ## v0.3.0-ux-pivot
 
 - **Critical fix:** `react-native-get-random-values` polyfill for Hermes `uuid()` (resolves "Property 'crypto' doesn't exist" boot crash)
