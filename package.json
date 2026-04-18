@@ -17,6 +17,7 @@
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/jetbrains-mono": "^0.4.1",
+    "@react-native-community/slider": "5.0.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.2",
     "expo": "~54.0.33",
