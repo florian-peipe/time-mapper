@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
-import { Alert, Linking, ScrollView, Text, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { Alert, Linking, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/useTheme";
 import { ListRow, Section, type IconName } from "@/components";
@@ -10,6 +10,17 @@ import { useUiStore, type ThemeOverride } from "@/state/uiStore";
 import { i18n } from "@/lib/i18n";
 import { ProUpsellCard } from "./ProUpsellCard";
 import { simulatePassage } from "@/features/tracking/devSim";
+
+/**
+ * Deep-link to the platform-specific subscription management page. iOS
+ * uses the `itms-apps://` scheme that opens the App Store directly into
+ * the user's subscriptions list. Android opens Play Store via web URL —
+ * the Play Store app intercepts and routes accordingly.
+ */
+const SUBSCRIPTION_MANAGEMENT_URL =
+  Platform.OS === "ios"
+    ? "itms-apps://apps.apple.com/account/subscriptions"
+    : "https://play.google.com/store/account/subscriptions";
 
 /**
  * Settings tab — vertical list of grouped sections, with a Pro upsell banner
@@ -29,7 +40,8 @@ export function SettingsScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
 
-  const { isPro, grant, revoke } = usePro();
+  const { isPro, grant, revoke, restore } = usePro();
+  const [restoreState, setRestoreState] = useState<"idle" | "busy" | "done" | "error">("idle");
   const { places } = usePlaces();
   const openSheet = useSheetStore((s) => s.openSheet);
   const themeOverride = useUiStore((s) => s.themeOverride);
@@ -73,6 +85,21 @@ export function SettingsScreen() {
     if (isPro) revoke();
     else grant();
   }, [isPro, grant, revoke]);
+
+  const handleManageSubscription = useCallback(() => {
+    void Linking.openURL(SUBSCRIPTION_MANAGEMENT_URL);
+  }, []);
+
+  const handleRestore = useCallback(async () => {
+    setRestoreState("busy");
+    try {
+      await restore();
+      setRestoreState("done");
+    } catch (err) {
+      console.warn("settings: restore failed", err);
+      setRestoreState("error");
+    }
+  }, [restore]);
 
   const handleSimulateVisit = useCallback(() => {
     if (places.length === 0) {
@@ -208,6 +235,28 @@ export function SettingsScreen() {
         />
       </Section>
 
+      <Section title="Subscription" testID="settings-section-subscription">
+        {isPro ? (
+          <ListRow
+            icon="star"
+            iconBg={t.color("color.accent.soft")}
+            iconColor={t.color("color.accent")}
+            title="Time Mapper Pro"
+            detail="Active"
+            onPress={handleManageSubscription}
+            testID="settings-row-pro-active"
+          />
+        ) : null}
+        <ListRow
+          icon="repeat"
+          title="Restore purchases"
+          detail={restoreLabel(restoreState)}
+          onPress={handleRestore}
+          last
+          testID="settings-row-restore"
+        />
+      </Section>
+
       <Section title="Data" testID="settings-section-data">
         <ListRow
           icon="download"
@@ -258,6 +307,17 @@ export function SettingsScreen() {
       ) : null}
     </ScrollView>
   );
+}
+
+/**
+ * Right-side label for the Restore purchases row. Reflects the in-flight
+ * + post-completion state so the user knows their tap was acknowledged.
+ */
+function restoreLabel(state: "idle" | "busy" | "done" | "error"): string | undefined {
+  if (state === "busy") return "Restoring…";
+  if (state === "done") return "Restored";
+  if (state === "error") return "Try again";
+  return undefined;
 }
 
 /** Cycle order: System (null) → Light → Dark → System. */

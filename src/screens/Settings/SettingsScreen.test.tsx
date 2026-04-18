@@ -1,6 +1,6 @@
 import React from "react";
 import { Linking } from "react-native";
-import { fireEvent, render, screen, within } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { PlacesRepoProvider } from "@/features/places/usePlaces";
@@ -58,11 +58,12 @@ describe("SettingsScreen", () => {
     expect(screen.getByText("Settings")).toBeTruthy();
   });
 
-  it("renders all five primary sections (Places first)", () => {
+  it("renders all six primary sections (Places first, Subscription before Data)", () => {
     render(wrap(<SettingsScreen />));
     expect(screen.getByTestId("settings-section-places")).toBeTruthy();
     expect(screen.getByTestId("settings-section-tracking")).toBeTruthy();
     expect(screen.getByTestId("settings-section-appearance")).toBeTruthy();
+    expect(screen.getByTestId("settings-section-subscription")).toBeTruthy();
     expect(screen.getByTestId("settings-section-data")).toBeTruthy();
     expect(screen.getByTestId("settings-section-about")).toBeTruthy();
   });
@@ -191,6 +192,47 @@ describe("SettingsScreen", () => {
     fireEvent.press(screen.getByTestId("settings-row-privacy"));
     expect(spy).toHaveBeenCalledWith("https://timemapper.app/privacy");
     spy.mockRestore();
+  });
+
+  it("renders the Subscription section with the Restore purchases row (always visible)", () => {
+    render(wrap(<SettingsScreen />));
+    expect(screen.getByTestId("settings-section-subscription")).toBeTruthy();
+    expect(screen.getByTestId("settings-row-restore")).toBeTruthy();
+    expect(screen.getByText("Restore purchases")).toBeTruthy();
+  });
+
+  it("Subscription section hides the Pro-active row when the user is free", () => {
+    render(wrap(<SettingsScreen />));
+    expect(screen.queryByTestId("settings-row-pro-active")).toBeNull();
+  });
+
+  it("Subscription section shows the Pro-active row when isPro is true", () => {
+    grantProMock();
+    render(wrap(<SettingsScreen />));
+    expect(screen.getByTestId("settings-row-pro-active")).toBeTruthy();
+    expect(screen.getByText("Time Mapper Pro")).toBeTruthy();
+    expect(screen.getByText("Active")).toBeTruthy();
+  });
+
+  it("tapping the Pro-active row deep-links to the platform subscription page", () => {
+    grantProMock();
+    const spy = jest.spyOn(Linking, "openURL").mockResolvedValueOnce(undefined as unknown as never);
+    render(wrap(<SettingsScreen />));
+    fireEvent.press(screen.getByTestId("settings-row-pro-active"));
+    expect(spy).toHaveBeenCalled();
+    const url = spy.mock.calls[0]![0];
+    // iOS scheme or Android web URL — both are valid depending on jest's
+    // platform mock. Check substring "subscriptions" to stay platform-agnostic.
+    expect(url).toMatch(/subscriptions/);
+    spy.mockRestore();
+  });
+
+  it("tapping Restore purchases shows 'Restoring…' then 'Restored' on success", async () => {
+    render(wrap(<SettingsScreen />));
+    const row = () => screen.getByTestId("settings-row-restore");
+    fireEvent.press(row());
+    // Async restore — wait for "Restored" label.
+    await waitFor(() => expect(within(row()).getByText("Restored")).toBeTruthy());
   });
 
   it("renders the Developer section under __DEV__ with only the Pro toggle", () => {
