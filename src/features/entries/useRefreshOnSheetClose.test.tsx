@@ -46,9 +46,7 @@ describe("useRefreshOnSheetClose", () => {
 
   it("calls refresh once per close, even if the component re-renders", () => {
     const refresh = jest.fn();
-    const { rerender } = renderHook(() =>
-      useRefreshOnSheetClose(["entryEdit"], refresh),
-    );
+    const { rerender } = renderHook(() => useRefreshOnSheetClose(["entryEdit"], refresh));
     act(() => useSheetStore.getState().openSheet("entryEdit", { entryId: null }));
     rerender(undefined);
     act(() => useSheetStore.getState().closeSheet());
