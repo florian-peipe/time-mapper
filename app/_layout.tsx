@@ -19,6 +19,7 @@ import { ThemeProvider } from "@/theme/ThemeProvider";
 import { useUiStore } from "@/state/uiStore";
 import { initI18n } from "@/lib/i18n";
 import { runMigrations } from "@/db/client";
+import { SheetHost } from "@/screens/SheetHost";
 
 function pickInitialLocale(override: string | null): string {
   if (override) return override;
@@ -58,6 +59,13 @@ export default function RootLayout() {
         <ThemeProvider schemeOverride={themeOverride ?? undefined}>
           <StatusBar style="auto" />
           <Stack screenOptions={{ headerShown: false }} />
+          {/*
+            Global sheet host — any screen can call
+            `useSheetStore.openSheet(...)` to summon Paywall, EntryEdit, or
+            AddPlace. Lives inside ThemeProvider so sheets pick up the live
+            scheme, below <Stack> so Modal z-indexes above the tab bar.
+          */}
+          <SheetHost />
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

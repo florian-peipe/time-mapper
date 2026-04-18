@@ -6,6 +6,13 @@ import { useProMock } from "@/features/billing/useProMock";
 import { PlanPicker, type PlanId } from "./PlanPicker";
 
 export type PaywallScreenProps = {
+  /**
+   * Whether the sheet is open. Defaults to `true` so existing test callers
+   * (and any direct embedder) keep working; the global `SheetHost` passes
+   * the live `active === "paywall"` value so the underlying Modal can stay
+   * mounted and hide natively without mount/unmount churn.
+   */
+  visible?: boolean;
   /** Caller closes the host sheet — usually `useSheetStore.closeSheet`. */
   onClose: () => void;
   /**
@@ -41,7 +48,7 @@ const FEATURES: readonly string[] = [
  * sheet so we can exercise the Pro entitlement state across the rest of
  * the app. Plan 4 swaps this for a real RevenueCat purchase flow.
  */
-export function PaywallScreen({ onClose, source: _source }: PaywallScreenProps) {
+export function PaywallScreen({ visible = true, onClose, source: _source }: PaywallScreenProps) {
   const t = useTheme();
   const { grant } = useProMock();
   const [plan, setPlan] = useState<PlanId>("year");
@@ -55,7 +62,7 @@ export function PaywallScreen({ onClose, source: _source }: PaywallScreenProps) 
 
   return (
     <Sheet
-      visible
+      visible={visible}
       onClose={onClose}
       heightPercent={92}
       testID="paywall-sheet"
