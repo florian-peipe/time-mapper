@@ -56,4 +56,34 @@ describe("EntriesRepo", () => {
     expect(e.endedAt).toBe(1_699_001_000);
     expect(e.source).toBe("manual");
   });
+
+  it("update() merges a partial patch and bumps updatedAt", () => {
+    const { entriesRepo, place, advance } = setup();
+    const e = entriesRepo.createManual({
+      placeId: place.id,
+      startedAt: 1_699_000_000,
+      endedAt: 1_699_001_000,
+    });
+    advance(50);
+    const updated = entriesRepo.update(e.id, {
+      endedAt: 1_699_002_000,
+      note: "client call",
+      pauseS: 300,
+    });
+    expect(updated.endedAt).toBe(1_699_002_000);
+    expect(updated.note).toBe("client call");
+    expect(updated.pauseS).toBe(300);
+    // updatedAt reflects the clock at the time of update.
+    expect(updated.updatedAt).toBe(1_700_000_050);
+    // Fields not in the patch are preserved.
+    expect(updated.startedAt).toBe(1_699_000_000);
+    expect(updated.source).toBe("manual");
+  });
+
+  it("update() throws if the entry does not exist", () => {
+    const { entriesRepo } = setup();
+    expect(() => entriesRepo.update("missing-id", { note: "x" })).toThrow(
+      /Entry missing-id not found/,
+    );
+  });
 });

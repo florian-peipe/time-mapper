@@ -7,6 +7,19 @@ import { uuid } from "@/lib/id";
 type AnyDb = BetterSQLite3Database | ExpoSQLiteDatabase;
 type Clock = { now: () => number };
 
+/**
+ * Fields callers may patch through `EntriesRepo.update`. Intentionally
+ * excludes `id`, `createdAt`, and `deletedAt` — those are managed by the
+ * repo. `source` stays on the row as inserted.
+ */
+export type UpdateEntryPatch = Partial<{
+  placeId: string;
+  startedAt: number;
+  endedAt: number | null;
+  pauseS: number;
+  note: string | null;
+}>;
+
 export class EntriesRepo {
   constructor(
     private db: AnyDb,
@@ -97,6 +110,23 @@ export class EntriesRepo {
       )
       .orderBy(desc(entries.startedAt))
       .all() as Entry[];
+  }
+
+  /**
+   * Merge `patch` into an existing entry row and bump `updatedAt` to the
+   * current clock. Mirrors `PlacesRepo.update`. Used by EntryEditSheet when
+   * saving edits to an existing entry. Throws if the id is unknown.
+   */
+  update(id: string, patch: UpdateEntryPatch): Entry {
+    const now = this.clock.now();
+    this.db
+      .update(entries)
+      .set({ ...patch, updatedAt: now })
+      .where(eq(entries.id, id))
+      .run();
+    const row = this.get(id);
+    if (!row) throw new Error(`Entry ${id} not found after update`);
+    return row;
   }
 
   softDelete(id: string): void {
