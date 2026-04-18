@@ -28,6 +28,7 @@ module.exports = [
       "android/**",
       "ios/**",
       "docs/**",
+      "src/db/migrations/**",
     ],
   },
 ];
