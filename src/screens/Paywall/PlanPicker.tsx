@@ -12,25 +12,37 @@ type PlanRow = {
   badge?: string;
 };
 
-const PLANS: readonly PlanRow[] = [
-  {
-    id: "year",
-    label: "Yearly",
-    price: "€29.99",
-    sub: "7-day free trial · €2.50/mo",
-    badge: "Save 50%",
-  },
-  {
-    id: "month",
-    label: "Monthly",
-    price: "€4.99",
-    sub: "Billed monthly",
-  },
-] as const;
+/**
+ * Default prices used when no live RevenueCat offering is available
+ * (network failure, products not yet configured, dev-mock mode). Real
+ * runs replace these with `product.priceString` from the store so the
+ * user sees their local-currency price.
+ */
+const DEFAULT_YEARLY: PlanRow = {
+  id: "year",
+  label: "Yearly",
+  price: "€29.99",
+  sub: "7-day free trial · €2.50/mo",
+  badge: "Save 50%",
+};
+
+const DEFAULT_MONTHLY: PlanRow = {
+  id: "month",
+  label: "Monthly",
+  price: "€4.99",
+  sub: "Billed monthly",
+};
 
 type Props = {
   selected: PlanId;
   onSelect: (id: PlanId) => void;
+  /**
+   * Live prices from the loaded RevenueCat offering. When undefined, we
+   * render the hardcoded fallbacks above so the screen never shows a
+   * blank price even if offerings haven't loaded yet.
+   */
+  yearlyPrice?: string;
+  monthlyPrice?: string;
   testID?: string;
 };
 
@@ -45,8 +57,15 @@ type Props = {
  * - Layout: label + price on opposite ends; the label row carries an
  *   optional pill badge (e.g. "Save 50%").
  */
-export function PlanPicker({ selected, onSelect, testID }: Props) {
+export function PlanPicker({ selected, onSelect, yearlyPrice, monthlyPrice, testID }: Props) {
   const t = useTheme();
+
+  // Build the rendered plan list each render — cheap (two rows) and lets
+  // a price update from the SDK propagate without remounting the picker.
+  const plans: readonly PlanRow[] = [
+    yearlyPrice ? { ...DEFAULT_YEARLY, price: yearlyPrice } : DEFAULT_YEARLY,
+    monthlyPrice ? { ...DEFAULT_MONTHLY, price: monthlyPrice } : DEFAULT_MONTHLY,
+  ];
 
   return (
     <View
@@ -57,7 +76,7 @@ export function PlanPicker({ selected, onSelect, testID }: Props) {
         marginTop: t.space[6],
       }}
     >
-      {PLANS.map((p) => {
+      {plans.map((p) => {
         const isSelected = selected === p.id;
         return (
           <Pressable
