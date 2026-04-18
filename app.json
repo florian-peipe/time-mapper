@@ -2,7 +2,7 @@
   "expo": {
     "name": "Time Mapper",
     "slug": "time-mapper",
-    "version": "0.1.0",
+    "version": "0.4.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -29,12 +29,12 @@
           "processing"
         ],
         "BGTaskSchedulerPermittedIdentifiers": [
-          "com.timemapper.app.geofence-resolve"
+          "com.timemapper.app.geofence"
         ],
-        "NSLocationWhenInUseUsageDescription": "Time Mapper uses your location to start the timer automatically when you arrive at a saved place.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Time Mapper needs always-on location to start and stop timers automatically in the background — even with the app closed.",
-        "NSLocationAlwaysUsageDescription": "Time Mapper needs always-on location to start and stop timers automatically in the background — even with the app closed.",
-        "NSUserNotificationsUsageDescription": "Time Mapper sends you a short confirmation when it starts or stops a timer automatically.",
+        "NSLocationWhenInUseUsageDescription": "Time Mapper uses your location to detect when you arrive at a place you've saved — so it can start the timer automatically. Your location stays on your device.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Time Mapper uses Always location so it can start and stop timers automatically when you enter or leave your saved places — even with the app closed. Your location never leaves your device.",
+        "NSLocationAlwaysUsageDescription": "Time Mapper uses Always location so it can start and stop timers automatically when you enter or leave your saved places — even with the app closed. Your location never leaves your device.",
+        "NSUserNotificationsUsageDescription": "Time Mapper sends a short confirmation when it starts or stops a timer automatically.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -61,7 +61,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Time Mapper needs always-on location to start and stop timers automatically in the background.",
+          "locationAlwaysAndWhenInUsePermission": "Time Mapper uses Always location so it can start and stop timers automatically when you enter or leave your saved places — even with the app closed. Your location never leaves your device.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true
         }
