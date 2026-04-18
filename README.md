@@ -60,7 +60,7 @@ keys from `EXPO_PUBLIC_*` env vars (which Expo substitutes into
    ```
    then `eas build --profile development` (or `production`).
 
-### Google Places (Plan 5 integration)
+### Google Places
 
 1. Enable the Places API in Google Cloud Console.
 2. Create an API key restricted to the iOS + Android bundle id
@@ -69,6 +69,26 @@ keys from `EXPO_PUBLIC_*` env vars (which Expo substitutes into
    ```
    EXPO_PUBLIC_GOOGLE_PLACES_API_KEY=AIza...
    ```
+
+### Sentry (optional)
+
+Crash reporting is opt-in. The app runs fine without it; when enabled it
+reports uncaught errors + explicit `captureException` calls.
+
+1. `npm install @sentry/react-native`
+2. Create a project at https://sentry.io and copy the DSN.
+3. Add to `.env.local`:
+   ```
+   EXPO_PUBLIC_SENTRY_DSN=https://your-dsn@sentry.io/12345
+   ```
+4. For EAS builds:
+   ```sh
+   npx eas secret:create --name EXPO_PUBLIC_SENTRY_DSN --value https://...
+   ```
+
+Privacy note: the wrapper in `src/lib/crash.ts` strips `latitude`,
+`longitude`, and `location` fields from all breadcrumbs/events before
+they leave the device. User id is the anonymous RevenueCat id only.
 
 ## Mock-mode behaviour
 

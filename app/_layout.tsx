@@ -23,6 +23,7 @@ import {
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { useUiStore } from "@/state/uiStore";
 import { initI18n } from "@/lib/i18n";
+import { captureException, initCrashReporting } from "@/lib/crash";
 import { runMigrations } from "@/db/client";
 import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
 import { SheetHost } from "@/screens/SheetHost";
@@ -52,6 +53,9 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    // v0.6: crash reporting initializes first so even a migration failure
+    // below lands in Sentry (when DSN configured). No-op when disabled.
+    initCrashReporting();
     (async () => {
       initI18n(pickInitialLocale(localeOverride));
       await runMigrations();
@@ -67,6 +71,7 @@ export default function RootLayout() {
       void bootstrapTracking();
     })().catch((err) => {
       console.error("Boot failure", err);
+      captureException(err, { stage: "boot" });
       setDbReady(true); // fail-open rather than hang — UI can show error later
     });
   }, [localeOverride]);
