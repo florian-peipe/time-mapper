@@ -9,5 +9,16 @@
   "common.edit": "Bearbeiten",
   "timeline.empty.title": "Noch keine Einträge. Füge einen Ort hinzu, damit wir automatisch starten.",
   "stats.title": "Diese Woche",
-  "settings.title": "Einstellungen"
+  "settings.title": "Einstellungen",
+  "onboarding.welcome.title": "Time Mapper",
+  "onboarding.welcome.body": "Privates, automatisches Zeittracking für deine wichtigsten Orte.",
+  "onboarding.welcome.cta": "Loslegen",
+  "onboarding.permissions.title": "Standort „Immer“",
+  "onboarding.permissions.body": "Time Mapper erkennt im Hintergrund, wenn du deine Orte betrittst oder verlässt. Dein Standort bleibt auf deinem Gerät — nichts wird hochgeladen.",
+  "onboarding.permissions.cta": "Auto-Tracking aktivieren",
+  "onboarding.permissions.skip": "Jetzt nicht",
+  "onboarding.firstPlace.title": "Dein erster Ort",
+  "onboarding.firstPlace.body": "Füge einen Ort hinzu — dein Zuhause, das Büro, dein Gym — und Time Mapper protokolliert deine Besuche automatisch.",
+  "onboarding.firstPlace.cta": "Ort hinzufügen",
+  "onboarding.firstPlace.skip": "Später"
 }

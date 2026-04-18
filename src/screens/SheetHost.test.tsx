@@ -3,32 +3,46 @@ import { act, render, screen } from "@testing-library/react-native";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { PlacesRepoProvider } from "@/features/places/usePlaces";
 import { EntriesRepoProvider } from "@/features/entries/useEntries";
+import { KvRepoProvider } from "@/features/onboarding/useOnboardingGate";
 import { PlacesRepo } from "@/db/repository/places";
 import { EntriesRepo } from "@/db/repository/entries";
+import { KvRepo } from "@/db/repository/kv";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import { resetProMock } from "@/features/billing/useProMock";
 import { SheetHost } from "./SheetHost";
 
+const mockRouterReplace = jest.fn();
+const mockRouterPush = jest.fn();
+
+jest.mock("expo-router", () => ({
+  useRouter: () => ({ replace: mockRouterReplace, push: mockRouterPush }),
+}));
+
 function mount() {
   const db = createTestDb();
   const placesRepo = new PlacesRepo(db);
   const entriesRepo = new EntriesRepo(db);
+  const kvRepo = new KvRepo(db);
   const utils = render(
     <ThemeProvider schemeOverride="light">
-      <PlacesRepoProvider value={placesRepo}>
-        <EntriesRepoProvider value={entriesRepo}>
-          <SheetHost />
-        </EntriesRepoProvider>
-      </PlacesRepoProvider>
+      <KvRepoProvider value={kvRepo}>
+        <PlacesRepoProvider value={placesRepo}>
+          <EntriesRepoProvider value={entriesRepo}>
+            <SheetHost />
+          </EntriesRepoProvider>
+        </PlacesRepoProvider>
+      </KvRepoProvider>
     </ThemeProvider>,
   );
-  return { ...utils, placesRepo, entriesRepo };
+  return { ...utils, placesRepo, entriesRepo, kvRepo };
 }
 
 beforeEach(() => {
   useSheetStore.setState({ active: null, payload: null });
   resetProMock();
+  mockRouterReplace.mockReset();
+  mockRouterPush.mockReset();
 });
 
 describe("SheetHost", () => {

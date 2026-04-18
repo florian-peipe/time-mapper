@@ -9,5 +9,16 @@
   "common.edit": "Edit",
   "timeline.empty.title": "No entries yet. Add a place to start tracking automatically.",
   "stats.title": "This week",
-  "settings.title": "Settings"
+  "settings.title": "Settings",
+  "onboarding.welcome.title": "Time Mapper",
+  "onboarding.welcome.body": "Private, automatic time tracking for the places that matter.",
+  "onboarding.welcome.cta": "Get started",
+  "onboarding.permissions.title": "Always location",
+  "onboarding.permissions.body": "Time Mapper watches for entry and exit of your places in the background. Your location stays on your device — nothing is ever uploaded.",
+  "onboarding.permissions.cta": "Enable auto-tracking",
+  "onboarding.permissions.skip": "Not now",
+  "onboarding.firstPlace.title": "Your first place",
+  "onboarding.firstPlace.body": "Add one place — home, the office, your gym — and Time Mapper will log your visits automatically.",
+  "onboarding.firstPlace.cta": "Add first place",
+  "onboarding.firstPlace.skip": "Skip for now"
 }

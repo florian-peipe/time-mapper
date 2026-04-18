@@ -3,8 +3,8 @@
 // `uuid()` (PlacesRepo, seedDemoData, etc.). Without it, Hermes throws
 // "Property 'crypto' doesn't exist" on iOS/Android and the app fails to boot.
 import "react-native-get-random-values";
-import React, { useEffect, useState } from "react";
-import { Stack } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { getLocales } from "expo-localization";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -24,6 +24,7 @@ import { ThemeProvider } from "@/theme/ThemeProvider";
 import { useUiStore } from "@/state/uiStore";
 import { initI18n } from "@/lib/i18n";
 import { runMigrations } from "@/db/client";
+import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
 import { SheetHost } from "@/screens/SheetHost";
 
 function pickInitialLocale(override: string | null): string {
@@ -68,6 +69,7 @@ export default function RootLayout() {
         <ThemeProvider schemeOverride={themeOverride ?? undefined}>
           <StatusBar style="auto" />
           <Stack screenOptions={{ headerShown: false }} />
+          <OnboardingGate />
           {/*
             Global sheet host — any screen can call
             `useSheetStore.openSheet(...)` to summon Paywall, EntryEdit, or
@@ -79,4 +81,30 @@ export default function RootLayout() {
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
+}
+
+/**
+ * Route guard for first-run. Sits inside the ThemeProvider so it has router
+ * + navigation context, but renders nothing of its own — it's a side-effect
+ * component. When the KV flag says the user hasn't finished onboarding and
+ * they're not already on an `(onboarding)` route, we redirect once. The
+ * `redirectedRef` guard prevents a replace-loop if the KV write + re-read
+ * race in an unexpected order.
+ */
+function OnboardingGate(): null {
+  const router = useRouter();
+  const segments = useSegments();
+  const { hydrated, needsOnboarding } = useOnboardingGate();
+  const redirectedRef = useRef(false);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const inOnboarding = segments[0] === "(onboarding)";
+    if (needsOnboarding && !inOnboarding && !redirectedRef.current) {
+      redirectedRef.current = true;
+      router.replace("/(onboarding)/welcome");
+    }
+  }, [hydrated, needsOnboarding, router, segments]);
+
+  return null;
 }

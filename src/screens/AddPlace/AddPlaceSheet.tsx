@@ -1,18 +1,32 @@
 import React, { useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import Slider from "@react-native-community/slider";
 import { useTheme } from "@/theme/useTheme";
 import { PLACE_COLORS } from "@/theme/tokens";
 import { Button, Icon, Input, Sheet, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { useProMock } from "@/features/billing/useProMock";
-import { useSheetStore } from "@/state/sheetStore";
+import { useSheetStore, type AddPlaceSource } from "@/state/sheetStore";
 
 export type AddPlaceSheetProps = {
   visible: boolean;
-  /** null → New. Edit mode is Plan 3+; we only support null for now. */
+  /** null → New place. Non-null → edit that place. */
   placeId: string | null;
+  /**
+   * Optional marker of where the sheet was opened from. Currently only
+   * `"onboarding"` drives extra behavior (calls `onSaved` so the gate can
+   * mark onboarding complete). Other sources are plain string tags used for
+   * analytics / debugging.
+   */
+  source?: AddPlaceSource;
   onClose: () => void;
+  /**
+   * Fired after a successful save (create OR update). Lets the onboarding
+   * flow mark itself complete and navigate to the tabs without knowing the
+   * AddPlaceSheet internals. For non-onboarding opens the host just passes
+   * `undefined` and this becomes a no-op.
+   */
+  onSaved?: (placeId: string) => void;
 };
 
 type Suggestion = {
@@ -55,32 +69,82 @@ const RADIUS_MAX = 300;
 const RADIUS_DEFAULT = 100;
 
 /**
- * AddPlaceSheet — two-phase flow for creating a new place.
+ * AddPlaceSheet — two-phase flow for creating (or, in v0.3, editing) a place.
  *
  * Phase 1: Search input (leading icon) + list of suggestion rows. Tap a
  * suggestion to transition to Phase 2 with the name pre-filled from the
- * first part of the address.
+ * first part of the address. Skipped entirely when `placeId != null`
+ * because we jump straight into Phase 2 with the loaded place's fields.
  *
  * Phase 2: Name input, address preview card, geofence radius slider
  * (50–300 m), color picker (8 swatches), icon picker (9 tiles), and a
- * sticky Save footer. Pro gate: free users with ≥1 existing place see a
- * "Unlock more places with Pro" CTA that opens the paywall instead of
- * calling `placesRepo.create`.
+ * sticky Save footer. In edit mode a destructive "Delete place" row sits
+ * below Save with a confirmation Alert.
+ *
+ * Pro gate: free users with ≥1 existing place see a "Unlock more places
+ * with Pro" CTA that opens the paywall instead of calling
+ * `placesRepo.create` — but only in NEW mode. Edit mode is never gated
+ * (the user already owns the place; billing only limits adding more).
  */
-export function AddPlaceSheet({ visible, placeId: _placeId, onClose }: AddPlaceSheetProps) {
+export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: AddPlaceSheetProps) {
   const t = useTheme();
-  const { create, count } = usePlaces();
+  const { places, create, update, remove, count } = usePlaces();
   const { isPro } = useProMock();
   const openSheet = useSheetStore((s) => s.openSheet);
 
-  const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Suggestion | null>(null);
-  const [name, setName] = useState("");
-  const [radius, setRadius] = useState(RADIUS_DEFAULT);
-  const [colorIdx, setColorIdx] = useState(0);
-  const [iconIdx, setIconIdx] = useState(0);
+  const editing = placeId != null;
+  const editingPlace = useMemo(
+    () => (placeId ? (places.find((p) => p.id === placeId) ?? null) : null),
+    [places, placeId],
+  );
 
-  const shouldPaywall = !isPro && count >= 1;
+  // Resolve the initial color/icon index from an edited place. Defaults to
+  // index 0 if the stored value isn't one of the chosen lists (old data,
+  // truncated color, etc.).
+  const initialColorIdx = useMemo(() => {
+    if (!editingPlace) return 0;
+    const idx = PLACE_COLORS.findIndex((c) => c === editingPlace.color);
+    return idx >= 0 ? idx : 0;
+  }, [editingPlace]);
+  const initialIconIdx = useMemo(() => {
+    if (!editingPlace) return 0;
+    const idx = ICON_CHOICES.findIndex((i) => i === editingPlace.icon);
+    return idx >= 0 ? idx : 0;
+  }, [editingPlace]);
+
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<Suggestion | null>(
+    editingPlace ? { desc: editingPlace.address, sec: "" } : null,
+  );
+  const [name, setName] = useState(editingPlace?.name ?? "");
+  const [radius, setRadius] = useState(editingPlace?.radiusM ?? RADIUS_DEFAULT);
+  const [colorIdx, setColorIdx] = useState(initialColorIdx);
+  const [iconIdx, setIconIdx] = useState(initialIconIdx);
+
+  // When the sheet is reused for a different placeId (edit vs. new vs.
+  // another edit), re-hydrate the local state so stale values from the
+  // previous instance don't leak through. Also resets when the sheet is
+  // hidden so reopening gives a clean slate.
+  React.useEffect(() => {
+    if (editingPlace) {
+      setSelected({ desc: editingPlace.address, sec: "" });
+      setName(editingPlace.name);
+      setRadius(editingPlace.radiusM);
+      setColorIdx(initialColorIdx);
+      setIconIdx(initialIconIdx);
+    } else if (!visible) {
+      setQuery("");
+      setSelected(null);
+      setName("");
+      setRadius(RADIUS_DEFAULT);
+      setColorIdx(0);
+      setIconIdx(0);
+    }
+  }, [editingPlace, visible, initialColorIdx, initialIconIdx]);
+
+  // Pro gate only applies when the user is trying to create an ADDITIONAL
+  // place on the free plan. Edit mode (placeId !== null) is never gated.
+  const shouldPaywall = !isPro && count >= 1 && !editing;
 
   const suggestions = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -102,35 +166,87 @@ export function AddPlaceSheet({ visible, placeId: _placeId, onClose }: AddPlaceS
     if (!selected) return;
     const chosenColor = PLACE_COLORS[colorIdx] ?? PLACE_COLORS[0];
     const chosenIcon = ICON_CHOICES[iconIdx] ?? ICON_CHOICES[0];
-    create({
-      name: name.trim() || selected.desc,
-      address: selected.desc,
-      // Coordinates are unavailable without a geocoder; stored as zeros for
-      // Plan 2. Plan 3 replaces the hardcoded suggestions with Google Places
-      // and populates real lat/long.
-      latitude: 0,
-      longitude: 0,
-      radiusM: radius,
-      color: chosenColor,
-      icon: chosenIcon,
-    });
+
+    let saved;
+    if (editing && placeId) {
+      saved = update(placeId, {
+        name: name.trim() || selected.desc,
+        address: selected.desc,
+        radiusM: radius,
+        color: chosenColor,
+        icon: chosenIcon,
+      });
+    } else {
+      saved = create({
+        name: name.trim() || selected.desc,
+        address: selected.desc,
+        // Coordinates are unavailable without a geocoder; stored as zeros for
+        // Plan 2. Plan 3 replaces the hardcoded suggestions with Google Places
+        // and populates real lat/long.
+        latitude: 0,
+        longitude: 0,
+        radiusM: radius,
+        color: chosenColor,
+        icon: chosenIcon,
+      });
+    }
+    onSaved?.(saved.id);
     onClose();
   };
 
-  const saveLabel = shouldPaywall ? "Unlock more places with Pro" : "Save place";
+  const handleDelete = () => {
+    if (!placeId) return;
+    Alert.alert("Delete place?", "This removes the place from your list. Entries are kept.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          remove(placeId);
+          onClose();
+        },
+      },
+    ]);
+  };
+
+  // Avoid using the source prop for behavior inside the sheet for now —
+  // the parent (SheetHost) is in charge of wiring `source === "onboarding"`
+  // into the `onSaved` callback. Keeping this reference prevents the lint
+  // rule from flagging the unused prop (TypeScript already tracks it).
+  void source;
+
+  const saveLabel = shouldPaywall
+    ? "Unlock more places with Pro"
+    : editing
+      ? "Save changes"
+      : "Save place";
+  const sheetTitle = editing ? "Edit place" : "Add place";
 
   return (
     <Sheet
       visible={visible}
       onClose={onClose}
       heightPercent={88}
-      title="Add place"
+      title={sheetTitle}
       testID="add-place-sheet"
       footer={
         selected ? (
-          <Button variant="primary" size="md" full onPress={handleSave} testID="add-place-save">
-            {saveLabel}
-          </Button>
+          <View style={{ gap: t.space[2] }}>
+            <Button variant="primary" size="md" full onPress={handleSave} testID="add-place-save">
+              {saveLabel}
+            </Button>
+            {editing ? (
+              <Button
+                variant="destructive"
+                size="md"
+                full
+                onPress={handleDelete}
+                testID="add-place-delete"
+              >
+                Delete place
+              </Button>
+            ) : null}
+          </View>
         ) : null
       }
     >
