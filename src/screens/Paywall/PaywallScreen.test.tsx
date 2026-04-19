@@ -49,17 +49,17 @@ describe("PaywallScreen — content", () => {
     render(wrap(<PaywallScreen onClose={() => {}} />));
     expect(screen.getByText("Track every place that matters.")).toBeTruthy();
     expect(
-      screen.getByText("Pro gives you unlimited places, full history, CSV export, and categories."),
+      screen.getByText("Pro gives you unlimited places, full history, and CSV export."),
     ).toBeTruthy();
   });
 
-  it("renders all five feature bullets", () => {
+  it("renders all four feature bullets (no categories — dropped in v0.6.1)", () => {
     render(wrap(<PaywallScreen onClose={() => {}} />));
     expect(screen.getByText("Unlimited places")).toBeTruthy();
     expect(screen.getByText("Full history (no 14-day limit)")).toBeTruthy();
     expect(screen.getByText("Weekly reports for past weeks")).toBeTruthy();
     expect(screen.getByText("CSV export")).toBeTruthy();
-    expect(screen.getByText("Place categories")).toBeTruthy();
+    expect(screen.queryByText("Place categories")).toBeNull();
   });
 
   it("renders both plan cards with their default fallback prices and the yearly badge", () => {

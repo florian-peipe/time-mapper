@@ -13,6 +13,7 @@ import {
 } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
+import { i18n } from "@/lib/i18n";
 import type { Entry, Place } from "@/db/schema";
 
 export type EntryEditSheetProps = {
@@ -59,6 +60,10 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
   const [startError, setStartError] = useState<string | undefined>();
   const [endError, setEndError] = useState<string | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
+  // Anchor timestamp for HH:MM → unix conversion. In edit mode this is the
+  // entry's original `startedAt` so we preserve the original date when the
+  // user only tweaks the clock time. In new mode it's "now".
+  const [anchorS, setAnchorS] = useState<number>(() => Math.floor(Date.now() / 1000));
 
   // Hydrate from the selected entry (Edit mode) or apply defaults (New mode).
   useEffect(() => {
@@ -71,6 +76,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
         setPause(String(Math.round((e.pauseS ?? 0) / 60)));
         setNote(e.note ?? "");
         setEntrySource(e.source);
+        setAnchorS(e.startedAt);
       }
     } else {
       // New mode defaults.
@@ -80,6 +86,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
       setNote("");
       setEntrySource(null);
       setPickerOpen(false);
+      setAnchorS(Math.floor(Date.now() / 1000));
     }
   }, [entryId, entriesRepo]);
 
@@ -112,13 +119,13 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
   const runValidation = useCallback((): boolean => {
     let ok = true;
     if (!TIME_RE.test(start)) {
-      setStartError("Use HH:MM");
+      setStartError(i18n.t("entryEdit.error.hhmm"));
       ok = false;
     } else {
       setStartError(undefined);
     }
     if (!TIME_RE.test(end)) {
-      setEndError("Use HH:MM");
+      setEndError(i18n.t("entryEdit.error.hhmm"));
       ok = false;
     } else {
       setEndError(undefined);
@@ -130,8 +137,12 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
     if (!runValidation()) return;
     if (!placeId) return; // no place selected — shouldn't happen post-load.
 
-    const startedAt = hhmmToUnixSecondsToday(start);
-    const endedAt = hhmmToUnixSecondsToday(end);
+    const startedAt = hhmmToUnixSecondsAt(start, anchorS);
+    let endedAt = hhmmToUnixSecondsAt(end, anchorS);
+    // If end < start the user is describing an entry that crosses midnight.
+    // Roll the end-date forward one day so the resulting entry still has
+    // positive duration.
+    if (endedAt < startedAt) endedAt += 86_400;
     const pauseS = pauseMin * 60;
 
     if (isNew) {
@@ -152,7 +163,19 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
       });
     }
     onClose();
-  }, [runValidation, placeId, isNew, entryId, start, end, pauseMin, note, entriesRepo, onClose]);
+  }, [
+    runValidation,
+    placeId,
+    isNew,
+    entryId,
+    start,
+    end,
+    pauseMin,
+    note,
+    entriesRepo,
+    onClose,
+    anchorS,
+  ]);
 
   const handleDelete = useCallback(() => {
     if (!entryId) return;
@@ -170,14 +193,14 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
       visible={visible}
       onClose={onClose}
       heightPercent={86}
-      title={isNew ? "New entry" : "Edit entry"}
+      title={isNew ? i18n.t("entryEdit.title.new") : i18n.t("entryEdit.title.edit")}
       testID="entry-edit-sheet"
       rightAccessory={
         <Pressable
           onPress={handleSave}
           testID="entry-edit-save"
           accessibilityRole="button"
-          accessibilityLabel="Save entry"
+          accessibilityLabel={i18n.t("entryEdit.label.saveEntry")}
           hitSlop={8}
           style={{
             // design-source: padding 7/14, accent bg, pill, 13/600
@@ -195,7 +218,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
               fontFamily: t.type.family.sans,
             }}
           >
-            Save
+            {i18n.t("entryEdit.label.save")}
           </Text>
         </Pressable>
       }
@@ -212,7 +235,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
             textTransform: "uppercase",
           }}
         >
-          Net duration
+          {i18n.t("entryEdit.label.netDuration")}
         </Text>
         <Text
           testID="entry-edit-net"
@@ -238,7 +261,10 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
             marginTop: t.space[1],
           }}
         >
-          {formatDur(grossMin)} gross · {pauseMin}m break
+          {i18n.t("entryEdit.label.grossAndBreak", {
+            gross: formatDur(grossMin),
+            pause: pauseMin,
+          })}
         </Text>
       </View>
 
@@ -257,7 +283,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           testID="entry-edit-place-row"
           onPress={() => setPickerOpen((o) => !o)}
           accessibilityRole="button"
-          accessibilityLabel="Select place"
+          accessibilityLabel={i18n.t("entryEdit.label.selectPlace")}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -278,7 +304,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
               width: 78,
             }}
           >
-            Place
+            {i18n.t("entryEdit.label.place")}
           </Text>
           <View
             style={{
@@ -315,7 +341,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
                   fontFamily: t.type.family.sans,
                 }}
               >
-                No place
+                {i18n.t("entryEdit.label.placeNone")}
               </Text>
             )}
           </View>
@@ -354,7 +380,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
         }}
       >
         <FieldRow
-          label="Start"
+          label={i18n.t("entryEdit.label.start")}
           value={start}
           onChangeText={(v) => {
             setStart(v);
@@ -367,7 +393,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           mono
         />
         <FieldRow
-          label="End"
+          label={i18n.t("entryEdit.label.end")}
           value={end}
           onChangeText={(v) => {
             setEnd(v);
@@ -380,7 +406,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           mono
         />
         <FieldRow
-          label="Pause"
+          label={i18n.t("entryEdit.label.pause")}
           value={pause}
           onChangeText={(v) => setPause(v.replace(/[^0-9]/g, ""))}
           testID="entry-edit-pause"
@@ -388,7 +414,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           keyboardType="number-pad"
           maxLength={3}
           mono
-          suffix="min"
+          suffix={i18n.t("entryEdit.label.minSuffix")}
           last
         />
       </View>
@@ -416,13 +442,13 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
             letterSpacing: 0.4,
           }}
         >
-          Note
+          {i18n.t("entryEdit.label.note")}
         </Text>
         <TextArea
           testID="entry-edit-note"
           value={note}
           onChangeText={setNote}
-          placeholder="Optional description — e.g. standup, commute, client call"
+          placeholder={i18n.t("entryEdit.label.notePlaceholder")}
           style={{
             borderWidth: 0,
             paddingHorizontal: 0,
@@ -457,7 +483,9 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
                 textTransform: "uppercase",
               }}
             >
-              {entrySource === "auto" ? "Auto-tracked" : "Manual entry"}
+              {entrySource === "auto"
+                ? i18n.t("entryEdit.label.sourceAuto")
+                : i18n.t("entryEdit.label.sourceManual")}
             </Text>
           </View>
         </View>
@@ -467,7 +495,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
       {!isNew ? (
         <View style={{ marginTop: t.space[1], marginBottom: t.space[6] }}>
           <Button variant="destructive" size="md" full onPress={handleDelete}>
-            Delete entry
+            {i18n.t("entryEdit.label.delete")}
           </Button>
         </View>
       ) : null}
@@ -593,12 +621,19 @@ function formatDur(minutes: number): string {
   return `${h}h ${String(m).padStart(2, "0")}m`;
 }
 
-/** Unix seconds for today at local HH:MM. Caller guarantees TIME_RE match. */
-function hhmmToUnixSecondsToday(hhmm: string): number {
+/**
+ * Convert a local HH:MM clock reading to unix seconds, anchored to the
+ * local-calendar day of `anchorUnixSeconds`. Critical for edit mode: if the
+ * user edits yesterday's entry and only changes the clock, we keep
+ * "yesterday" fixed instead of snapping to today. Exported for unit tests.
+ *
+ * Caller guarantees the HH:MM string matches `TIME_RE`.
+ */
+export function hhmmToUnixSecondsAt(hhmm: string, anchorUnixSeconds: number): number {
   const parts = hhmm.split(":");
   const h = parseInt(parts[0] ?? "0", 10);
   const m = parseInt(parts[1] ?? "0", 10);
-  const d = new Date();
+  const d = new Date(anchorUnixSeconds * 1000);
   d.setHours(Number.isNaN(h) ? 0 : h, Number.isNaN(m) ? 0 : m, 0, 0);
   return Math.floor(d.getTime() / 1000);
 }

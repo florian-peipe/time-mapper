@@ -326,4 +326,57 @@ describe("EntryEditSheet — save", () => {
     expect(fresh?.note).toBe("new note");
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it("preserves the original date when editing yesterday's entry and only changing HH:MM", () => {
+    // Today is 2026-04-17 12:00 local; seed an entry that started yesterday
+    // at 09:00 and ended yesterday at 10:00.
+    const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
+    const yesterdayStart = Math.floor(new Date(2026, 3, 16, 9, 0, 0).getTime() / 1000);
+    const yesterdayEnd = Math.floor(new Date(2026, 3, 16, 10, 0, 0).getTime() / 1000);
+
+    const { entry, entriesRepo } = setup({
+      nowMs,
+      mode: "edit",
+      entry: {
+        placeIndex: 0,
+        startedAtOffset: yesterdayStart - Math.floor(nowMs / 1000),
+        endedAtOffset: yesterdayEnd - Math.floor(nowMs / 1000),
+      },
+    });
+    expect(entry).not.toBeNull();
+    if (!entry) return;
+
+    // Only change the HH:MM clock of the end time.
+    fireEvent.changeText(screen.getByTestId("entry-edit-end"), "11:30");
+    fireEvent.press(screen.getByTestId("entry-edit-save"));
+
+    const fresh = entriesRepo.get(entry.id);
+    expect(fresh).not.toBeNull();
+    if (!fresh) return;
+    // Start is untouched — still yesterday 09:00.
+    expect(fresh.startedAt).toBe(yesterdayStart);
+    // End rolled to yesterday 11:30, NOT today 11:30.
+    const expectedEnd = Math.floor(new Date(2026, 3, 16, 11, 30, 0).getTime() / 1000);
+    expect(fresh.endedAt).toBe(expectedEnd);
+  });
+
+  it("rolls end forward a day when end < start (entry crosses midnight)", () => {
+    // Start 22:00, end 02:00 → end + 86400.
+    const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
+    const { entriesRepo } = setup({ nowMs, mode: "new" });
+    fireEvent.changeText(screen.getByTestId("entry-edit-start"), "22:00");
+    fireEvent.changeText(screen.getByTestId("entry-edit-end"), "02:00");
+    fireEvent.press(screen.getByTestId("entry-edit-save"));
+
+    const list = entriesRepo.listBetween(0, 2_000_000_000);
+    expect(list).toHaveLength(1);
+    const e = list[0];
+    expect(e).toBeDefined();
+    if (!e || e.endedAt == null) return;
+    // Today 22:00 local, end is tomorrow 02:00 local.
+    const expectedStart = Math.floor(new Date(2026, 3, 17, 22, 0, 0).getTime() / 1000);
+    const expectedEnd = Math.floor(new Date(2026, 3, 18, 2, 0, 0).getTime() / 1000);
+    expect(e.startedAt).toBe(expectedStart);
+    expect(e.endedAt).toBe(expectedEnd);
+  });
 });

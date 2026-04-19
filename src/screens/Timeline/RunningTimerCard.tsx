@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Button, Card, TrackingDot } from "@/components";
+import { i18n } from "@/lib/i18n";
 
 type Props = {
   /** Place display name, shown inline after "Tracking". */
@@ -61,7 +62,7 @@ export function RunningTimerCard({ placeName, startedAt, onStop, testID }: Props
               fontWeight: t.type.weight.medium,
             }}
           >
-            Tracking{" "}
+            {i18n.t("running.label.tracking")}{" "}
             <Text
               style={{
                 color: t.color("color.fg"),
@@ -87,7 +88,7 @@ export function RunningTimerCard({ placeName, startedAt, onStop, testID }: Props
           </Text>
         </View>
         <Button variant="secondary" size="sm" onPress={onStop}>
-          Stop
+          {i18n.t("running.cta.stop")}
         </Button>
       </View>
     </Card>

@@ -8,6 +8,7 @@ import { useEntries } from "@/features/entries/useEntries";
 import { useOngoingEntry } from "@/features/entries/useOngoingEntry";
 import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClose";
 import { usePlaces } from "@/features/places/usePlaces";
+import { usePro } from "@/features/billing/usePro";
 import { useSheetStore } from "@/state/sheetStore";
 import type { Entry, Place } from "@/db/schema";
 import type { IconName, SourceKind } from "@/components";
@@ -39,6 +40,7 @@ export function TimelineScreen() {
   const ongoingState = useOngoingEntry();
   const placesState = usePlaces();
   const openSheet = useSheetStore((s) => s.openSheet);
+  const { isPro } = usePro();
 
   const handleRefresh = useCallback(() => {
     entriesState.refresh();
@@ -83,7 +85,13 @@ export function TimelineScreen() {
     <View style={{ flex: 1, backgroundColor: t.color("color.bg") }}>
       {/* Header sits under the safe-area top — we let it own the inset. */}
       <View style={{ paddingTop: insets.top }}>
-        <DayNavHeader dayOffset={dayOffset} totalMin={totalMin} onChangeDay={setDayOffset} />
+        <DayNavHeader
+          dayOffset={dayOffset}
+          totalMin={totalMin}
+          isPro={isPro}
+          onChangeDay={setDayOffset}
+          testID="day-nav-header"
+        />
       </View>
 
       <ScrollView

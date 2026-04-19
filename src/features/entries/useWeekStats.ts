@@ -50,20 +50,27 @@ function dayIndex(startedAt: number, weekStartSeconds: number): number {
 }
 
 /**
- * Aggregates the current week's entries by place, returning both a per-day
- * breakdown (for stacked bar charts) and a per-place total (for a legend).
+ * Aggregates the target week's entries by place. `weekOffset === 0` means
+ * "this week"; -1 means "last week"; any positive value is clamped to 0
+ * (the UI should never let the user request a future week).
+ *
  * Reads the `EntriesRepo` and `PlacesRepo` from their respective contexts so
  * tests can inject in-memory repos; production uses the device repos.
  */
-export function useWeekStats(): UseWeekStatsResult {
+export function useWeekStats(weekOffset = 0): UseWeekStatsResult {
   const entriesRepo = useEntriesRepo();
   const placesRepo = usePlacesRepo();
 
-  // Capture weekStart once per mount. The hook is expected to live for the
-  // duration of the user viewing the Stats screen — changing weeks is a
-  // navigation operation, not a state update inside this hook (Plan 2 does not
-  // expose a "pick another week" UI yet — that's Pro-gated, Plan 3+).
-  const weekStart = useMemo(() => computeWeekStart(new Date()), []);
+  // Clamp forward direction so callers don't have to.
+  const safeOffset = Math.min(weekOffset, 0);
+
+  // Recompute weekStart whenever the offset changes. We anchor to "now" at
+  // render time — callers can re-observe by flipping the offset.
+  const weekStart = useMemo(() => {
+    const base = computeWeekStart(new Date());
+    if (safeOffset !== 0) base.setDate(base.getDate() + safeOffset * 7);
+    return base;
+  }, [safeOffset]);
   const weekStartSeconds = useMemo(() => Math.floor(weekStart.getTime() / 1000), [weekStart]);
   const weekEndSeconds = weekStartSeconds + 7 * 86_400 - 1;
 

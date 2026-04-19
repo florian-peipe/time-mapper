@@ -26,12 +26,14 @@ export type PaywallScreenProps = {
   source?: string;
 };
 
+// v0.6.1: `paywall.features.categories` was removed — categories didn't
+// ship in v1. The key is still present in en.json/de.json so the key
+// coverage test passes; we just don't render it here.
 const FEATURE_KEYS: readonly string[] = [
   "paywall.features.unlimited",
   "paywall.features.history",
   "paywall.features.reports",
   "paywall.features.export",
-  "paywall.features.categories",
 ] as const;
 
 /**

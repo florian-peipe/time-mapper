@@ -149,4 +149,40 @@ describe("StatsScreen", () => {
     expect(screen.getByTestId("ledger-row-0")).toBeTruthy();
     expect(screen.getByTestId("ledger-row-1")).toBeTruthy();
   });
+
+  it("week navigator shows a prev + next chevron and the range label", () => {
+    const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
+    setup({ nowMs });
+    expect(screen.getByTestId("stats-week-nav")).toBeTruthy();
+    expect(screen.getByTestId("stats-week-prev")).toBeTruthy();
+    expect(screen.getByTestId("stats-week-next")).toBeTruthy();
+    expect(screen.getByTestId("stats-week-range").props.children).toMatch(/Apr 13/);
+  });
+
+  it("next-week chevron is disabled on the current week (offset 0)", () => {
+    const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
+    setup({ nowMs });
+    const btn = screen.getByTestId("stats-week-next");
+    expect(btn.props.accessibilityState?.disabled).toBe(true);
+  });
+
+  it("tapping prev-week while NOT Pro opens the paywall (source=history)", () => {
+    const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
+    setup({ nowMs });
+    fireEvent.press(screen.getByTestId("stats-week-prev"));
+    expect(useSheetStore.getState().active).toBe("paywall");
+    expect(useSheetStore.getState().payload).toEqual({ source: "history" });
+  });
+
+  it("tapping prev-week while Pro navigates the range and enables the next chevron", () => {
+    grantProMock();
+    const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
+    setup({ nowMs });
+    fireEvent.press(screen.getByTestId("stats-week-prev"));
+    // Offset is now -1 → range shows the prior Monday–Sunday.
+    expect(screen.getByTestId("stats-week-range").props.children).toMatch(/Apr 6/);
+    // Next is now enabled (can move back toward today).
+    const next = screen.getByTestId("stats-week-next");
+    expect(next.props.accessibilityState?.disabled).toBe(false);
+  });
 });

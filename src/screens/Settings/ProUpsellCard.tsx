@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Rings } from "@/components";
+import { i18n } from "@/lib/i18n";
 
 type Props = {
   /** Tap handler — opens the paywall sheet via the global sheetStore. */
@@ -78,7 +79,7 @@ export function ProUpsellCard({ onPress, testID }: Props) {
             letterSpacing: 0.5,
           }}
         >
-          TIME MAPPER PRO
+          {i18n.t("proUpsell.eyebrow")}
         </Text>
         <Text
           style={{
@@ -89,12 +90,12 @@ export function ProUpsellCard({ onPress, testID }: Props) {
             marginTop: t.space[1],
           }}
         >
-          Unlimited places, full history, CSV.
+          {i18n.t("proUpsell.headline")}
         </Text>
         <Pressable
           onPress={onPress}
           accessibilityRole="button"
-          accessibilityLabel="Start 7-day free trial"
+          accessibilityLabel={i18n.t("proUpsell.cta")}
           testID={testID ? `${testID}-cta` : undefined}
           style={({ pressed }) => ({
             // design-source: padding '10px 18px', borderRadius 9999
@@ -115,7 +116,7 @@ export function ProUpsellCard({ onPress, testID }: Props) {
               fontFamily: t.type.family.sans,
             }}
           >
-            Start 7-day free trial
+            {i18n.t("proUpsell.cta")}
           </Text>
         </Pressable>
       </View>

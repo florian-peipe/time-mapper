@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from "react";
-import { ScrollView, Text, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/useTheme";
 import { Card, Icon, IconBadge } from "@/components";
@@ -9,26 +9,28 @@ import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClos
 import { usePlaces } from "@/features/places/usePlaces";
 import { useSheetStore } from "@/state/sheetStore";
 import { i18n } from "@/lib/i18n";
+import { localeForDateApis } from "@/lib/time";
 import type { Place } from "@/db/schema";
 import { WeekBarChart } from "./WeekBarChart";
 import { Ledger } from "./Ledger";
 
 /**
- * Stats tab. Three stacked sections inside a vertical scroll view:
- * 1. Heading ("This week" + date range).
+ * Stats tab. Four stacked sections inside a vertical scroll view:
+ * 1. Heading ("This week" + week-range navigator with < > chevrons).
  * 2. Week bar chart card (via `WeekBarChart`) with color-dot legend.
  * 3. Pro-upsell card (only when `!isPro`) that opens the paywall sheet.
  * 4. Spreadsheet `Ledger` listing every entry in the current week.
  *
- * Tapping the Pro upsell or a Ledger "Add row" button fires the shared
- * `sheetStore` open-sheet action. Data is read from `useWeekStats()`
- * (including the freshly exposed `entries` array) and `usePlaces()`.
+ * Week navigation: forward chevron clamps at offset 0 (this week). Backward
+ * chevron fires the paywall when the user is on the free plan — past-week
+ * stats are a Pro feature.
  */
 export function StatsScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
 
-  const stats = useWeekStats();
+  const [weekOffset, setWeekOffset] = useState(0);
+  const stats = useWeekStats(weekOffset);
   const placesState = usePlaces();
   const { isPro } = usePro();
   const openSheet = useSheetStore((s) => s.openSheet);
@@ -45,6 +47,20 @@ export function StatsScreen() {
   const handleOpenPaywall = useCallback(() => {
     openSheet("paywall", { source: "history" });
   }, [openSheet]);
+
+  const handlePrevWeek = useCallback(() => {
+    if (!isPro) {
+      handleOpenPaywall();
+      return;
+    }
+    setWeekOffset((o) => o - 1);
+  }, [isPro, handleOpenPaywall]);
+
+  const handleNextWeek = useCallback(() => {
+    setWeekOffset((o) => Math.min(0, o + 1));
+  }, []);
+
+  const nextDisabled = weekOffset >= 0;
 
   const handleOpenEntry = useCallback(
     (entryId: string) => {
@@ -79,16 +95,72 @@ export function StatsScreen() {
         >
           {i18n.t("stats.title")}
         </Text>
-        <Text
+      </View>
+
+      {/* Week navigator — < [range] > */}
+      <View
+        style={{
+          paddingHorizontal: t.space[5],
+          paddingBottom: t.space[3],
+          flexDirection: "row",
+          alignItems: "center",
+          gap: t.space[2],
+        }}
+        testID="stats-week-nav"
+      >
+        <Pressable
+          onPress={handlePrevWeek}
+          testID="stats-week-prev"
+          accessibilityRole="button"
+          accessibilityLabel={i18n.t("stats.week.prev")}
+          hitSlop={8}
           style={{
+            minWidth: t.minTouchTarget,
+            minHeight: t.minTouchTarget,
+            width: t.minTouchTarget,
+            height: t.minTouchTarget,
+            borderRadius: t.radius.pill,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Icon name="chevron-left" size={18} color={t.color("color.fg2")} />
+        </Pressable>
+        <Text
+          testID="stats-week-range"
+          style={{
+            flex: 1,
+            textAlign: "center",
             fontSize: t.type.size.s,
-            color: t.color("color.fg3"),
+            color: t.color("color.fg2"),
             fontFamily: t.type.family.sans,
-            marginTop: 2,
+            fontWeight: t.type.weight.medium,
+            fontVariant: ["tabular-nums"],
           }}
         >
           {rangeLabel}
         </Text>
+        <Pressable
+          onPress={handleNextWeek}
+          testID="stats-week-next"
+          accessibilityRole="button"
+          accessibilityLabel={i18n.t("stats.week.next")}
+          accessibilityState={{ disabled: nextDisabled }}
+          disabled={nextDisabled}
+          hitSlop={8}
+          style={{
+            minWidth: t.minTouchTarget,
+            minHeight: t.minTouchTarget,
+            width: t.minTouchTarget,
+            height: t.minTouchTarget,
+            borderRadius: t.radius.pill,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: nextDisabled ? 0.3 : 1,
+          }}
+        >
+          <Icon name="chevron-right" size={18} color={t.color("color.fg2")} />
+        </Pressable>
       </View>
 
       <View style={{ paddingHorizontal: t.space[5], paddingVertical: t.space[2] }}>
@@ -156,11 +228,12 @@ function indexPlaces(places: Place[]): Map<string, Place> {
   return map;
 }
 
-/** "Apr 13 — Apr 19" for a Monday-start week. */
+/** "Apr 13 — Apr 19" for a Monday-start week. Honors the active i18n locale. */
 function formatWeekRange(weekStart: Date): string {
   const end = new Date(weekStart);
   end.setDate(end.getDate() + 6);
-  const startLabel = weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const endLabel = end.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const locale = localeForDateApis();
+  const startLabel = weekStart.toLocaleDateString(locale, { month: "short", day: "numeric" });
+  const endLabel = end.toLocaleDateString(locale, { month: "short", day: "numeric" });
   return `${startLabel} — ${endLabel}`;
 }

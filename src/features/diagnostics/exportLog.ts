@@ -1,14 +1,16 @@
-// Dev-only diagnostic log exporter. Dumps the last N pending transitions, the
-// last geofence events from AsyncStorage (if available), the anon user-id, and
-// the app version into a JSON file, then invokes the platform share sheet.
+// Diagnostic log exporter. Dumps the last N pending transitions, the last
+// geofence events (if available), the anon user-id, and the app version into
+// a JSON file, then invokes the platform share sheet.
 //
-// This is intentionally small — it's a bug-report aid, not a structured log
-// pipeline. If the expo-file-system / Sharing modules aren't available
-// (headless Jest, Expo Go without the right modules) we log the payload to
-// the console instead.
+// This is a bug-report aid and a production-visible feature (surfaced under
+// Settings → Data → Export diagnostic log). `expo-file-system` and
+// `expo-sharing` are managed-workflow standard — we import them directly
+// instead of the try/require dance we used pre-v0.6.1.
 
 import { Platform } from "react-native";
 import Constants from "expo-constants";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 
 export type DiagnosticPayload = {
   generatedAt: string;
@@ -84,27 +86,22 @@ export async function exportDiagnosticLog(extra: Partial<DiagnosticPayload> = {}
   console.log("[diagnostics]", json);
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const FileSystem = require("expo-file-system") as {
-      documentDirectory?: string | null;
-      writeAsStringAsync?: (uri: string, data: string) => Promise<void>;
-    };
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const Sharing = require("expo-sharing") as {
-      isAvailableAsync?: () => Promise<boolean>;
-      shareAsync?: (uri: string, opts?: Record<string, unknown>) => Promise<void>;
-    };
-    const dir = FileSystem.documentDirectory;
-    if (!dir || !FileSystem.writeAsStringAsync) return;
+    const dir = (FileSystem as unknown as { documentDirectory?: string | null }).documentDirectory;
+    if (!dir) return;
     const uri = `${dir}time-mapper-diagnostics-${Date.now()}.json`;
-    await FileSystem.writeAsStringAsync(uri, json);
-    if (Sharing.isAvailableAsync && (await Sharing.isAvailableAsync()) && Sharing.shareAsync) {
+    await (
+      FileSystem as unknown as {
+        writeAsStringAsync: (uri: string, data: string) => Promise<void>;
+      }
+    ).writeAsStringAsync(uri, json);
+    if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(uri, {
         mimeType: "application/json",
         dialogTitle: "Time Mapper diagnostics",
       });
     }
-  } catch {
-    // Share/file-system not available — console.log above is the only exit.
+  } catch (err) {
+    // Share/file-system failed — console.log above is the only exit.
+    console.warn("[diagnostics] export failed", err);
   }
 }
