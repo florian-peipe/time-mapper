@@ -55,6 +55,14 @@ jobs:
 
     env:
       CONFIGURATION: ${{ github.event.inputs.configuration || 'Release' }}
+      # Expo prebuild adds Sentry's "Bundle React Native code and images"
+      # and "Upload Debug Symbols to Sentry" script phases to the Xcode
+      # project. Without a SENTRY_ORG/PROJECT/AUTH_TOKEN those phases fail
+      # the archive. Since this workflow intentionally ships with Sentry
+      # disabled (see header), tell the Sentry scripts to skip uploading —
+      # they short-circuit to a no-op and let the underlying RN bundle
+      # script run unwrapped.
+      SENTRY_DISABLE_AUTO_UPLOAD: "true"
 
     steps:
       - name: Checkout
