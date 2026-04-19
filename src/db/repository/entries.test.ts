@@ -86,4 +86,29 @@ describe("EntriesRepo", () => {
       /Entry missing-id not found/,
     );
   });
+
+  it("restore() clears deletedAt so the entry reappears in listBetween", () => {
+    const { entriesRepo, place, advance } = setup();
+    const e = entriesRepo.createManual({
+      placeId: place.id,
+      startedAt: 1_699_000_000,
+      endedAt: 1_699_001_000,
+    });
+    entriesRepo.softDelete(e.id);
+    // After soft delete the entry is filtered out of listBetween.
+    expect(entriesRepo.listBetween(0, 1_700_001_000)).toHaveLength(0);
+
+    advance(30);
+    const restored = entriesRepo.restore(e.id);
+    expect(restored.deletedAt).toBeNull();
+    // Re-appears.
+    expect(entriesRepo.listBetween(0, 1_700_001_000)).toHaveLength(1);
+    // updatedAt reflects the clock at restore time.
+    expect(restored.updatedAt).toBe(1_700_000_030);
+  });
+
+  it("restore() throws if the entry does not exist", () => {
+    const { entriesRepo } = setup();
+    expect(() => entriesRepo.restore("missing-id")).toThrow(/Entry missing-id not found/);
+  });
 });

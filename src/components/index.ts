@@ -16,6 +16,7 @@ export { ScreenShell } from "./ScreenShell";
 export { Section } from "./Section";
 export { SegmentedControl, type SegmentedOption } from "./SegmentedControl";
 export { Sheet } from "./Sheet";
+export { SnackbarHost } from "./Snackbar";
 export { SourceChip, type SourceKind } from "./SourceChip";
 export { TextArea } from "./TextArea";
 export { TrackingDot } from "./TrackingDot";

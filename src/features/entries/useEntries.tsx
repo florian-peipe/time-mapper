@@ -59,6 +59,7 @@ export type UseEntriesResult = {
     pauseS?: number;
   }) => Entry;
   softDelete: (id: string) => void;
+  restore: (id: string) => void;
 };
 
 /**
@@ -106,5 +107,13 @@ export function useEntries(dayOffset: number): UseEntriesResult {
     [repo, refresh],
   );
 
-  return { entries, loading, refresh, createManual, softDelete };
+  const restore = useCallback(
+    (id: string) => {
+      repo.restore(id);
+      refresh();
+    },
+    [repo, refresh],
+  );
+
+  return { entries, loading, refresh, createManual, softDelete, restore };
 }

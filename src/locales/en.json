@@ -183,6 +183,8 @@
   "entryEdit.label.sourceManual": "Manual entry",
   "entryEdit.label.grossAndBreak": "{{gross}} gross · {{pause}}m break",
   "entryEdit.error.hhmm": "Use HH:MM",
+  "entryEdit.snack.deleted": "Entry deleted",
+  "entryEdit.snack.undo": "Undo",
   "running.label.tracking": "Tracking",
   "running.cta.stop": "Stop",
   "daynav.label.prev": "Previous day",

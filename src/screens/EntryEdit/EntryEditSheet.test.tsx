@@ -6,6 +6,7 @@ import { EntriesRepoProvider } from "@/features/entries/useEntries";
 import { PlacesRepo } from "@/db/repository/places";
 import { EntriesRepo } from "@/db/repository/entries";
 import { createTestDb } from "@/db/testClient";
+import { useSnackbarStore } from "@/state/snackbarStore";
 import type { Entry, Place } from "@/db/schema";
 import { EntryEditSheet } from "./EntryEditSheet";
 
@@ -202,6 +203,34 @@ describe("EntryEditSheet — Edit mode", () => {
     if (!entry) return;
     const after = entriesRepo.get(entry.id);
     expect(after?.deletedAt).not.toBeNull();
+  });
+
+  it("shows an undo snackbar after delete and restores the entry when Undo fires", () => {
+    useSnackbarStore.setState({ current: null, seq: 0 });
+    const nowMs = new Date(2026, 3, 17, 14, 0, 0).getTime();
+    const { entry, entriesRepo } = setup({
+      nowMs,
+      mode: "edit",
+      entry: {
+        placeIndex: 0,
+        startedAtOffset: -2 * 3600,
+        endedAtOffset: -3600,
+      },
+    });
+    fireEvent.press(screen.getByText("Delete entry"));
+    const snack = useSnackbarStore.getState().current;
+    expect(snack).not.toBeNull();
+    expect(snack?.message).toBe("Entry deleted");
+    expect(snack?.action?.label).toBe("Undo");
+    expect(snack?.ttlMs).toBe(5000);
+
+    if (!entry) return;
+    // Before undo — deletedAt is set.
+    expect(entriesRepo.get(entry.id)?.deletedAt).not.toBeNull();
+    // Fire undo.
+    snack?.action?.onPress();
+    // Row is restored.
+    expect(entriesRepo.get(entry.id)?.deletedAt).toBeNull();
   });
 });
 

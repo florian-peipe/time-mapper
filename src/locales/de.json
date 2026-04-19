@@ -183,6 +183,8 @@
   "entryEdit.label.sourceManual": "Manueller Eintrag",
   "entryEdit.label.grossAndBreak": "{{gross}} brutto · {{pause}} Min. Pause",
   "entryEdit.error.hhmm": "HH:MM verwenden",
+  "entryEdit.snack.deleted": "Eintrag gelöscht",
+  "entryEdit.snack.undo": "Rückgängig",
   "running.label.tracking": "Tracking",
   "running.cta.stop": "Stoppen",
   "daynav.label.prev": "Vorheriger Tag",

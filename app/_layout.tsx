@@ -21,7 +21,7 @@ import {
   JetBrainsMono_500Medium,
 } from "@expo-google-fonts/jetbrains-mono";
 import { ThemeProvider } from "@/theme/ThemeProvider";
-import { ErrorBoundary } from "@/components";
+import { ErrorBoundary, SnackbarHost } from "@/components";
 import { useHydrateUiStoreFromKv, useUiStore } from "@/state/uiStore";
 import { initI18n } from "@/lib/i18n";
 import { captureException, initCrashReporting } from "@/lib/crash";
@@ -106,6 +106,14 @@ export default function RootLayout() {
               scheme, below <Stack> so Modal z-indexes above the tab bar.
             */}
             <SheetHost />
+            {/*
+              Global snackbar host. Absolute-positioned, lives below the
+              SheetHost in tree order so it paints on top when a snack is
+              active. Subscribes to `useSnackbarStore` — any screen can
+              `show({ message, action })` to trigger an ephemeral hint
+              (e.g. undo-on-delete for entries).
+            */}
+            <SnackbarHost />
           </ErrorBoundary>
         </ThemeProvider>
       </SafeAreaProvider>

@@ -99,6 +99,25 @@ describe("useEntries", () => {
     await waitFor(() => expect(result.current.entries.length).toBe(0));
   });
 
+  it("restore() brings a soft-deleted entry back into the list", async () => {
+    const fixed = new Date(2026, 3, 17, 12, 0, 0).getTime();
+    const { entriesRepo, place, wrapper } = setup(fixed);
+    const start = Math.floor(new Date(2026, 3, 17, 7, 0, 0).getTime() / 1000);
+    const end = Math.floor(new Date(2026, 3, 17, 8, 0, 0).getTime() / 1000);
+    const created = entriesRepo.createManual({ placeId: place.id, startedAt: start, endedAt: end });
+
+    const { result } = renderHook(() => useEntries(0), { wrapper });
+    await waitFor(() => expect(result.current.entries.length).toBe(1));
+    await act(async () => {
+      result.current.softDelete(created.id);
+    });
+    await waitFor(() => expect(result.current.entries.length).toBe(0));
+    await act(async () => {
+      result.current.restore(created.id);
+    });
+    await waitFor(() => expect(result.current.entries.length).toBe(1));
+  });
+
   it("refetches when dayOffset changes", async () => {
     const fixed = new Date(2026, 3, 17, 12, 0, 0).getTime();
     const { entriesRepo, place, wrapper } = setup(fixed);

@@ -14,6 +14,7 @@ import {
 import { usePlaces } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { i18n } from "@/lib/i18n";
+import { useSnackbarStore } from "@/state/snackbarStore";
 import type { Entry, Place } from "@/db/schema";
 
 export type EntryEditSheetProps = {
@@ -180,6 +181,25 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
   const handleDelete = useCallback(() => {
     if (!entryId) return;
     entriesRepo.softDelete(entryId);
+    // Offer a 5s Undo via the global snackbar. Tapping Undo clears the
+    // `deletedAt` mark so the entry reappears in Timeline/Stats. If the TTL
+    // elapses first the deletion becomes durable (retention purge eventually
+    // hard-removes it server-side of the clock, not eagerly).
+    useSnackbarStore.getState().show({
+      message: i18n.t("entryEdit.snack.deleted"),
+      action: {
+        label: i18n.t("entryEdit.snack.undo"),
+        onPress: () => {
+          try {
+            entriesRepo.restore(entryId);
+          } catch {
+            // Row was hard-purged between delete and undo — nothing we can
+            // do; the snack host will dismiss regardless.
+          }
+        },
+      },
+      ttlMs: 5000,
+    });
     onClose();
   }, [entryId, entriesRepo, onClose]);
 

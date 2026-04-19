@@ -150,4 +150,23 @@ export class EntriesRepo {
     const now = this.clock.now();
     this.db.update(entries).set({ deletedAt: now, updatedAt: now }).where(eq(entries.id, id)).run();
   }
+
+  /**
+   * Reverse a prior `softDelete` by clearing `deletedAt`. Used by the
+   * "Undo" affordance that appears after entry deletion. No-op if the
+   * row is already un-deleted. Throws if the id is unknown, so the UI
+   * can surface a "couldn't restore" toast in the rare case the user
+   * hits Undo after the row has been hard-purged (retention sweep).
+   */
+  restore(id: string): Entry {
+    const now = this.clock.now();
+    this.db
+      .update(entries)
+      .set({ deletedAt: null, updatedAt: now })
+      .where(eq(entries.id, id))
+      .run();
+    const row = this.get(id);
+    if (!row) throw new Error(`Entry ${id} not found after restore`);
+    return row;
+  }
 }
