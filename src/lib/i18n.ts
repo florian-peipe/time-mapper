@@ -45,3 +45,12 @@ export let i18n: AppI18n = createI18n("en");
 export function initI18n(locale: string): void {
   i18n = createI18n(locale);
 }
+
+/**
+ * Switch the active locale on the singleton. Kept separate from `initI18n`
+ * (which rebuilds the instance + reinstalls the key-separator hack) so UI
+ * code can flip languages without blowing away the cached I18n backend.
+ */
+export function setLocale(locale: string): void {
+  i18n.setLocale(locale);
+}

@@ -130,8 +130,9 @@ describe("i18n key coverage", () => {
       if (words.length < 3) continue;
       // Strings that are essentially placeholder templates (interpolation
       // tokens joined by a separator like " · ") are identical in every
-      // locale by design. Same for "Time Mapper" brand strings.
-      if (/^Time Mapper/.test(v)) continue;
+      // locale by design. Same for "Time Mapper" brand strings, including
+      // the uppercase eyebrow used in the Pro-upsell card.
+      if (/^Time Mapper/i.test(v)) continue;
       if (/^\{\{.*\}\}/.test(v) && v.replace(/\{\{[^}]+\}\}/g, "").trim().length <= 2) continue;
       suspicious.push({ key: k, value: v });
     }

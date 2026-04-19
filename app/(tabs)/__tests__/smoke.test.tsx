@@ -4,8 +4,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { PlacesRepoProvider } from "@/features/places/usePlaces";
 import { EntriesRepoProvider } from "@/features/entries/useEntries";
+import { KvRepoProvider } from "@/features/onboarding/useOnboardingGate";
 import { PlacesRepo } from "@/db/repository/places";
 import { EntriesRepo } from "@/db/repository/entries";
+import { KvRepo } from "@/db/repository/kv";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore } from "@/state/uiStore";
@@ -18,6 +20,7 @@ function wrap(ui: React.ReactNode) {
   const db = createTestDb();
   const places = new PlacesRepo(db, { now: () => 1_700_000_000 });
   const entries = new EntriesRepo(db, { now: () => 1_700_000_000 });
+  const kv = new KvRepo(db);
   return render(
     <SafeAreaProvider
       initialMetrics={{
@@ -26,9 +29,11 @@ function wrap(ui: React.ReactNode) {
       }}
     >
       <ThemeProvider schemeOverride="light">
-        <PlacesRepoProvider value={places}>
-          <EntriesRepoProvider value={entries}>{ui}</EntriesRepoProvider>
-        </PlacesRepoProvider>
+        <KvRepoProvider value={kv}>
+          <PlacesRepoProvider value={places}>
+            <EntriesRepoProvider value={entries}>{ui}</EntriesRepoProvider>
+          </PlacesRepoProvider>
+        </KvRepoProvider>
       </ThemeProvider>
     </SafeAreaProvider>,
   );

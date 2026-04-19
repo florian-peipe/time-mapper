@@ -8,6 +8,7 @@ import { usePlaces } from "@/features/places/usePlaces";
 import { usePro } from "@/features/billing/usePro";
 import { useSheetStore, type AddPlaceSource } from "@/state/sheetStore";
 import { MAX_PLACES } from "@/features/tracking/geofenceService";
+import { useKvRepo } from "@/features/onboarding/useOnboardingGate";
 import { i18n } from "@/lib/i18n";
 import {
   autocomplete,
@@ -15,6 +16,7 @@ import {
   createSessionToken,
   type PlaceSuggestion,
 } from "@/lib/geocode";
+import { readGlobalBuffers } from "@/screens/Settings/BuffersSheet";
 import { MapPreview } from "./MapPreview";
 
 export type AddPlaceSheetProps = {
@@ -69,6 +71,15 @@ const RADIUS_MAX = 300;
 const RADIUS_DEFAULT = 100;
 const AUTOCOMPLETE_DEBOUNCE_MS = 300;
 
+// Per-place buffer slider bounds (minutes). Entry bias tends to be longer
+// than exit bias — matches the design of the state machine's dwell
+// thresholds (entry buffer protects against false-positive entries, exit
+// buffer collapses brief re-entries into the same entry).
+const ENTRY_BUFFER_MIN_MIN = 1;
+const ENTRY_BUFFER_MAX_MIN = 15;
+const EXIT_BUFFER_MIN_MIN = 1;
+const EXIT_BUFFER_MAX_MIN = 10;
+
 /**
  * AddPlaceSheet — two-phase flow for creating (or, in v0.3, editing) a place.
  *
@@ -93,6 +104,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   const { places, create, update, remove, count } = usePlaces();
   const { isPro } = usePro();
   const openSheet = useSheetStore((s) => s.openSheet);
+  const kv = useKvRepo();
 
   const editing = placeId != null;
   const editingPlace = useMemo(
@@ -131,6 +143,22 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   const [iconIdx, setIconIdx] = useState(initialIconIdx);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  // Per-place buffer defaults. New places pre-fill from the global KV
+  // defaults (set via Settings → Default buffers); edited places keep
+  // their existing values. UI operates on minutes, persists in seconds.
+  const initialEntryBufferMin = useMemo(() => {
+    if (editingPlace) return Math.round((editingPlace.entryBufferS ?? 300) / 60);
+    const { entryBufferS } = readGlobalBuffers(kv);
+    return Math.round(entryBufferS / 60);
+  }, [editingPlace, kv]);
+  const initialExitBufferMin = useMemo(() => {
+    if (editingPlace) return Math.round((editingPlace.exitBufferS ?? 180) / 60);
+    const { exitBufferS } = readGlobalBuffers(kv);
+    return Math.round(exitBufferS / 60);
+  }, [editingPlace, kv]);
+  const [entryBufferMin, setEntryBufferMin] = useState(initialEntryBufferMin);
+  const [exitBufferMin, setExitBufferMin] = useState(initialExitBufferMin);
+
   // Places session token — minted per "open search → select" interaction so
   // Google bills a single transaction across the autocomplete keystrokes and
   // the final details call. Refreshed when a selection completes (prep for
@@ -152,6 +180,8 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setRadius(editingPlace.radiusM);
       setColorIdx(initialColorIdx);
       setIconIdx(initialIconIdx);
+      setEntryBufferMin(initialEntryBufferMin);
+      setExitBufferMin(initialExitBufferMin);
     } else if (!visible) {
       setQuery("");
       setSelected(null);
@@ -162,8 +192,17 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setSuggestions([]);
       setApiError(null);
       sessionTokenRef.current = createSessionToken();
+      setEntryBufferMin(initialEntryBufferMin);
+      setExitBufferMin(initialExitBufferMin);
     }
-  }, [editingPlace, visible, initialColorIdx, initialIconIdx]);
+  }, [
+    editingPlace,
+    visible,
+    initialColorIdx,
+    initialIconIdx,
+    initialEntryBufferMin,
+    initialExitBufferMin,
+  ]);
 
   // Autocomplete debounce. Every keystroke schedules a Places Autocomplete
   // call 300ms later; if the user keeps typing we cancel and reschedule.
@@ -247,6 +286,10 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
     const chosenIcon = ICON_CHOICES[iconIdx] ?? ICON_CHOICES[0];
 
     let saved;
+    const buffers = {
+      entryBufferS: entryBufferMin * 60,
+      exitBufferS: exitBufferMin * 60,
+    };
     if (editing && placeId) {
       saved = update(placeId, {
         name: name.trim() || selected.description,
@@ -256,6 +299,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
         radiusM: radius,
         color: chosenColor,
         icon: chosenIcon,
+        ...buffers,
       });
     } else {
       saved = create({
@@ -266,6 +310,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
         radiusM: radius,
         color: chosenColor,
         icon: chosenIcon,
+        ...buffers,
       });
     }
     onSaved?.(saved.id);
@@ -537,6 +582,24 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
             />
           </View>
 
+          {/* Per-place entry + exit buffers. */}
+          <BufferSliderRow
+            label={i18n.t("addPlace.field.entryBuffer")}
+            minutes={entryBufferMin}
+            minValue={ENTRY_BUFFER_MIN_MIN}
+            maxValue={ENTRY_BUFFER_MAX_MIN}
+            onChange={setEntryBufferMin}
+            testID="add-place-entry-buffer"
+          />
+          <BufferSliderRow
+            label={i18n.t("addPlace.field.exitBuffer")}
+            minutes={exitBufferMin}
+            minValue={EXIT_BUFFER_MIN_MIN}
+            maxValue={EXIT_BUFFER_MAX_MIN}
+            onChange={setExitBufferMin}
+            testID="add-place-exit-buffer"
+          />
+
           {/* Color picker. */}
           <View>
             <Text
@@ -665,6 +728,78 @@ function ColorSwatch({
         />
       </View>
     </Pressable>
+  );
+}
+
+/**
+ * Per-place buffer slider row — label + current minutes readout + a slider.
+ * Local component so the AddPlaceSheet form stays self-contained.
+ */
+function BufferSliderRow({
+  label,
+  minutes,
+  minValue,
+  maxValue,
+  onChange,
+  testID,
+}: {
+  label: string;
+  minutes: number;
+  minValue: number;
+  maxValue: number;
+  onChange: (v: number) => void;
+  testID?: string;
+}) {
+  const t = useTheme();
+  const valueLabel = i18n.t("addPlace.field.bufferValue", { n: minutes });
+  return (
+    <View>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginBottom: t.space[2],
+        }}
+      >
+        <Text
+          accessibilityRole="text"
+          style={{
+            fontSize: t.type.size.s,
+            color: t.color("color.fg2"),
+            fontFamily: t.type.family.sans,
+            fontWeight: t.type.weight.medium,
+          }}
+        >
+          {label}
+        </Text>
+        <Text
+          style={{
+            fontSize: t.type.size.s,
+            color: t.color("color.fg"),
+            fontFamily: t.type.family.sans,
+            fontVariant: ["tabular-nums"],
+          }}
+          testID={testID ? `${testID}-value` : undefined}
+        >
+          {valueLabel}
+        </Text>
+      </View>
+      <Slider
+        testID={testID}
+        minimumValue={minValue}
+        maximumValue={maxValue}
+        step={1}
+        value={minutes}
+        onValueChange={(v: number) => onChange(Math.round(v))}
+        minimumTrackTintColor={t.color("color.accent")}
+        maximumTrackTintColor={t.color("color.border")}
+        thumbTintColor={t.color("color.accent")}
+        style={{ width: "100%", height: 40 }}
+        accessibilityRole="adjustable"
+        accessibilityLabel={label}
+        accessibilityValue={{ min: minValue, max: maxValue, now: minutes, text: valueLabel }}
+      />
+    </View>
   );
 }
 

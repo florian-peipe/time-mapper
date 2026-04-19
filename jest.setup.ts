@@ -54,6 +54,28 @@ jest.mock("expo-notifications", () => ({
   AndroidImportance: { LOW: 2, DEFAULT: 3, HIGH: 4 },
 }));
 
+jest.mock("expo-store-review", () => ({
+  __esModule: true,
+  isAvailableAsync: jest.fn(async () => false),
+  requestReview: jest.fn(async () => undefined),
+  hasAction: jest.fn(async () => false),
+}));
+
+jest.mock("expo-file-system", () => ({
+  __esModule: true,
+  documentDirectory: "/tmp/mock-docs/",
+  writeAsStringAsync: jest.fn(async () => undefined),
+  readAsStringAsync: jest.fn(async () => ""),
+  deleteAsync: jest.fn(async () => undefined),
+  getInfoAsync: jest.fn(async () => ({ exists: false })),
+}));
+
+jest.mock("expo-sharing", () => ({
+  __esModule: true,
+  isAvailableAsync: jest.fn(async () => true),
+  shareAsync: jest.fn(async () => undefined),
+}));
+
 // react-native-maps ships a native binding that Jest can't load through
 // node_modules. We only need MapView/Marker/Circle to RENDER in UI tests —
 // not to actually display tiles — so stub the exports with passthrough Views.

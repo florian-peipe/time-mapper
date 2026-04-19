@@ -336,15 +336,23 @@ describe("a11y — screens", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepo } = require("@/db/repository/places");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { KvRepo } = require("@/db/repository/kv");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { createTestDb } = require("@/db/testClient");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepoProvider } = require("@/features/places/usePlaces");
-    const repo = new PlacesRepo(createTestDb());
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { KvRepoProvider } = require("@/features/onboarding/useOnboardingGate");
+    const db = createTestDb();
+    const repo = new PlacesRepo(db);
+    const kv = new KvRepo(db);
     const { getAllByRole } = render(
       wrap(
-        <PlacesRepoProvider value={repo}>
-          <SettingsScreen />
-        </PlacesRepoProvider>,
+        <KvRepoProvider value={kv}>
+          <PlacesRepoProvider value={repo}>
+            <SettingsScreen />
+          </PlacesRepoProvider>
+        </KvRepoProvider>,
       ),
     );
     const headers = getAllByRole("header");
@@ -360,10 +368,16 @@ describe("a11y — screens", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepo } = require("@/db/repository/places");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { KvRepo } = require("@/db/repository/kv");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { createTestDb } = require("@/db/testClient");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepoProvider } = require("@/features/places/usePlaces");
-    const repo = new PlacesRepo(createTestDb());
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { KvRepoProvider } = require("@/features/onboarding/useOnboardingGate");
+    const db = createTestDb();
+    const repo = new PlacesRepo(db);
+    const kv = new KvRepo(db);
     const place = repo.create({
       name: "Home",
       address: "1 Example Ln",
@@ -372,9 +386,11 @@ describe("a11y — screens", () => {
     });
     const { getByTestId } = render(
       wrap(
-        <PlacesRepoProvider value={repo}>
-          <SettingsScreen />
-        </PlacesRepoProvider>,
+        <KvRepoProvider value={kv}>
+          <PlacesRepoProvider value={repo}>
+            <SettingsScreen />
+          </PlacesRepoProvider>
+        </KvRepoProvider>,
       ),
     );
     const row = getByTestId(`settings-row-place-${place.id}`);
@@ -387,19 +403,27 @@ describe("a11y — screens", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepo } = require("@/db/repository/places");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { KvRepo } = require("@/db/repository/kv");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { createTestDb } = require("@/db/testClient");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepoProvider } = require("@/features/places/usePlaces");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { KvRepoProvider } = require("@/features/onboarding/useOnboardingGate");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { grantProMock, resetProMock } = require("@/features/billing/useProMock");
     resetProMock();
     grantProMock();
-    const repo = new PlacesRepo(createTestDb());
+    const db = createTestDb();
+    const repo = new PlacesRepo(db);
+    const kv = new KvRepo(db);
     const { getByTestId } = render(
       wrap(
-        <PlacesRepoProvider value={repo}>
-          <SettingsScreen />
-        </PlacesRepoProvider>,
+        <KvRepoProvider value={kv}>
+          <PlacesRepoProvider value={repo}>
+            <SettingsScreen />
+          </PlacesRepoProvider>
+        </KvRepoProvider>,
       ),
     );
     const row = getByTestId("settings-row-toggle-pro");
@@ -424,10 +448,16 @@ describe("a11y — adjustable control (slider in AddPlaceSheet)", () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { PlacesRepo } = require("@/db/repository/places");
       // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { KvRepo } = require("@/db/repository/kv");
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { createTestDb } = require("@/db/testClient");
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { PlacesRepoProvider } = require("@/features/places/usePlaces");
-      const repo = new PlacesRepo(createTestDb());
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { KvRepoProvider } = require("@/features/onboarding/useOnboardingGate");
+      const db = createTestDb();
+      const repo = new PlacesRepo(db);
+      const kv = new KvRepo(db);
       // Edit mode hydrates Phase 2 instantly with a place that carries
       // non-zero lat/lng (ensures the slider is present on first render).
       const p = repo.create({
@@ -439,9 +469,11 @@ describe("a11y — adjustable control (slider in AddPlaceSheet)", () => {
       });
       const { getByTestId } = render(
         wrap(
-          <PlacesRepoProvider value={repo}>
-            <AddPlaceSheet visible placeId={p.id} onClose={() => {}} onSaved={() => {}} />
-          </PlacesRepoProvider>,
+          <KvRepoProvider value={kv}>
+            <PlacesRepoProvider value={repo}>
+              <AddPlaceSheet visible placeId={p.id} onClose={() => {}} onSaved={() => {}} />
+            </PlacesRepoProvider>
+          </KvRepoProvider>,
         ),
       );
       const slider = getByTestId("add-place-radius");
