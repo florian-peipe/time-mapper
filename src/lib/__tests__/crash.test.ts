@@ -31,14 +31,12 @@ describe("crash reporting", () => {
     info.mockRestore();
   });
 
-  it("no-ops when DSN is set but @sentry/react-native is unavailable", () => {
+  it("initializes Sentry when DSN + module are present", () => {
     process.env[DSN_KEY] = "https://fake-dsn@sentry.io/123";
-    const info = jest.spyOn(console, "info").mockImplementation(() => undefined);
+    // The jest.setup.ts @sentry/react-native stub exposes `init` as a
+    // spyable mock; after initCrashReporting runs, the flag flips true.
     initCrashReporting();
-    // Sentry is not installed in this repo — the require() fails gracefully.
-    expect(isCrashReportingEnabled()).toBe(false);
-    expect(info).toHaveBeenCalled();
-    info.mockRestore();
+    expect(isCrashReportingEnabled()).toBe(true);
   });
 
   it("captureException falls back to console.error when Sentry is disabled", () => {

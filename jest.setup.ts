@@ -76,6 +76,17 @@ jest.mock("expo-sharing", () => ({
   shareAsync: jest.fn(async () => undefined),
 }));
 
+// @sentry/react-native ships native bridge modules that Jest can't load.
+// Stub the whole module so crash.ts can still lazy-require without the
+// real binding; real-init behavior is covered by the unit tests in
+// crash.test.ts which override this mock per-case.
+jest.mock("@sentry/react-native", () => ({
+  __esModule: true,
+  init: jest.fn(),
+  captureException: jest.fn(),
+  setUser: jest.fn(),
+}));
+
 // react-native-maps ships a native binding that Jest can't load through
 // node_modules. We only need MapView/Marker/Circle to RENDER in UI tests —
 // not to actually display tiles — so stub the exports with passthrough Views.

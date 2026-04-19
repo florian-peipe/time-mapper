@@ -47,7 +47,7 @@ export function ProUpsellCard({ onPress, testID }: Props) {
         // v0.3 polish: shadow-md equivalent (matches Card's `elevated` variant)
         // so the dark tile lifts off the Settings background and reads as the
         // premium CTA it is. Values are the same as shadowMd in Card.tsx.
-        shadowColor: "#110D09",
+        shadowColor: t.color("color.shadow"),
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.08,
         shadowRadius: 12,

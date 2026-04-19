@@ -20,6 +20,27 @@ module.exports = [
     },
   },
   {
+    // One-time Node scripts live under scripts/*.js. Tell eslint they
+    // run in Node (so `__dirname`, `require`, `module`, `process` are
+    // ambient) and suppress the browser-centric no-console rule we keep
+    // on the rest of the source tree.
+    files: ["scripts/**/*.js"],
+    languageOptions: {
+      globals: {
+        __dirname: "readonly",
+        __filename: "readonly",
+        require: "readonly",
+        module: "readonly",
+        process: "readonly",
+        console: "readonly",
+      },
+    },
+    rules: {
+      "no-console": "off",
+      "no-undef": "off",
+    },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".expo/**",

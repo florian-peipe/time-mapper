@@ -21,15 +21,17 @@ type Props = {
 };
 
 // shadow-md from design-system README, mapped to RN's ios + android shadow props
-const shadowMd = {
-  // iOS
-  shadowColor: "#110D09",
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.08,
-  shadowRadius: 12,
-  // Android
-  elevation: 3,
-} as const;
+function shadowMd(t: Theme) {
+  return {
+    // iOS — color sourced from the theme's shadow token
+    shadowColor: t.color("color.shadow"),
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    // Android
+    elevation: 3,
+  } as const;
+}
 
 function buildStyle(t: Theme, variant: CardVariant, padding: number): ViewStyle {
   const base: ViewStyle = {
@@ -48,14 +50,14 @@ function buildStyle(t: Theme, variant: CardVariant, padding: number): ViewStyle 
     return {
       ...base,
       borderRadius: t.radius.md,
-      ...shadowMd,
+      ...shadowMd(t),
     };
   }
   // elevated
   return {
     ...base,
     borderRadius: t.radius.lg,
-    ...shadowMd,
+    ...shadowMd(t),
   };
 }
 

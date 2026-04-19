@@ -64,7 +64,7 @@ export function Sheet({
   const overlayStyle: StyleProp<ViewStyle> = {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.32)",
+    backgroundColor: t.color("color.scrim"),
   };
 
   const sheetStyle: StyleProp<ViewStyle> = {
@@ -75,7 +75,7 @@ export function Sheet({
     borderTopRightRadius: t.radius.lg,
     flexDirection: "column",
     // shadow-lg from README — sheet elevates above the scrim
-    shadowColor: "#110D09",
+    shadowColor: t.color("color.shadow"),
     shadowOffset: { width: 0, height: -8 },
     shadowOpacity: 0.12,
     shadowRadius: 32,

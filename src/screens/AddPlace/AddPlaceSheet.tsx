@@ -6,7 +6,7 @@ import { PLACE_COLORS } from "@/theme/tokens";
 import { Banner, Button, Icon, Input, Sheet, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { usePro } from "@/features/billing/usePro";
-import { useSheetStore, type AddPlaceSource } from "@/state/sheetStore";
+import { useSheetStore, type AddPlaceSource, type PendingPlaceForm } from "@/state/sheetStore";
 import { MAX_PLACES } from "@/features/tracking/geofenceService";
 import { useKvRepo } from "@/features/onboarding/useOnboardingGate";
 import { i18n } from "@/lib/i18n";
@@ -104,6 +104,8 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   const { places, create, update, remove, count } = usePlaces();
   const { isPro } = usePro();
   const openSheet = useSheetStore((s) => s.openSheet);
+  const pendingPlaceForm = useSheetStore((s) => s.pendingPlaceForm);
+  const setPendingPlaceForm = useSheetStore((s) => s.setPendingPlaceForm);
   const kv = useKvRepo();
 
   const editing = placeId != null;
@@ -170,6 +172,30 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   // previous instance don't leak through. Also resets when the sheet is
   // hidden so reopening gives a clean slate.
   useEffect(() => {
+    // Restoration path — if the sheet is reopened after a paywall hop and
+    // the store holds a `pendingPlaceForm`, hydrate Phase 2 from that and
+    // clear the slot so subsequent opens start fresh. This takes priority
+    // over the edit-mode rehydration.
+    if (
+      visible &&
+      pendingPlaceForm &&
+      pendingPlaceForm.placeId === placeId &&
+      pendingPlaceForm.source === source
+    ) {
+      setSelected({
+        description: pendingPlaceForm.description,
+        latitude: pendingPlaceForm.latitude,
+        longitude: pendingPlaceForm.longitude,
+      });
+      setName(pendingPlaceForm.name);
+      setRadius(pendingPlaceForm.radiusM);
+      setColorIdx(pendingPlaceForm.colorIdx);
+      setIconIdx(pendingPlaceForm.iconIdx);
+      setEntryBufferMin(pendingPlaceForm.entryBufferMin);
+      setExitBufferMin(pendingPlaceForm.exitBufferMin);
+      setPendingPlaceForm(null);
+      return;
+    }
     if (editingPlace) {
       setSelected({
         description: editingPlace.address,
@@ -202,33 +228,41 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
     initialIconIdx,
     initialEntryBufferMin,
     initialExitBufferMin,
+    pendingPlaceForm,
+    placeId,
+    source,
+    setPendingPlaceForm,
   ]);
 
   // Autocomplete debounce. Every keystroke schedules a Places Autocomplete
-  // call 300ms later; if the user keeps typing we cancel and reschedule.
-  // Empty query → show all demo rows (when no key) or clear suggestions.
+  // call 300ms later; if the user keeps typing we cancel the prior fetch
+  // via AbortController and reschedule. Empty query → show all demo rows
+  // (when no key) or clear suggestions.
   useEffect(() => {
     if (editing || selected) return;
     let cancelled = false;
+    const controller = new AbortController();
     const handle = setTimeout(() => {
       void (async () => {
         try {
-          const results = await autocomplete(query, sessionTokenRef.current);
+          const results = await autocomplete(query, sessionTokenRef.current, controller.signal);
           if (!cancelled) {
             setSuggestions(results);
             setApiError(null);
           }
         } catch (err) {
-          if (!cancelled) {
-            const msg = err instanceof Error ? err.message : String(err);
-            setApiError(msg);
-            setSuggestions([]);
-          }
+          if (cancelled) return;
+          // Ignore aborts — they just mean a newer keystroke superseded us.
+          if (err instanceof Error && err.name === "AbortError") return;
+          const msg = err instanceof Error ? err.message : String(err);
+          setApiError(msg);
+          setSuggestions([]);
         }
       })();
     }, AUTOCOMPLETE_DEBOUNCE_MS);
     return () => {
       cancelled = true;
+      controller.abort();
       clearTimeout(handle);
     };
   }, [query, editing, selected]);
@@ -268,6 +302,25 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
 
   const handleSave = () => {
     if (shouldPaywall) {
+      // Stash the current form so the sheet can rehydrate after the user
+      // returns from a successful purchase. Clearing happens after the
+      // restore picks it up (see the hydration effect below).
+      if (selected) {
+        const stash: PendingPlaceForm = {
+          placeId,
+          source,
+          description: selected.description,
+          latitude: selected.latitude,
+          longitude: selected.longitude,
+          name,
+          radiusM: radius,
+          colorIdx,
+          iconIdx,
+          entryBufferMin,
+          exitBufferMin,
+        };
+        setPendingPlaceForm(stash);
+      }
       openSheet("paywall", { source: "2nd-place" });
       return;
     }

@@ -21,6 +21,7 @@ import {
   JetBrainsMono_500Medium,
 } from "@expo-google-fonts/jetbrains-mono";
 import { ThemeProvider } from "@/theme/ThemeProvider";
+import { ErrorBoundary } from "@/components";
 import { useHydrateUiStoreFromKv, useUiStore } from "@/state/uiStore";
 import { initI18n } from "@/lib/i18n";
 import { captureException, initCrashReporting } from "@/lib/crash";
@@ -88,15 +89,24 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider schemeOverride={themeOverride ?? undefined}>
           <StatusBar style="auto" />
-          <Stack screenOptions={{ headerShown: false }} />
-          <OnboardingGate />
           {/*
-            Global sheet host — any screen can call
-            `useSheetStore.openSheet(...)` to summon Paywall, EntryEdit, or
-            AddPlace. Lives inside ThemeProvider so sheets pick up the live
-            scheme, below <Stack> so Modal z-indexes above the tab bar.
+            Top-level ErrorBoundary. Catches any uncaught render-phase
+            exception from the Stack + SheetHost subtree and shows a
+            "Restart" fallback rather than leaving the user on a blank or
+            frozen screen. Goes below ThemeProvider so the fallback uses
+            plain styles and can't crash if theme was the thing that threw.
           */}
-          <SheetHost />
+          <ErrorBoundary>
+            <Stack screenOptions={{ headerShown: false }} />
+            <OnboardingGate />
+            {/*
+              Global sheet host — any screen can call
+              `useSheetStore.openSheet(...)` to summon Paywall, EntryEdit, or
+              AddPlace. Lives inside ThemeProvider so sheets pick up the live
+              scheme, below <Stack> so Modal z-indexes above the tab bar.
+            */}
+            <SheetHost />
+          </ErrorBoundary>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

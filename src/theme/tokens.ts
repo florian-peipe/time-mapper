@@ -21,6 +21,13 @@ const lightColors = {
   "color.chip.auto.fg": "#1D4E89",
   "color.chip.manual.bg": "#F2EEE8",
   "color.chip.manual.fg": "#59503F",
+  // Overlay scrim behind modal sheets. Light theme uses a softer tint so
+  // the underlying UI stays partially visible; dark theme bumps opacity.
+  "color.scrim": "rgba(0,0,0,0.32)",
+  // Shadow color used by Card + Sheet. Light mode picks a dark-brown tint
+  // consistent with the brand palette; dark mode uses pure black so the
+  // shadow reads against the deep background.
+  "color.shadow": "#110D09",
 } as const;
 
 const darkColors = {
@@ -46,6 +53,8 @@ const darkColors = {
   "color.chip.auto.fg": "#8FB6E6",
   "color.chip.manual.bg": "#2A2620",
   "color.chip.manual.fg": "#B8B1A6",
+  "color.scrim": "rgba(0,0,0,0.5)",
+  "color.shadow": "#000000",
 } as const;
 
 export type ColorTokenKey = keyof typeof lightColors;

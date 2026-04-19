@@ -82,7 +82,7 @@ export function SegmentedControl<T extends string>({ value, onChange, options, t
               backgroundColor: t.color("color.surface"),
               borderRadius: t.radius.pill,
               // shadow-sm (from README) — subtle lift on the thumb
-              shadowColor: "#110D09",
+              shadowColor: t.color("color.shadow"),
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.06,
               shadowRadius: 2,

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { AppState, type AppStateStatus } from "react-native";
 import {
   getLocationStatus,
   getNotificationsStatus,
@@ -37,8 +38,21 @@ export function useLocationPermission(): {
         setLoading(false);
       }
     })();
+    // AppState subscription: re-read the permission status each time the
+    // app returns to the foreground, so a user who toggled the OS setting
+    // while backgrounded sees the updated state on return.
+    const onChange = (next: AppStateStatus) => {
+      if (next === "active") {
+        void (async () => {
+          const s = await getLocationStatus();
+          if (active) setStatus(s);
+        })();
+      }
+    };
+    const sub = AppState.addEventListener("change", onChange);
     return () => {
       active = false;
+      sub.remove();
     };
   }, []);
 
@@ -80,8 +94,18 @@ export function useNotificationPermission(): {
         setLoading(false);
       }
     })();
+    const onChange = (next: AppStateStatus) => {
+      if (next === "active") {
+        void (async () => {
+          const s = await getNotificationsStatus();
+          if (active) setStatus(s);
+        })();
+      }
+    };
+    const sub = AppState.addEventListener("change", onChange);
     return () => {
       active = false;
+      sub.remove();
     };
   }, []);
 

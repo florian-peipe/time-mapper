@@ -12,12 +12,15 @@ describe("design tokens", () => {
     expect(darkKeys).toEqual(lightKeys);
   });
 
-  it("every color token is a valid 6-digit hex", () => {
-    const hex = /^#[0-9A-Fa-f]{6}$/;
+  it("every color token is a valid color string (hex or rgba())", () => {
+    // Most tokens are #RRGGBB, but `color.scrim` uses an rgba() form so
+    // the sheet overlay can carry an alpha channel without requiring a
+    // separate opacity field. Accept both.
+    const valid = /^(#[0-9A-Fa-f]{6}|rgba?\([\s\d,.]+\))$/;
     for (const theme of [tokens.light, tokens.dark]) {
       for (const [key, value] of Object.entries(theme)) {
         if (key.startsWith("color.")) {
-          expect(value).toMatch(hex);
+          expect(value).toMatch(valid);
         }
       }
     }

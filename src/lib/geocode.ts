@@ -153,6 +153,11 @@ type DetailsResponse = {
  * "search → select" interaction so Google bills only for the final details
  * lookup. Mint a fresh one when the search sheet opens.
  *
+ * Optional `signal` aborts the in-flight fetch (e.g. the caller typed a
+ * new keystroke and we no longer need the old result). When the signal
+ * fires we bubble the `AbortError` up so the caller can tell an aborted
+ * call apart from a real network/API failure.
+ *
  * Throws on HTTP errors or non-OK `status` returned by the API — callers
  * should catch and surface a Banner. `ZERO_RESULTS` is NOT treated as an
  * error; we return an empty array.
@@ -160,6 +165,7 @@ type DetailsResponse = {
 export async function autocomplete(
   query: string,
   sessionToken: string,
+  signal?: AbortSignal,
 ): Promise<PlaceSuggestion[]> {
   const key = getApiKey();
   if (!key) return filterDemoSuggestions(query);
@@ -176,7 +182,7 @@ export async function autocomplete(
     types: "address",
   });
 
-  const res = await fetch(`${AUTOCOMPLETE_URL}?${params.toString()}`);
+  const res = await fetch(`${AUTOCOMPLETE_URL}?${params.toString()}`, { signal });
   if (!res.ok) throw new Error(`Places autocomplete HTTP ${res.status}`);
   const data = (await res.json()) as AutocompleteResponse;
   if (data.status === "ZERO_RESULTS") return [];

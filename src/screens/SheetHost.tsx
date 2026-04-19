@@ -5,6 +5,7 @@ import { PaywallScreen } from "@/screens/Paywall/PaywallScreen";
 import { EntryEditSheet } from "@/screens/EntryEdit/EntryEditSheet";
 import { AddPlaceSheet } from "@/screens/AddPlace/AddPlaceSheet";
 import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
+import { usePro } from "@/features/billing/usePro";
 
 const ADD_PLACE_SOURCES: readonly AddPlaceSource[] = [
   "onboarding",
@@ -43,7 +44,10 @@ export function SheetHost() {
   const active = useSheetStore((s) => s.active);
   const payload = useSheetStore((s) => s.payload);
   const close = useSheetStore((s) => s.closeSheet);
+  const openSheet = useSheetStore((s) => s.openSheet);
+  const pendingPlaceForm = useSheetStore((s) => s.pendingPlaceForm);
   const { markComplete } = useOnboardingGate();
+  const { isPro } = usePro();
 
   const entryId =
     active === "entryEdit" && payload && "entryId" in payload ? payload.entryId : null;
@@ -60,9 +64,26 @@ export function SheetHost() {
     }
   }, [addPlaceSource, markComplete, router]);
 
+  /**
+   * Paywall close handler — if we came from an interrupted AddPlace flow
+   * (pendingPlaceForm is set) AND the user is now Pro (purchase succeeded),
+   * reopen AddPlaceSheet so they can complete the save. Otherwise just
+   * dismiss the paywall.
+   */
+  const handlePaywallClose = useCallback(() => {
+    if (pendingPlaceForm && isPro) {
+      openSheet("addPlace", {
+        placeId: pendingPlaceForm.placeId,
+        source: pendingPlaceForm.source,
+      });
+      return;
+    }
+    close();
+  }, [pendingPlaceForm, isPro, openSheet, close]);
+
   return (
     <>
-      <PaywallScreen visible={active === "paywall"} onClose={close} />
+      <PaywallScreen visible={active === "paywall"} onClose={handlePaywallClose} />
       <EntryEditSheet visible={active === "entryEdit"} entryId={entryId} onClose={close} />
       <AddPlaceSheet
         visible={active === "addPlace"}

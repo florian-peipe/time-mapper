@@ -5,6 +5,7 @@ export { Banner, type BannerTone } from "./Banner";
 export { Button, type ButtonVariant, type ButtonSize } from "./Button";
 export { Card, type CardVariant } from "./Card";
 export { Chip, type ChipTone } from "./Chip";
+export { ErrorBoundary } from "./ErrorBoundary";
 export { Icon, type IconName } from "./Icon";
 export { IconBadge } from "./IconBadge";
 export { Input } from "./Input";
