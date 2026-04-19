@@ -4,6 +4,78 @@ All notable changes to Time Mapper are documented here. Release tags are of
 the form `vMAJOR.MINOR-shortname` where the shortname traces back to the
 plan that shipped the work (`foundation`, `core-ui`, …).
 
+## v1.0.0-beta
+
+Final beta: everything in the MVP scope is built, tested, and wired.
+Awaiting third-party provisioning + store submission.
+
+### What's bundled
+
+All features shipped across v0.1 through v0.6.1 are included:
+
+- **Foundation** — design tokens, theme provider, primitives, i18n, DB
+  (schema + migrations + repositories), unique-id polyfill.
+- **Core UI** — Timeline (today + history), Stats (weekly bar chart +
+  legend), Settings, AddPlace sheet (autocomplete + per-place
+  buffers + radius), EntryEditSheet (HH:MM fields + pause), Paywall.
+- **Onboarding** — welcome → permissions → first place (3 steps, with
+  `PermissionsScreen` requesting OS location + notification grants).
+- **Location engine** — state machine + geofence service + background
+  task, bootstrap reconciliation on cold start, pending-transitions
+  catch-up, dev sim utility.
+- **Billing** — RevenueCat integration with mock mode fallback; four
+  paywall trigger sources; restore purchases; manage subscription
+  deep-link.
+- **Notifications** — local notifications on entry open/close plus
+  quiet-hours windowing.
+- **Crash reporting** — opt-in Sentry wrapper that strips location
+  fields before events leave the device.
+- **Legal** — Privacy / Terms / Impressum routes with placeholder guard
+  that prevents unfilled `{{TOKEN}}` content from shipping.
+- **Store metadata** — iOS + Android YAML, EAS build + submit profiles,
+  screenshot capture README.
+- **Undo-on-delete** — entry deletion surfaces a 5-second snackbar with
+  an Undo action that restores the row (new in v1.0.0-beta).
+
+### Quality gates
+
+- **Tests:** 615 passing across 83 suites (Jest). Includes repos,
+  hooks, screens, end-to-end tracking flows, a11y, snapshots, and
+  critical user-flow smoke tests.
+- **Typecheck:** `tsc --noEmit` clean.
+- **Lint:** `eslint .` — zero warnings, zero errors.
+- **Build:** `expo export --platform ios` succeeds (~10.7 MB bundle).
+
+### Outstanding user-provided items
+
+Before the App Store / Play Console build ships, the developer must
+provide:
+
+- [ ] Apple Developer account + ASC App ID + Team ID (`eas.json`)
+- [ ] Google Play Console account + service-account JSON
+- [ ] RevenueCat project + iOS + Android public API keys
+- [ ] Google Places API key (for address autocomplete)
+- [ ] Impressum contact details (`src/screens/Legal/contact.local.ts`)
+- [ ] Support email (placeholder `support@timemapper.app`)
+- [ ] Privacy policy hosted URL (for App Store Privacy page)
+- [ ] Sentry DSN (optional; crash reporting disables gracefully)
+- [ ] Store screenshots (EAS simulator captures; README commands in
+      `store/screenshots/README.md`)
+
+### Known limitations
+
+- **Expo Go cannot run the geofence background task** — by design.
+  OS geofencing requires a full dev client or standalone build. Tests
+  mock the task so CI is green, but real-device validation of
+  auto-tracking requires `npx eas build --profile development`.
+- **CSV export is a no-op** — the paywall gates the row, but the
+  actual file-writing path is intentionally deferred to a follow-up
+  release. The Pro-upsell UX is real; the export itself will land in
+  v1.0.0-GA.
+- **Screenshots are placeholder** — `store/screenshots/` ships capture
+  commands but no images. Run the simctl/adb captures after installing
+  a dev build.
+
 ## v0.6.1-pre-ship-fixes
 
 Pass-3 review closed all nine P0 ship blockers and most P1s. 113 → 119

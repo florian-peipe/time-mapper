@@ -7,15 +7,46 @@ data lives on-device; nothing leaves your phone.
 Built with Expo (Router) + React Native + SQLite (via Drizzle) +
 RevenueCat for billing.
 
-## What's done
+## What's in v1.0.0
+
+Everything the MVP scope asks for is shipped and tested:
+
+- First-run onboarding (welcome → permissions → add your first place).
+- Places — add/edit/delete with name, address, color, icon, radius, and
+  per-place entry + exit buffers.
+- Address autocomplete via Google Places, with a hardcoded-address
+  fallback when the key is missing.
+- Auto-tracking via OS geofencing. A state machine sits behind a
+  background task; the UI reconciles OS state on every cold boot so
+  crashes never leak into double-counting.
+- Timeline (today + history within retention). Entries show place,
+  start, end, duration, and source (auto / manual).
+- Manual entry + edit + delete (with a 5-second Undo snackbar that
+  restores the row on tap).
+- Weekly summary — bar chart + total for the current / prior week,
+  with a Pro-gated multi-week navigator.
+- Local notifications on entry open / close (opt-in via OS settings).
+- Pro paywall with 4 trigger sources: 2nd-place, history depth,
+  export, and the Settings upsell card.
+- Full Settings surface: OS permissions deep-link, per-place buffers,
+  notifications quiet-hours, theme, language, retention gate, legal
+  pages, support, Pro management, diagnostic export.
+- Privacy: location data never leaves the device. Sentry is opt-in
+  and location-field-stripped when enabled.
+- i18n: every user-facing string in en + de.
+- Accessibility: semantic labels, 44pt touch targets, WCAG AA contrast.
+
+## What's done (release history)
 
 | Area | Status |
 | --- | --- |
-| Foundation — tokens, primitives, theme, i18n, DB | Shipped |
-| Core UI — Timeline, Stats, Settings, Add Place, Paywall, EntryEdit | Shipped |
-| Location engine — geofences, state machine, bootstrap, reconcile | Shipped |
-| Billing — RevenueCat + mock mode + paywall wired | Shipped |
-| Release polish — a11y, DE audit, Sentry, legal, store metadata, EAS, map preview | Shipped |
+| Foundation — tokens, primitives, theme, i18n, DB | Shipped (v0.1) |
+| Core UI — Timeline, Stats, Settings, Add Place, Paywall, EntryEdit | Shipped (v0.2) |
+| UX pivot — onboarding polish, pending-transitions, map preview | Shipped (v0.3) |
+| Location engine — geofences, state machine, bootstrap, reconcile | Shipped (v0.4) |
+| Billing — RevenueCat + mock mode + paywall wired | Shipped (v0.5) |
+| Release polish — a11y, DE audit, Sentry, legal, store metadata, EAS | Shipped (v0.6) |
+| Pre-ship fixes — Impressum guard, KV persistence, sheets, snackbar | Shipped (v1.0.0-beta) |
 
 ## What the user provides (before ship)
 
@@ -80,7 +111,7 @@ exact strings to paste into App Store Connect and Play Console.
 
 | Environment | Works? | Notes |
 | --- | --- | --- |
-| `npm test` (Jest) | Yes | 553 tests — repos, screens, flows, a11y, snapshots |
+| `npm test` (Jest) | Yes | 615 tests — repos, screens, flows, a11y, snapshots |
 | `npm run typecheck` | Yes | Strict TS — no `any` added |
 | `npm run lint` | Yes | Zero-warning baseline |
 | `npm run build:check` | Yes | `expo export --platform ios` |
@@ -205,3 +236,67 @@ store/
   android/         Play Console metadata.yaml
   screenshots/     README with simctl/adb capture commands
 ```
+
+## Troubleshooting
+
+### Geofences never fire
+
+OS geofences require a **development build or standalone app** — they
+do not fire inside Expo Go. If you see the OS permission banner but no
+entry/exit events, rebuild with `npx eas build --profile development`
+and install the dev client on your device.
+
+On iOS, check **Settings → Time Mapper → Location → Always**. The app
+asks for *Always* up-front because "When In Use" will not wake
+geofences when the app is backgrounded.
+
+On Android 10+, Android requires the same **Allow all the time**
+selection in the permission prompt. If the user dismissed the prompt,
+the Settings → "Location permissions" row deep-links to the OS page.
+
+### "Pro mode: mock" banner won't go away
+
+The app is running without RevenueCat keys. Set
+`EXPO_PUBLIC_REVENUECAT_IOS_KEY` + `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`
+in `.env.local`, or push them as EAS secrets for production builds.
+
+### Impressum shows "not yet configured"
+
+You forgot to create `src/screens/Legal/contact.local.ts` (or any of
+the four required fields is empty / still has a `{{TOKEN}}`
+placeholder). Copy the example file and fill in real values — see
+"Impressum contact details" above. The file is gitignored so your
+address never hits the repo.
+
+### Paywall shows "Unable to load pricing"
+
+Either (a) RevenueCat keys are missing so the pricing fetch failed
+gracefully, or (b) the Offering `default` + Entitlement `pro` are not
+configured on the RevenueCat dashboard, or (c) the store products
+(`tm_pro_monthly`, `tm_pro_yearly`) are not in "Ready to submit" /
+"Active" state in App Store Connect / Play Console.
+
+### Sentry crashes have missing location context
+
+That's intentional — `src/lib/crash.ts` strips `latitude`, `longitude`,
+`location`, and related fields from every breadcrumb and event before
+Sentry sees it. Coordinates never leave the device.
+
+### Jest test fails with "Cannot find module 'expo-sqlite'"
+
+A repository or hook is being imported at module-eval time in a
+non-device context. Check that the offending import uses the
+lazy-`require()` pattern in `usePlaces` / `useEntries` etc. — see
+`getDeviceRepo()` helpers.
+
+## License
+
+Copyright © 2026 Time Mapper developer.
+
+This source is proprietary. No grant of rights is implied by its
+publication in this repository. A commercial license will be issued
+once the App Store build ships; until then assume "all rights
+reserved".
+
+The Time Mapper wordmark, icon, and color palette are unregistered
+trademarks of the developer.
