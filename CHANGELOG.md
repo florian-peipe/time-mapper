@@ -4,6 +4,96 @@ All notable changes to Time Mapper are documented here. Release tags are of
 the form `vMAJOR.MINOR-shortname` where the shortname traces back to the
 plan that shipped the work (`foundation`, `core-ui`, …).
 
+## v0.6.1-pre-ship-fixes
+
+Pass-3 review closed all nine P0 ship blockers and most P1s. 113 → 119
+commits, 553 → 599 tests passing.
+
+### P0 ship blockers (closed)
+
+- **Impressum placeholder guard** — `{{OWNER_NAME}}`, `{{ADDRESS}}`,
+  `{{EMAIL}}`, `{{PHONE}}` are now interpolated from a gitignored
+  `src/screens/Legal/contact.local.ts` override. If the file is
+  missing or any token survives, the page renders an "Impressum not
+  yet configured" error variant instead of leaking literal
+  placeholder text into an App Store review.
+- **uiStore persistence** — `themeOverride` and `localeOverride`
+  survive cold starts. `setThemeOverride` / `setLocaleOverride`
+  write through to KV (`ui.themeOverride`, `ui.localeOverride`); a
+  new `useHydrateUiStoreFromKv` hook runs once at RootLayout mount.
+- **Settings row handlers** — Location, Notifications, Default
+  buffers, Retention, Rate, Language all have real behavior. Rate
+  uses `expo-store-review` with a store-URL fallback.
+- **Quiet hours UI** — new `NotificationsSheet` (toggle + hour
+  steppers for start/end) wired over the existing
+  `notifier.getQuietHours/setQuietHours` KV backend.
+- **Default buffers UI** — new `BuffersSheet` (entry 1–15 min +
+  exit 1–10 min sliders) persists to `global.buffers.{entry,exit}_s`
+  KV keys. `AddPlaceSheet` pre-fills its per-place buffer sliders
+  from the same defaults via `readGlobalBuffers(kv)`.
+- **Per-place buffers in AddPlaceSheet** — entry + exit buffer
+  sliders land in Phase 2 and persist to `places.entry_buffer_s` /
+  `exit_buffer_s`.
+- **EntryEditSheet date anchor** — renamed `hhmmToUnixSecondsToday`
+  to `hhmmToUnixSecondsAt(hhmm, anchorUnixSeconds)`. Edit mode
+  threads the entry's original `startedAt` so editing yesterday's
+  entry preserves the date. Midnight-crossing entries roll the end
+  forward by 86400s.
+- **Paywall triggers** —
+  - Timeline DayNavHeader blocks `goBack` past `FREE_HISTORY_DAYS`
+    (14) for free users and opens paywall(source=history).
+  - Stats has a `< [week range] >` navigator. Forward clamps at 0;
+    free-tier prev-week opens paywall.
+  - Place categories dropped from the paywall hero + feature list
+    (categories didn't ship; keys stay for locale symmetry).
+- **App icons + splash** — `scripts/generate-icons.js` writes
+  `assets/icon.png`, `adaptive-icon.png`, `splash-icon.png`,
+  `favicon.png` from the brand rings motif (solid accent
+  `#FF6A3D` + white concentric rings). Pure pngjs; no SVG tool
+  required.
+- **Screenshot capture plan** — `store/screenshots/capture.md`
+  details simulator sizes, seed data, and per-screen capture
+  commands. `placeholder-required.txt` lists all 25 expected PNGs
+  so the upload script can validate the drop.
+
+### P1 (most addressed)
+
+- **Support row** (P1-10) — `mailto:support@timemapper.app` with
+  placeholder email tracked in README.
+- **Diagnostic log** (P1-11, P1-12) — moved out of `__DEV__`;
+  installed `expo-file-system` + `expo-sharing` as managed-workflow
+  deps and dropped the lazy-require guards.
+- **AppState refresh** (P1-13) — permission hooks re-read OS status
+  on foreground.
+- **Paywall preserves AddPlace form** (P1-14) — `sheetStore.pendingPlaceForm`
+  stashes Phase-2 state through a paywall hop.
+- **Hardcoded English moved to i18n** (P1-15) — EntryEditSheet,
+  RunningTimerCard, DayNavHeader, ProUpsellCard keys in en.json +
+  de.json.
+- **Locale-aware date formatting** (P1-16) — new
+  `localeForDateApis()` helper picks `de-DE` / `en-US`.
+- **Stats week navigation** (P1-17) — covered in P0-7(b).
+- **ErrorBoundary** (P1-18) — new top-level boundary wraps Stack +
+  SheetHost; `captureException` + "Restart" fallback.
+- **Scrim + shadow tokens** (P1-21) — `color.scrim` + `color.shadow`
+  tokens replace inline `rgba(0,0,0,0.32)` / `#110D09`. Dark-mode
+  variants deepen both.
+- **Typed-route helper** (P1-22) — `legalRoute("/legal/privacy")`
+  centralizes the Expo Router cast.
+- **Sentry wired** (P1-23) — `@sentry/react-native` installed; the
+  existing lazy-require in `crash.ts` auto-detects. DSN still opt-in.
+- **Tap targets** (P1-26) — DayNavHeader prev/next bumped to 44pt.
+- **Autocomplete abort** (P1-27) — `autocomplete(..., signal?)`
+  accepts an `AbortSignal`; AddPlaceSheet aborts prior fetches on
+  each debounced keystroke.
+
+### Post-ship polish backlog (deferred)
+
+P2-29 through P2-39 — these are nice-to-have polish: richer
+onboarding animation, Stats per-place drilldown, real CSV export
+pipe, place categories revival, dark-mode screenshot sweeps, Android
+back-handler audit, etc. Captured here so a future pass can triage.
+
 ## v0.6.0-release-ready
 
 Release polish pass — everything between working billing and a

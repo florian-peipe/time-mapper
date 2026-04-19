@@ -10,6 +10,7 @@ import { usePro } from "@/features/billing/usePro";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore, type ThemeOverride } from "@/state/uiStore";
 import { i18n, setLocale } from "@/lib/i18n";
+import { legalRoute } from "@/lib/routes";
 import { ProUpsellCard } from "./ProUpsellCard";
 import { simulatePassage } from "@/features/tracking/devSim";
 import { exportDiagnosticLog } from "@/features/diagnostics/exportLog";
@@ -108,20 +109,20 @@ export function SettingsScreen() {
     setLocale(next ?? pickSystemLocale());
   }, [localeOverride, setLocaleOverride]);
 
-  // Legal routes live under `app/legal/*` — the typed-routes generator runs
-  // at `expo start` time, so the string-literal types for these paths aren't
-  // visible during `tsc --noEmit`. Cast the union until the generator catches
-  // up; the runtime still resolves correctly.
+  // Legal routes live under `app/legal/*` — the typed-routes generator
+  // runs at `expo start` time so the string-literal types aren't visible
+  // during `tsc --noEmit`. Route through the `legalRoute` helper which
+  // centralizes the cast behind an exhaustive union (typo-safe).
   const handleOpenPrivacy = useCallback(() => {
-    router.push("/legal/privacy" as unknown as Parameters<typeof router.push>[0]);
+    router.push(legalRoute("/legal/privacy"));
   }, [router]);
 
   const handleOpenTerms = useCallback(() => {
-    router.push("/legal/terms" as unknown as Parameters<typeof router.push>[0]);
+    router.push(legalRoute("/legal/terms"));
   }, [router]);
 
   const handleOpenImpressum = useCallback(() => {
-    router.push("/legal/impressum" as unknown as Parameters<typeof router.push>[0]);
+    router.push(legalRoute("/legal/impressum"));
   }, [router]);
 
   const handleExportDiagnostics = useCallback(() => {
