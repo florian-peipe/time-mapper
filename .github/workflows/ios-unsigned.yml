@@ -50,7 +50,7 @@ concurrency:
 jobs:
   build:
     name: Build unsigned .ipa
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
 
     env:
@@ -66,27 +66,18 @@ jobs:
           node-version: "20"
           cache: npm
 
+      # React Native 0.81 (shipped by Expo SDK 54) requires Xcode 16.1+.
+      # The macos-15 runner image includes 16.x by default.
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "15.4"
+          xcode-version: "16.1"
 
       - name: Install JS deps
         run: npm ci
 
       - name: Expo prebuild (ios)
         run: npx expo prebuild --platform ios --clean --no-install
-
-      # Resolve the scheme + workspace names from the prebuilt project so this
-      # workflow keeps working if app.json → expo.name is ever renamed.
-      - name: Resolve scheme + workspace
-        id: ios
-        run: |
-          WORKSPACE=$(ls ios/*.xcworkspace -d | head -n1)
-          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
-          echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
-          echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
-          echo "Resolved: workspace=$WORKSPACE scheme=$SCHEME"
 
       - name: Cache CocoaPods
         uses: actions/cache@v4
@@ -95,7 +86,7 @@ jobs:
             ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods/repos
-          key: pods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
+          key: pods-${{ runner.os }}-${{ hashFiles('ios/Podfile') }}
           restore-keys: |
             pods-${{ runner.os }}-
 
@@ -103,12 +94,32 @@ jobs:
         working-directory: ios
         run: pod install --repo-update
 
+      # Resolve the scheme + workspace names AFTER `pod install` runs — the
+      # .xcworkspace is created by CocoaPods, not by `expo prebuild`. Using
+      # `find` rather than a glob keeps this portable across BSD and GNU ls.
+      - name: Resolve scheme + workspace
+        id: ios
+        run: |
+          set -euo pipefail
+          WORKSPACE=$(find ios -maxdepth 1 -name "*.xcworkspace" -type d | head -n1)
+          if [ -z "$WORKSPACE" ]; then
+            echo "::error::No .xcworkspace found under ios/"
+            ls -la ios/
+            exit 1
+          fi
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
+          echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
+          echo "Resolved: workspace=$WORKSPACE scheme=$SCHEME"
+
       - name: Build unsigned .app
         env:
           SCHEME: ${{ steps.ios.outputs.scheme }}
           WORKSPACE: ${{ steps.ios.outputs.workspace }}
         run: |
           set -euo pipefail
+          # GitHub Actions runs bash with pipefail on, so any non-zero exit
+          # from xcodebuild fails the step through the xcpretty pipe.
           xcodebuild \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
@@ -123,8 +134,7 @@ jobs:
             EXPANDED_CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
             ONLY_ACTIVE_ARCH=NO \
-            | xcpretty \
-            && exit ${PIPESTATUS[0]}
+            | xcpretty
 
       - name: Package .app into .ipa
         env:
