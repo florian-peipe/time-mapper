@@ -73,6 +73,23 @@ jobs:
         with:
           xcode-version: "16.1"
 
+      # Since Xcode 16, Apple ships the iOS platform SDK as a separately
+      # downloadable component (~3 GB). The GitHub Actions macOS runner
+      # images don't always preinstall it, so `xcodebuild -destination
+      # "generic/platform=iOS"` fails with "iOS 18.1 is not installed".
+      # This step is idempotent — it's a no-op when the platform is
+      # already present.
+      - name: Ensure iOS platform is installed
+        run: |
+          set -euo pipefail
+          echo "=== SDKs before download ==="
+          xcodebuild -showsdks || true
+          echo "=== Downloading iOS platform (idempotent) ==="
+          sudo xcodebuild -runFirstLaunch || true
+          xcodebuild -downloadPlatform iOS
+          echo "=== SDKs after download ==="
+          xcodebuild -showsdks
+
       - name: Install JS deps
         run: npm ci
 
