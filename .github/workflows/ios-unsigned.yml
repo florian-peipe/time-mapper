@@ -67,11 +67,37 @@ jobs:
           cache: npm
 
       # React Native 0.81 (shipped by Expo SDK 54) requires Xcode 16.1+.
-      # The macos-15 runner image includes 16.x by default.
+      # Use `latest-stable` rather than pinning 16.1: on the macos-15 image,
+      # Xcode 16.1 ships with the iOS 18.1 **SDK** but not the iOS 18.1
+      # **Platform** (the ibtool/actool device-support bundle Xcode 16
+      # started shipping as a separate download). That made ibtool fail
+      # with "iOS 18.1 Platform Not Installed" on SplashScreen.storyboard,
+      # and `xcodebuild -downloadPlatform iOS` can't run on a hosted runner
+      # (exit 70, "Unable to connect to simulator"). The image's default
+      # Xcode has its matching Platform preinstalled, so picking it avoids
+      # the whole download path.
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.1"
+          xcode-version: "latest-stable"
+
+      # Diagnostic dump so any future "Platform Not Installed" regression
+      # shows up in the log without needing another CI round-trip.
+      - name: Show Xcode + iOS Platform state
+        run: |
+          set -euo pipefail
+          echo "=== xcode-select ==="
+          xcode-select -p
+          xcodebuild -version
+          echo "=== Installed Xcodes ==="
+          ls -1d /Applications/Xcode*.app 2>/dev/null || true
+          XCODE_DEV="$(xcode-select -p)"
+          echo "=== Platforms under active Xcode ==="
+          ls -la "$XCODE_DEV/Platforms/" 2>&1 || true
+          echo "=== iPhoneOS.platform/Developer ==="
+          ls -la "$XCODE_DEV/Platforms/iPhoneOS.platform/Developer" 2>&1 || true
+          echo "=== xcodebuild -showsdks ==="
+          xcodebuild -showsdks
 
       - name: Install JS deps
         run: npm ci
