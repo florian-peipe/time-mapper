@@ -4,10 +4,12 @@ import { uuid } from "@/lib/id";
 import { EntriesRepo } from "@/db/repository/entries";
 import { PlacesRepo } from "@/db/repository/places";
 import { PendingTransitionsRepo } from "@/db/repository/pending";
+import { KvRepo } from "@/db/repository/kv";
 import { step, type Event, type MachineState } from "@/features/tracking/stateMachine";
 import { loadState, applyEffects } from "@/features/tracking/persistence";
 import { TASK_NAME } from "@/features/tracking/geofenceService";
 import { maybeNotifyForEffects } from "@/features/notifications/notifier";
+import { recordBgFire } from "@/features/tracking/trackingHealth";
 
 /** iOS event type → state machine event kind. */
 const EVENT_ENTER = 1;
@@ -48,37 +50,61 @@ export async function handleGeofencingEvent(
   nowS: number = Math.floor(Date.now() / 1000),
 ): Promise<void> {
   const db = getDb();
-  const places = new PlacesRepo(db);
-  const entries = new EntriesRepo(db);
-  const pending = new PendingTransitionsRepo(db);
+  // `places` + `kv` are read-mostly outside the transaction; the write-heavy
+  // path (loadState → apply events → apply CONFIRMs) is wrapped in a single
+  // db.transaction below using tx-scoped repos. Notifications fire after
+  // commit so a rolled-back transaction doesn't leave orphan toasts.
+  const placesOuter = new PlacesRepo(db);
+  const kv = new KvRepo(db);
 
-  const initial = loadState(entries, pending);
-  let state = initial;
+  // Record the wake so the tracking-health indicator knows the OS is still
+  // calling us. Written unconditionally — even an empty/unknown event is
+  // evidence that the task is registered and firing.
+  recordBgFire(kv, nowS);
+
   const allEffects: ReturnType<typeof step>["effects"] = [];
 
-  // 1. Apply the incoming region event (if any).
-  if (data) {
-    const event = mapRegionEvent(data, places, nowS);
-    if (event) {
-      const r = step(state, event);
+  // All state-machine reads + writes run in one atomic transaction. If the
+  // JS task crashes mid-batch, the OS rolls back and `loadState` on the
+  // next wake sees a consistent DB. drizzle-orm's transaction callback
+  // receives a `tx` drizzle instance that transparently proxies to the
+  // transaction — we pass it into tx-scoped repo constructors so every
+  // write in this block lands inside the transaction.
+  db.transaction((tx) => {
+    const entries = new EntriesRepo(tx);
+    const pending = new PendingTransitionsRepo(tx);
+    const places = new PlacesRepo(tx);
+
+    const initial = loadState(entries, pending);
+    let state = initial;
+
+    // 1. Apply the incoming region event (if any).
+    if (data) {
+      const event = mapRegionEvent(data, places, nowS);
+      if (event) {
+        const r = step(state, event);
+        state = applyEffects(r.effects, r.next, entries, pending, nowS);
+        allEffects.push(...r.effects);
+      }
+    }
+
+    // 2. Opportunistic CONFIRM for any pending transition whose buffer has
+    // elapsed. Keeps looping until no more are due.
+    for (let i = 0; i < 10; i++) {
+      const due = pending.dueAt(nowS);
+      if (due.length === 0) break;
+      const r = step(state, { kind: "CONFIRM", atS: nowS });
+      if (r.effects.length === 0) break;
       state = applyEffects(r.effects, r.next, entries, pending, nowS);
       allEffects.push(...r.effects);
     }
-  }
+  });
 
-  // 2. Opportunistic CONFIRM for any pending transition whose buffer has
-  // elapsed. Keeps looping until no more are due.
-  for (let i = 0; i < 10; i++) {
-    const due = pending.dueAt(nowS);
-    if (due.length === 0) break;
-    const r = step(state, { kind: "CONFIRM", atS: nowS });
-    if (r.effects.length === 0) break;
-    state = applyEffects(r.effects, r.next, entries, pending, nowS);
-    allEffects.push(...r.effects);
-  }
-
-  // 3. Fire notifications for any open/close effects that occurred.
-  await maybeNotifyForEffects(allEffects, places, nowS);
+  // 3. Fire notifications for any open/close effects that occurred. This
+  // runs AFTER the transaction commits — a rolled-back transaction would
+  // have empty `allEffects`, so we won't send a notification for a write
+  // that didn't persist.
+  await maybeNotifyForEffects(allEffects, placesOuter, nowS);
 }
 
 function mapRegionEvent(data: GeofencingData, placesRepo: PlacesRepo, nowS: number): Event | null {

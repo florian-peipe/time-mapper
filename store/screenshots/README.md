@@ -31,7 +31,7 @@ Choose 6 screens that tell the story of Time Mapper in order:
    ("Home", "Gym", "Office") to render a convincing day.
 2. **Running timer card** — a place is currently being tracked, big
    Rings visualization, place name prominent. Use `Settings → Dev →
-   Simulate visit` to produce an ongoing entry, then screenshot.
+Simulate visit` to produce an ongoing entry, then screenshot.
 3. **Add place sheet — Phase 2** — show the map preview with a pin +
    circle over Cologne (demo data's default). Highlights the radius slider.
 4. **Stats tab** — the week bar chart with a legend of 3–4 places

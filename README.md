@@ -38,41 +38,43 @@ Everything the MVP scope asks for is shipped and tested:
 
 ## What's done (release history)
 
-| Area | Status |
-| --- | --- |
-| Foundation — tokens, primitives, theme, i18n, DB | Shipped (v0.1) |
-| Core UI — Timeline, Stats, Settings, Add Place, Paywall, EntryEdit | Shipped (v0.2) |
-| UX pivot — onboarding polish, pending-transitions, map preview | Shipped (v0.3) |
-| Location engine — geofences, state machine, bootstrap, reconcile | Shipped (v0.4) |
-| Billing — RevenueCat + mock mode + paywall wired | Shipped (v0.5) |
-| Release polish — a11y, DE audit, Sentry, legal, store metadata, EAS | Shipped (v0.6) |
-| Pre-ship fixes — Impressum guard, KV persistence, sheets, snackbar | Shipped (v1.0.0-beta) |
+| Area                                                                | Status                |
+| ------------------------------------------------------------------- | --------------------- |
+| Foundation — tokens, primitives, theme, i18n, DB                    | Shipped (v0.1)        |
+| Core UI — Timeline, Stats, Settings, Add Place, Paywall, EntryEdit  | Shipped (v0.2)        |
+| UX pivot — onboarding polish, pending-transitions, map preview      | Shipped (v0.3)        |
+| Location engine — geofences, state machine, bootstrap, reconcile    | Shipped (v0.4)        |
+| Billing — RevenueCat + mock mode + paywall wired                    | Shipped (v0.5)        |
+| Release polish — a11y, DE audit, Sentry, legal, store metadata, EAS | Shipped (v0.6)        |
+| Pre-ship fixes — Impressum guard, KV persistence, sheets, snackbar  | Shipped (v1.0.0-beta) |
 
 ## What the user provides (before ship)
 
-| Item | Where | Docs |
-| --- | --- | --- |
-| Apple Developer account | App Store Connect | [developer.apple.com](https://developer.apple.com) |
-| Google Play Console account | Play Console | [play.google.com/console](https://play.google.com/console) |
-| RevenueCat project + API keys | `EXPO_PUBLIC_REVENUECAT_{IOS,ANDROID}_KEY` | [revenuecat.com](https://www.revenuecat.com) |
-| Google Places API key | `EXPO_PUBLIC_GOOGLE_PLACES_API_KEY` | [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) |
-| Sentry DSN (optional) | `EXPO_PUBLIC_SENTRY_DSN` | [sentry.io](https://sentry.io) |
-| Impressum contact details | `src/screens/Legal/contact.local.ts` (gitignored) | See § 5 TMG |
-| Support email | `src/screens/Settings/SettingsScreen.tsx` (mailto) + app.json | Placeholder `support@timemapper.app` |
-| Privacy policy public URL | App Store Connect → App Privacy | Host `docs/legal/privacy-en.md` |
-| Apple ID + ASC App ID + Team ID | `eas.json` submit.production.ios | ASC → App Information |
-| Play service account JSON | `play-service-account.json` (gitignored) | Play Console → Setup → API access |
-| App icon + screenshots | `assets/icon.png` + `store/screenshots/` | [Screenshot README](./store/screenshots/README.md) |
+| Item                            | Where                                                         | Docs                                                                          |
+| ------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Apple Developer account         | App Store Connect                                             | [developer.apple.com](https://developer.apple.com)                            |
+| Google Play Console account     | Play Console                                                  | [play.google.com/console](https://play.google.com/console)                    |
+| RevenueCat project + API keys   | `EXPO_PUBLIC_REVENUECAT_{IOS,ANDROID}_KEY`                    | [revenuecat.com](https://www.revenuecat.com)                                  |
+| Google Places API key           | `EXPO_PUBLIC_GOOGLE_PLACES_API_KEY`                           | [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) |
+| Sentry DSN (optional)           | `EXPO_PUBLIC_SENTRY_DSN`                                      | [sentry.io](https://sentry.io)                                                |
+| Impressum contact details       | `src/screens/Legal/contact.local.ts` (gitignored)             | See § 5 TMG                                                                   |
+| Support email                   | `src/screens/Settings/SettingsScreen.tsx` (mailto) + app.json | Placeholder `support@timemapper.app`                                          |
+| Privacy policy public URL       | App Store Connect → App Privacy                               | Host `docs/legal/privacy-en.md`                                               |
+| Apple ID + ASC App ID + Team ID | `eas.json` submit.production.ios                              | ASC → App Information                                                         |
+| Play service account JSON       | `play-service-account.json` (gitignored)                      | Play Console → Setup → API access                                             |
+| App icon + screenshots          | `assets/icon.png` + `store/screenshots/`                      | [Screenshot README](./store/screenshots/README.md)                            |
 
 ## How to build + submit
 
 ### 1. Install
+
 ```sh
 npm install
 cp .env.example .env.local   # fill in the keys you have
 ```
 
 ### 2. Push EAS secrets (one-time)
+
 ```sh
 npx eas secret:create --name EXPO_PUBLIC_REVENUECAT_IOS_KEY --value appl_...
 npx eas secret:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value goog_...
@@ -81,6 +83,7 @@ npx eas secret:create --name EXPO_PUBLIC_SENTRY_DSN --value https://...   # opti
 ```
 
 ### 3. Build
+
 ```sh
 # Development client (simulators only, hot reload):
 npx eas build --profile development --platform ios
@@ -96,6 +99,7 @@ npx eas build --profile production --platform android
 ```
 
 ### 4. Submit
+
 Before `eas submit`, fill the placeholders in `eas.json → submit.production`
 and drop your Play service-account JSON at `play-service-account.json`.
 
@@ -109,15 +113,15 @@ exact strings to paste into App Store Connect and Play Console.
 
 ## How to test locally
 
-| Environment | Works? | Notes |
-| --- | --- | --- |
-| `npm test` (Jest) | Yes | 615 tests — repos, screens, flows, a11y, snapshots |
-| `npm run typecheck` | Yes | Strict TS — no `any` added |
-| `npm run lint` | Yes | Zero-warning baseline |
-| `npm run build:check` | Yes | `expo export --platform ios` |
-| `npx expo start` (Expo Go) | Partial | UI renders + mock billing; **no geofencing** — that needs a dev build |
-| `npx expo run:ios` (dev client) | Yes | Full feature set including background geofence |
-| `npx expo run:android` (dev client) | Yes | Same |
+| Environment                         | Works?  | Notes                                                                 |
+| ----------------------------------- | ------- | --------------------------------------------------------------------- |
+| `npm test` (Jest)                   | Yes     | 615 tests — repos, screens, flows, a11y, snapshots                    |
+| `npm run typecheck`                 | Yes     | Strict TS — no `any` added                                            |
+| `npm run lint`                      | Yes     | Zero-warning baseline                                                 |
+| `npm run build:check`               | Yes     | `expo export --platform ios`                                          |
+| `npx expo start` (Expo Go)          | Partial | UI renders + mock billing; **no geofencing** — that needs a dev build |
+| `npx expo run:ios` (dev client)     | Yes     | Full feature set including background geofence                        |
+| `npx expo run:android` (dev client) | Yes     | Same                                                                  |
 
 ### Dev toggles (in a debug build)
 
@@ -247,7 +251,7 @@ entry/exit events, rebuild with `npx eas build --profile development`
 and install the dev client on your device.
 
 On iOS, check **Settings → Time Mapper → Location → Always**. The app
-asks for *Always* up-front because "When In Use" will not wake
+asks for _Always_ up-front because "When In Use" will not wake
 geofences when the app is backgrounded.
 
 On Android 10+, Android requires the same **Allow all the time**

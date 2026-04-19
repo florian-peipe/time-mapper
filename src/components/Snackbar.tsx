@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import { Pressable, Text, View } from "react-native";
+import React, { useEffect, useMemo, useRef } from "react";
+import { Animated, Pressable, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { useSnackbarStore } from "@/state/snackbarStore";
 
@@ -26,14 +26,26 @@ export function SnackbarHost({ testID }: { testID?: string } = {}) {
   const snack = useSnackbarStore((s) => s.current);
   const dismiss = useSnackbarStore((s) => s.dismiss);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Countdown progress (1 → 0 over ttlMs). Re-used across snacks to keep a
+  // single animated value in flight; reset to 1 whenever a new snack mounts.
+  const progress = useMemo(() => new Animated.Value(1), []);
 
   useEffect(() => {
     if (timerRef.current != null) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    progress.stopAnimation();
+    progress.setValue(1);
     if (!snack) return;
     const id = snack.id;
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: snack.ttlMs,
+      // Width animations must run on the JS thread — native driver only
+      // supports transform/opacity.
+      useNativeDriver: false,
+    }).start();
     timerRef.current = setTimeout(() => {
       dismiss(id);
     }, snack.ttlMs);
@@ -42,8 +54,9 @@ export function SnackbarHost({ testID }: { testID?: string } = {}) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
+      progress.stopAnimation();
     };
-  }, [snack, dismiss]);
+  }, [snack, dismiss, progress]);
 
   if (!snack) return null;
 
@@ -115,6 +128,40 @@ export function SnackbarHost({ testID }: { testID?: string } = {}) {
             {snack.action.label}
           </Text>
         </Pressable>
+      ) : null}
+      {/*
+        Countdown bar — a thin accent-colored fill at the bottom edge of the
+        snackbar that depletes from full to empty over the TTL. Only rendered
+        when the snack has an action (the undo case) — transient snacks
+        without an action don't need a visible countdown.
+      */}
+      {snack.action ? (
+        <View
+          testID="snackbar-countdown"
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 3,
+            backgroundColor: t.color("color.border"),
+            borderBottomLeftRadius: t.radius.md,
+            borderBottomRightRadius: t.radius.md,
+            overflow: "hidden",
+          }}
+        >
+          <Animated.View
+            style={{
+              height: "100%",
+              width: progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["0%", "100%"],
+              }),
+              backgroundColor: t.color("color.accent"),
+            }}
+          />
+        </View>
       ) : null}
     </View>
   );

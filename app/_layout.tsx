@@ -25,14 +25,16 @@ import { ErrorBoundary, SnackbarHost } from "@/components";
 import { useHydrateUiStoreFromKv, useUiStore } from "@/state/uiStore";
 import { initI18n } from "@/lib/i18n";
 import { captureException, initCrashReporting } from "@/lib/crash";
-import { runMigrations } from "@/db/client";
+import { runMigrations, db } from "@/db/client";
 import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
+import { KvRepo } from "@/db/repository/kv";
+import { getTelemetryEnabled } from "@/features/diagnostics/telemetryConsent";
 import { SheetHost } from "@/screens/SheetHost";
 // Side-effect import: registers the geofence task at module-eval time, which
 // is a hard requirement of expo-task-manager (OS cold-wakes run only JS
 // module init, not React render). Must come before bootstrapTracking().
 import "@/background/tasks";
-import { bootstrapTracking } from "@/features/tracking/bootstrap";
+import { bootstrapTracking, startForegroundReconcileWatcher } from "@/features/tracking/bootstrap";
 
 function pickInitialLocale(override: string | null): string {
   if (override) return override;
@@ -59,12 +61,19 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    // v0.6: crash reporting initializes first so even a migration failure
-    // below lands in Sentry (when DSN configured). No-op when disabled.
-    initCrashReporting();
     (async () => {
       initI18n(pickInitialLocale(localeOverride));
       await runMigrations();
+      // v1.0.1: crash reporting is opt-in per GDPR — check the KV flag.
+      // Must happen after migrations so the KV table exists; if a migration
+      // crash happens before this line, we'll miss it in Sentry, but
+      // privacy > observability for a pre-install fault.
+      try {
+        const consent = getTelemetryEnabled(new KvRepo(db));
+        initCrashReporting({ consent });
+      } catch {
+        // Reading KV failed — default to no-Sentry to be safe.
+      }
       // v0.3: no auto-seed on boot. The app now starts empty so first-run
       // feels like a real install (onboarding takes the user straight to
       // "add your first place"). `seedDemoData` still exists in `db/seed.ts`
@@ -80,6 +89,10 @@ export default function RootLayout() {
       captureException(err, { stage: "boot" });
       setDbReady(true); // fail-open rather than hang — UI can show error later
     });
+    // Re-reconcile geofences whenever the app returns to foreground — catches
+    // permission downgrades that happened while backgrounded (v1.0.1 fix).
+    const sub = startForegroundReconcileWatcher();
+    return () => sub.remove();
   }, [localeOverride]);
 
   if (!fontsLoaded || !dbReady) return null;

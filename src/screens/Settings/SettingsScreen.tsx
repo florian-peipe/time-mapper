@@ -5,15 +5,23 @@ import { useRouter } from "expo-router";
 import * as StoreReview from "expo-store-review";
 import { useTheme } from "@/theme/useTheme";
 import { ListRow, Section, type IconName } from "@/components";
-import { usePlaces } from "@/features/places/usePlaces";
+import { usePlaces, usePlacesRepo } from "@/features/places/usePlaces";
+import { useEntriesRepo } from "@/features/entries/useEntries";
 import { usePro } from "@/features/billing/usePro";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore, type ThemeOverride } from "@/state/uiStore";
+import { useSnackbarStore } from "@/state/snackbarStore";
 import { i18n, setLocale } from "@/lib/i18n";
 import { legalRoute } from "@/lib/routes";
 import { ProUpsellCard } from "./ProUpsellCard";
 import { simulatePassage } from "@/features/tracking/devSim";
 import { exportDiagnosticLog } from "@/features/diagnostics/exportLog";
+import { exportEntriesCsv } from "@/features/diagnostics/exportEntries";
+import { useKvRepo, useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
+import { getTelemetryEnabled, setTelemetryEnabled } from "@/features/diagnostics/telemetryConsent";
+import { resetAllData } from "@/features/diagnostics/resetAllData";
+import { buildBackupPayload, exportBackupJson } from "@/features/diagnostics/backup";
+import { PendingTransitionsRepo } from "@/db/repository/pending";
 import { NotificationsSheet } from "./NotificationsSheet";
 import { BuffersSheet } from "./BuffersSheet";
 
@@ -67,6 +75,26 @@ export function SettingsScreen() {
   const { isPro, grant, revoke, restore } = usePro();
   const [restoreState, setRestoreState] = useState<"idle" | "busy" | "done" | "error">("idle");
   const { places } = usePlaces();
+  const placesRepo = usePlacesRepo();
+  const entriesRepo = useEntriesRepo();
+  // Lifetime net-minute totals per place. Computed on every render — with
+  // dozens of places and hundreds of entries the cost is negligible, and
+  // there's no reactive `entries` value at this level we could key a
+  // useMemo on cleanly. `places` is already reactive via `usePlaces` so
+  // a new place mutation re-renders this component anyway.
+  const lifetimeByPlace = (() => {
+    const totals = new Map<string, number>();
+    for (const e of entriesRepo.listAll()) {
+      if (e.endedAt == null) continue; // ongoing — don't count toward lifetime yet
+      const gross = Math.max(0, e.endedAt - e.startedAt);
+      const net = Math.max(0, gross - (e.pauseS ?? 0));
+      totals.set(e.placeId, (totals.get(e.placeId) ?? 0) + net);
+    }
+    return totals;
+  })();
+  const kv = useKvRepo();
+  const [telemetryEnabled, setTelemetryEnabledLocal] = useState(() => getTelemetryEnabled(kv));
+  const { reset: resetOnboardingFlag } = useOnboardingGate();
   const openSheet = useSheetStore((s) => s.openSheet);
   const themeOverride = useUiStore((s) => s.themeOverride);
   const setThemeOverride = useUiStore((s) => s.setThemeOverride);
@@ -131,13 +159,121 @@ export function SettingsScreen() {
     });
   }, []);
 
+  const handleExportBackup = useCallback(() => {
+    (async () => {
+      try {
+        // Lazy require — keep the raw `db` off the test import graph.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { db } = require("@/db/client");
+        const pending = new PendingTransitionsRepo(db);
+        const payload = buildBackupPayload(
+          placesRepo.list(),
+          entriesRepo.listAll(),
+          pending.listAll(),
+        );
+        const shared = await exportBackupJson(payload);
+        if (!shared) {
+          useSnackbarStore
+            .getState()
+            .show({ message: i18n.t("settings.data.export.unavailable"), ttlMs: 4000 });
+        }
+      } catch (err) {
+        console.warn("backup export failed", err);
+        useSnackbarStore
+          .getState()
+          .show({ message: i18n.t("settings.data.export.failed"), ttlMs: 4000 });
+      }
+    })();
+  }, [placesRepo, entriesRepo]);
+
   const handleExport = useCallback(() => {
     if (!isPro) {
       handleOpenPaywall("export");
       return;
     }
-    // Real CSV export lands in Plan 5 polish; intentional no-op for now.
-  }, [isPro, handleOpenPaywall]);
+    (async () => {
+      try {
+        const entries = entriesRepo.listAll();
+        const placesById = new Map(placesRepo.list().map((p) => [p.id, p]));
+        const shared = await exportEntriesCsv(entries, placesById);
+        if (!shared) {
+          useSnackbarStore
+            .getState()
+            .show({ message: i18n.t("settings.data.export.unavailable"), ttlMs: 4000 });
+        }
+      } catch (err) {
+        console.warn("CSV export failed", err);
+        useSnackbarStore
+          .getState()
+          .show({ message: i18n.t("settings.data.export.failed"), ttlMs: 4000 });
+      }
+    })();
+  }, [isPro, handleOpenPaywall, entriesRepo, placesRepo]);
+
+  const handleShowOnboarding = useCallback(() => {
+    router.push("/(onboarding)/welcome");
+  }, [router]);
+
+  const handleResetAllData = useCallback(() => {
+    Alert.alert(
+      i18n.t("settings.data.reset.confirmTitle"),
+      i18n.t("settings.data.reset.confirmBody"),
+      [
+        { text: i18n.t("common.cancel"), style: "cancel" },
+        {
+          text: i18n.t("settings.data.reset.confirmCta"),
+          style: "destructive",
+          onPress: () => {
+            // Second-level confirmation — destructive + irreversible.
+            Alert.alert(
+              i18n.t("settings.data.reset.doubleTitle"),
+              i18n.t("settings.data.reset.doubleBody"),
+              [
+                { text: i18n.t("common.cancel"), style: "cancel" },
+                {
+                  text: i18n.t("settings.data.reset.doubleCta"),
+                  style: "destructive",
+                  onPress: () => {
+                    void (async () => {
+                      try {
+                        // Lazy require — keeps expo-sqlite off the test import
+                        // graph; SettingsScreen renders in jest-expo with no
+                        // native binding available.
+                        // eslint-disable-next-line @typescript-eslint/no-require-imports
+                        const { db } = require("@/db/client");
+                        await resetAllData(db);
+                        resetOnboardingFlag();
+                        // Route back to onboarding so the UX exits from the
+                        // same place the user first entered.
+                        router.replace("/(onboarding)/welcome");
+                      } catch (err) {
+                        console.warn("resetAllData failed", err);
+                      }
+                    })();
+                  },
+                },
+              ],
+            );
+          },
+        },
+      ],
+    );
+  }, [resetOnboardingFlag, router]);
+
+  const handleToggleTelemetry = useCallback(() => {
+    const next = !telemetryEnabled;
+    setTelemetryEnabled(kv, next);
+    setTelemetryEnabledLocal(next);
+    // The live Sentry instance keeps running for this session if we just
+    // flipped off (Sentry has no public teardown). Explain that to the
+    // user via a short snackbar so they aren't confused by the delay.
+    useSnackbarStore.getState().show({
+      message: i18n.t(
+        next ? "settings.data.telemetry.enabledNote" : "settings.data.telemetry.disabledNote",
+      ),
+      ttlMs: 4000,
+    });
+  }, [telemetryEnabled, kv]);
 
   const handleOpenLocationSettings = useCallback(() => {
     void Linking.openSettings().catch((err) => {
@@ -282,19 +418,27 @@ export function SettingsScreen() {
             />
           ) : (
             <>
-              {places.map((p) => (
-                <ListRow
-                  key={p.id}
-                  icon={toIconName(p.icon)}
-                  iconBg={p.color}
-                  iconColor={t.color("color.accent.contrast")}
-                  title={p.name}
-                  detail={p.address || undefined}
-                  onPress={() => handleEditPlace(p.id)}
-                  testID={`settings-row-place-${p.id}`}
-                  accessibilityHint={i18n.t("common.edit")}
-                />
-              ))}
+              {places.map((p) => {
+                const lifetime = formatLifetimeTotal(lifetimeByPlace.get(p.id) ?? 0);
+                const detail = p.address
+                  ? lifetime
+                    ? `${p.address} · ${lifetime}`
+                    : p.address
+                  : (lifetime ?? undefined);
+                return (
+                  <ListRow
+                    key={p.id}
+                    icon={toIconName(p.icon)}
+                    iconBg={p.color}
+                    iconColor={t.color("color.accent.contrast")}
+                    title={p.name}
+                    detail={detail}
+                    onPress={() => handleEditPlace(p.id)}
+                    testID={`settings-row-place-${p.id}`}
+                    accessibilityHint={i18n.t("common.edit")}
+                  />
+                );
+              })}
               <ListRow
                 icon="plus"
                 title={i18n.t("settings.places.addAnother")}
@@ -407,11 +551,44 @@ export function SettingsScreen() {
           */}
           <ListRow
             icon="download"
+            title={i18n.t("settings.data.backup")}
+            detail={i18n.t("settings.data.backup.detail")}
+            onPress={handleExportBackup}
+            testID="settings-row-backup"
+          />
+          <ListRow
+            icon="download"
             title={i18n.t("settings.data.diagnostics")}
             detail={i18n.t("settings.data.diagnostics.detail")}
             onPress={handleExportDiagnostics}
-            last
             testID="settings-row-diagnostics"
+          />
+          <ListRow
+            icon="lock"
+            title={i18n.t("settings.data.telemetry")}
+            detail={i18n.t(
+              telemetryEnabled ? "settings.data.telemetry.on" : "settings.data.telemetry.off",
+            )}
+            onPress={handleToggleTelemetry}
+            testID="settings-row-telemetry"
+            accessibilityState={{ checked: telemetryEnabled }}
+          />
+          <ListRow
+            icon="repeat"
+            title={i18n.t("settings.data.showOnboarding")}
+            detail={i18n.t("settings.data.showOnboarding.detail")}
+            onPress={handleShowOnboarding}
+            testID="settings-row-show-onboarding"
+          />
+          <ListRow
+            icon="x"
+            iconBg={t.color("color.danger.soft")}
+            iconColor={t.color("color.danger")}
+            title={i18n.t("settings.data.reset")}
+            detail={i18n.t("settings.data.reset.detail")}
+            onPress={handleResetAllData}
+            last
+            testID="settings-row-reset"
           />
         </Section>
 
@@ -488,6 +665,21 @@ export function SettingsScreen() {
  * Right-side label for the Restore purchases row. Reflects the in-flight
  * + post-completion state so the user knows their tap was acknowledged.
  */
+/**
+ * Short lifetime-total label for the Places ListRow right-side detail
+ * (e.g. "42h", "3h 15m", "45m"). Returns null when the place has no
+ * recorded time yet, so the caller can decide whether to show the
+ * address alone or hide the detail entirely.
+ */
+function formatLifetimeTotal(minutes: number): string | null {
+  if (minutes <= 0) return null;
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h >= 100 || m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
 function restoreLabel(state: "idle" | "busy" | "done" | "error"): string | undefined {
   if (state === "busy") return i18n.t("settings.subscription.restore.busy");
   if (state === "done") return i18n.t("settings.subscription.restore.done");

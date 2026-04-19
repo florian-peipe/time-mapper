@@ -52,6 +52,7 @@ export type UsePlacesResult = {
   create: (input: CreatePlaceInput) => Place;
   update: (id: string, patch: Partial<CreatePlaceInput>) => Place;
   remove: (id: string) => void;
+  restore: (id: string) => void;
   count: number;
 };
 
@@ -109,5 +110,14 @@ export function usePlaces(): UsePlacesResult {
     [repo, refresh],
   );
 
-  return { places, loading, refresh, create, update, remove, count: places.length };
+  const restore = useCallback(
+    (id: string) => {
+      repo.restore(id);
+      refresh();
+      void reconcileAfterPlaceChange();
+    },
+    [repo, refresh],
+  );
+
+  return { places, loading, refresh, create, update, remove, restore, count: places.length };
 }

@@ -3,7 +3,7 @@ import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
 import type { PlacesRepo } from "./repository/places";
 import type { EntriesRepo } from "./repository/entries";
 import type { KvRepo } from "./repository/kv";
-import { entries, places, categories, pendingTransitions, kv } from "./schema";
+import { entries, places, pendingTransitions, kv } from "./schema";
 
 type AnyDb = BetterSQLite3Database | ExpoSQLiteDatabase;
 type Clock = () => number;
@@ -147,11 +147,10 @@ export function resetAndSeed(
   clock: Clock = defaultClock,
 ): void {
   // Order: child rows before parents — entries + pending_transitions both
-  // reference places, so they go first. categories + kv are independent.
+  // reference places, so they go first.
   db.delete(entries).run();
   db.delete(pendingTransitions).run();
   db.delete(places).run();
-  db.delete(categories).run();
   db.delete(kv).run();
   seedDemoData(placesRepo, entriesRepo, kvRepo, clock);
 }

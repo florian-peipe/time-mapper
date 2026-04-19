@@ -34,64 +34,70 @@ export function RunningTimerCard({ placeName, startedAt, onStop, testID }: Props
     // it stands out from the neutral list rhythm below — "this is the active
     // session" reads at a glance. Card primitive owns radius + shadow; the
     // fill override layers on top.
-    <Card
-      variant="tile"
-      padding={4}
-      testID={testID}
-      style={{ backgroundColor: t.color("color.accent.soft") }}
+    <View
+      accessible
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={i18n.t("running.a11y.card", { name: placeName, elapsed })}
     >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: t.space[3],
-        }}
+      <Card
+        variant="tile"
+        padding={4}
+        testID={testID}
+        style={{ backgroundColor: t.color("color.accent.soft") }}
       >
-        {/*
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: t.space[3],
+          }}
+        >
+          {/*
           v0.3 polish: pulsing success-green TrackingDot replaces the static
           accent dot. Reads as "live, currently tracking" more than a solid
           circle. Size 10 matches the original design-system spec.
         */}
-        <TrackingDot size={10} />
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text
-            style={{
-              fontSize: t.type.size.xs,
-              color: t.color("color.fg3"),
-              fontFamily: t.type.family.sans,
-              fontWeight: t.type.weight.medium,
-            }}
-          >
-            {i18n.t("running.label.tracking")}{" "}
+          <TrackingDot size={10} />
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text
               style={{
-                color: t.color("color.fg"),
-                fontWeight: t.type.weight.semibold,
+                fontSize: t.type.size.xs,
+                color: t.color("color.fg3"),
+                fontFamily: t.type.family.sans,
+                fontWeight: t.type.weight.medium,
               }}
             >
-              {placeName}
+              {i18n.t("running.label.tracking")}{" "}
+              <Text
+                style={{
+                  color: t.color("color.fg"),
+                  fontWeight: t.type.weight.semibold,
+                }}
+              >
+                {placeName}
+              </Text>
             </Text>
-          </Text>
-          <Text
-            testID={testID ? `${testID}-elapsed` : "running-timer-elapsed"}
-            style={{
-              fontSize: 26, // design-system spec: 26px running-timer size, no token
-              fontWeight: t.type.weight.bold,
-              color: t.color("color.fg"),
-              fontFamily: t.type.family.sans,
-              letterSpacing: -0.5,
-              marginTop: 2,
-              fontVariant: ["tabular-nums"],
-            }}
-          >
-            {elapsed}
-          </Text>
+            <Text
+              testID={testID ? `${testID}-elapsed` : "running-timer-elapsed"}
+              style={{
+                fontSize: 26, // design-system spec: 26px running-timer size, no token
+                fontWeight: t.type.weight.bold,
+                color: t.color("color.fg"),
+                fontFamily: t.type.family.sans,
+                letterSpacing: -0.5,
+                marginTop: 2,
+                fontVariant: ["tabular-nums"],
+              }}
+            >
+              {elapsed}
+            </Text>
+          </View>
+          <Button variant="secondary" size="sm" onPress={onStop}>
+            {i18n.t("running.cta.stop")}
+          </Button>
         </View>
-        <Button variant="secondary" size="sm" onPress={onStop}>
-          {i18n.t("running.cta.stop")}
-        </Button>
-      </View>
-    </Card>
+      </Card>
+    </View>
   );
 }
 

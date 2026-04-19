@@ -130,11 +130,11 @@ describe("AddPlaceSheet — Phase 1 (search)", () => {
 });
 
 describe("AddPlaceSheet — Phase 2 (editor)", () => {
-  it("enters the editor after selecting a suggestion and pre-fills the name", async () => {
+  it("enters the editor after selecting a suggestion with the name left empty", async () => {
     setup({});
     await gotoPhase2();
-    // Name input pre-filled with mainText ("Kinkelstr. 3").
-    expect(screen.getByTestId("add-place-name").props.value).toBe("Kinkelstr. 3");
+    // Name input stays empty so the user labels the place (e.g. "Arbeit").
+    expect(screen.getByTestId("add-place-name").props.value).toBe("");
     // Address preview uses the formatted_address from the demo details.
     expect(screen.getByText(/Kinkelstr\. 3, 50733 Köln, Germany/)).toBeTruthy();
   });

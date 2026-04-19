@@ -9,7 +9,6 @@ export const places = sqliteTable("places", {
   radiusM: integer("radius_m").notNull().default(100),
   entryBufferS: integer("entry_buffer_s").notNull().default(300),
   exitBufferS: integer("exit_buffer_s").notNull().default(180),
-  categoryId: text("category_id"),
   color: text("color").notNull(),
   icon: text("icon").notNull(),
   createdAt: integer("created_at").notNull(),
@@ -35,13 +34,6 @@ export const entries = sqliteTable("entries", {
   deletedAt: integer("deleted_at"),
 });
 
-export const categories = sqliteTable("categories", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  color: text("color").notNull(),
-  createdAt: integer("created_at").notNull(),
-});
-
 export const pendingTransitions = sqliteTable("pending_transitions", {
   id: text("id").primaryKey(),
   placeId: text("place_id")
@@ -63,5 +55,4 @@ export type Place = typeof places.$inferSelect;
 export type NewPlace = typeof places.$inferInsert;
 export type Entry = typeof entries.$inferSelect;
 export type NewEntry = typeof entries.$inferInsert;
-export type Category = typeof categories.$inferSelect;
 export type PendingTransition = typeof pendingTransitions.$inferSelect;

@@ -13,10 +13,18 @@ export class KvRepo {
     return (row as { value: string } | undefined)?.value ?? null;
   }
 
+  /**
+   * Atomic upsert — a single `INSERT … ON CONFLICT DO UPDATE` statement so
+   * two concurrent writers never race between `get` and `write`. Required
+   * on the mobile runtime where the background geofence task can fire
+   * while the foreground JS is in the middle of a KV write.
+   */
   set(key: string, value: string): void {
-    const existing = this.get(key);
-    if (existing === null) this.db.insert(kv).values({ key, value }).run();
-    else this.db.update(kv).set({ value }).where(eq(kv.key, key)).run();
+    this.db
+      .insert(kv)
+      .values({ key, value })
+      .onConflictDoUpdate({ target: kv.key, set: { value } })
+      .run();
   }
 
   delete(key: string): void {

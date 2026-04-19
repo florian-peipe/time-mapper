@@ -1,5 +1,5 @@
-import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import React, { useMemo } from "react";
+import { PixelRatio, Pressable, ScrollView, Text, View } from "react-native";
 import { useTheme, type Theme } from "@/theme/useTheme";
 import { Icon } from "@/components";
 import { i18n } from "@/lib/i18n";
@@ -20,26 +20,34 @@ type Props = {
   testID?: string;
 };
 
-// Column widths are the design-system spec for the mono-grid spreadsheet —
-// they must match across the header, body, and sum rows exactly, so we keep
-// them as literals with one place to edit.
-const COLUMNS = [
-  { key: "place", label: "PLACE", letter: "A", width: 108, align: "left" }, // column width, mono grid
-  { key: "start", label: "START", letter: "B", width: 64, align: "right" }, // column width, mono grid
-  { key: "pause", label: "PAUSE", letter: "C", width: 52, align: "right" }, // column width, mono grid
-  { key: "end", label: "END", letter: "D", width: 64, align: "right" }, // column width, mono grid
-  { key: "duration", label: "DURATION", letter: "E", width: 72, align: "right" }, // column width, mono grid
-  { key: "note", label: "NOTE", letter: "F", width: 180, align: "left" }, // column width, mono grid
+// Base column widths per the design-system mono-grid spec. Actual rendered
+// widths scale with `PixelRatio.getFontScale()` so text doesn't clip at
+// large Dynamic Type / Font Scale settings. Clamped on both ends so the
+// spreadsheet stays legible even at extreme values.
+type Col = {
+  key: "place" | "start" | "pause" | "end" | "duration" | "note";
+  label: string;
+  letter: "A" | "B" | "C" | "D" | "E" | "F";
+  baseWidth: number;
+  align: "left" | "right";
+};
+const BASE_COLUMNS: readonly Col[] = [
+  { key: "place", label: "PLACE", letter: "A", baseWidth: 108, align: "left" },
+  { key: "start", label: "START", letter: "B", baseWidth: 64, align: "right" },
+  { key: "pause", label: "PAUSE", letter: "C", baseWidth: 52, align: "right" },
+  { key: "end", label: "END", letter: "D", baseWidth: 64, align: "right" },
+  { key: "duration", label: "DURATION", letter: "E", baseWidth: 72, align: "right" },
+  { key: "note", label: "NOTE", letter: "F", baseWidth: 180, align: "left" },
 ] as const;
 
-// `#` row-number gutter column width — design-system 38px. No token fits;
-// mono-grid alignment is the constraint.
-const GUTTER_W = 38; // column width, mono grid
-// Cell paddings that the design-system mono grid relies on — 6 for the
-// letter-row header, 10 for everything else. No space tokens at those sizes.
-const CELL_PAD_V = 10; // cell vertical padding, mono grid
-const CELL_PAD_H = 10; // cell horizontal padding, mono grid
-const LETTER_PAD_V = 6; // letter-row vertical padding, mono grid
+// Clamp the effective font scale — stop growing columns past 1.5× so the
+// spreadsheet doesn't dominate the Stats page on max-size settings.
+const FONT_SCALE_CEIL = 1.5;
+
+const BASE_GUTTER_W = 38; // `#` row-number gutter column
+const BASE_CELL_PAD_V = 10;
+const BASE_CELL_PAD_H = 10;
+const BASE_LETTER_PAD_V = 6;
 
 /**
  * Spreadsheet-style ledger table used by the Stats screen. Source:
@@ -52,6 +60,22 @@ const LETTER_PAD_V = 6; // letter-row vertical padding, mono grid
  */
 export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: Props) {
   const t = useTheme();
+
+  // Effective mono-grid metrics that scale with the user's font-size
+  // preference. Computed on every render — cheap, and font scale only
+  // changes via a system settings round-trip which re-mounts the screen
+  // anyway. PixelRatio is SDK-wide and always returns ≥1.
+  const { columns, gutterW, cellPadV, cellPadH, letterPadV } = useMemo(() => {
+    const rawScale = PixelRatio.getFontScale();
+    const scale = Math.min(Math.max(rawScale, 1), FONT_SCALE_CEIL);
+    return {
+      columns: BASE_COLUMNS.map((c) => ({ ...c, width: Math.round(c.baseWidth * scale) })),
+      gutterW: Math.round(BASE_GUTTER_W * scale),
+      cellPadV: Math.round(BASE_CELL_PAD_V * scale),
+      cellPadH: Math.round(BASE_CELL_PAD_H * scale),
+      letterPadV: Math.round(BASE_LETTER_PAD_V * scale),
+    };
+  }, []);
 
   const rows: LedgerRow[] = [];
   for (const entry of entries) {
@@ -66,7 +90,7 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
     0,
   );
 
-  const totalW = COLUMNS.reduce((a, c) => a + c.width, 0) + GUTTER_W;
+  const totalW = columns.reduce((a, c) => a + c.width, 0) + gutterW;
 
   return (
     <View
@@ -96,7 +120,7 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
               letterSpacing: -0.3,
             }}
           >
-            Ledger
+            {i18n.t("stats.ledger.title")}
           </Text>
           <Text
             style={{
@@ -106,14 +130,14 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
               marginTop: 2,
             }}
           >
-            Tap any row to edit · swipe table to scroll
+            {i18n.t("stats.ledger.hint")}
           </Text>
         </View>
         <Pressable
           testID="ledger-add-row"
           onPress={onAddRow}
           accessibilityRole="button"
-          accessibilityLabel="Add row"
+          accessibilityLabel={i18n.t("stats.ledger.addRow")}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -133,7 +157,7 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
               fontFamily: t.type.family.sans,
             }}
           >
-            Add row
+            {i18n.t("stats.ledger.addRow")}
           </Text>
         </Pressable>
       </View>
@@ -149,8 +173,18 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
       >
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={{ minWidth: totalW }}>
-            <ColumnLetterHeader />
-            <FieldNameHeader />
+            <ColumnLetterHeader
+              columns={columns}
+              gutterW={gutterW}
+              letterPadV={letterPadV}
+              cellPadH={cellPadH}
+            />
+            <FieldNameHeader
+              columns={columns}
+              gutterW={gutterW}
+              cellPadV={cellPadV}
+              cellPadH={cellPadH}
+            />
             {rows.map((row, idx) => (
               <LedgerBodyRow
                 key={row.entry.id}
@@ -158,10 +192,21 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
                 index={idx}
                 isLast={idx === rows.length - 1}
                 onPress={() => onOpenEntry(row.entry.id)}
+                columns={columns}
+                gutterW={gutterW}
+                cellPadV={cellPadV}
+                cellPadH={cellPadH}
               />
             ))}
             {rows.length > 0 ? (
-              <SumRow totalMinutes={totalMinutes} totalPauseMinutes={totalPauseMinutes} />
+              <SumRow
+                totalMinutes={totalMinutes}
+                totalPauseMinutes={totalPauseMinutes}
+                columns={columns}
+                gutterW={gutterW}
+                cellPadV={cellPadV}
+                cellPadH={cellPadH}
+              />
             ) : null}
           </View>
         </ScrollView>
@@ -197,7 +242,15 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
   );
 }
 
-function ColumnLetterHeader() {
+type MetricsProps = {
+  columns: (Col & { width: number })[];
+  gutterW: number;
+  cellPadV?: number;
+  cellPadH: number;
+  letterPadV?: number;
+};
+
+function ColumnLetterHeader({ columns, gutterW, letterPadV, cellPadH }: MetricsProps) {
   const t = useTheme();
   return (
     <View
@@ -208,17 +261,17 @@ function ColumnLetterHeader() {
         borderBottomColor: t.color("color.border"),
       }}
     >
-      <View style={gutterHeaderStyle(t)}>
+      <View style={gutterHeaderStyle(t, gutterW, letterPadV ?? BASE_LETTER_PAD_V)}>
         <Text style={gutterLetterTextStyle(t)}>#</Text>
       </View>
-      {COLUMNS.map((c, i) => (
+      {columns.map((c, i) => (
         <View
           key={c.key}
           style={{
             width: c.width,
-            paddingVertical: LETTER_PAD_V,
-            paddingHorizontal: CELL_PAD_H,
-            borderRightWidth: i === COLUMNS.length - 1 ? 0 : 1,
+            paddingVertical: letterPadV ?? BASE_LETTER_PAD_V,
+            paddingHorizontal: cellPadH,
+            borderRightWidth: i === columns.length - 1 ? 0 : 1,
             borderRightColor: t.color("color.border"),
           }}
         >
@@ -240,7 +293,7 @@ function ColumnLetterHeader() {
   );
 }
 
-function FieldNameHeader() {
+function FieldNameHeader({ columns, gutterW, cellPadH, letterPadV }: MetricsProps) {
   const t = useTheme();
   return (
     <View
@@ -251,15 +304,15 @@ function FieldNameHeader() {
         borderBottomColor: t.color("color.border"),
       }}
     >
-      <View style={gutterHeaderStyle(t)} />
-      {COLUMNS.map((c, i) => (
+      <View style={gutterHeaderStyle(t, gutterW, letterPadV ?? BASE_LETTER_PAD_V)} />
+      {columns.map((c, i) => (
         <View
           key={c.key}
           style={{
             width: c.width,
             paddingVertical: t.space[2],
-            paddingHorizontal: CELL_PAD_H,
-            borderRightWidth: i === COLUMNS.length - 1 ? 0 : 1,
+            paddingHorizontal: cellPadH,
+            borderRightWidth: i === columns.length - 1 ? 0 : 1,
             borderRightColor: t.color("color.border"),
           }}
         >
@@ -286,18 +339,26 @@ function LedgerBodyRow({
   index,
   isLast,
   onPress,
+  columns,
+  gutterW,
+  cellPadV,
+  cellPadH,
 }: {
   row: LedgerRow;
   index: number;
   isLast: boolean;
   onPress: () => void;
+  columns: (Col & { width: number })[];
+  gutterW: number;
+  cellPadV: number;
+  cellPadH: number;
 }) {
   const t = useTheme();
   const entry = row.entry;
   const place = row.place;
 
   const startLabel = formatClock(entry.startedAt);
-  const endLabel = entry.endedAt == null ? "now" : formatClock(entry.endedAt);
+  const endLabel = entry.endedAt == null ? i18n.t("entryRow.ongoing") : formatClock(entry.endedAt);
   const pauseMinutes = Math.floor((entry.pauseS ?? 0) / 60);
   const pauseLabel = pauseMinutes > 0 ? formatHoursMinutes(pauseMinutes) : "—";
   const netLabel = formatHoursMinutes(netMinutes(entry));
@@ -314,7 +375,9 @@ function LedgerBodyRow({
         borderBottomColor: t.color("color.border"),
       }}
     >
-      <View style={[gutterBodyStyle(t), { backgroundColor: t.color("color.surface2") }]}>
+      <View
+        style={[gutterBodyStyle(t, gutterW, cellPadV), { backgroundColor: t.color("color.surface2") }]}
+      >
         <Text
           style={{
             color: t.color("color.fg3"),
@@ -330,9 +393,9 @@ function LedgerBodyRow({
       </View>
       <View
         style={{
-          width: COLUMNS[0].width,
-          paddingVertical: CELL_PAD_V,
-          paddingHorizontal: CELL_PAD_H,
+          width: columns[0]!.width,
+          paddingVertical: cellPadV,
+          paddingHorizontal: cellPadH,
           borderRightWidth: 1,
           borderRightColor: t.color("color.border"),
           flexDirection: "row",
@@ -361,19 +424,37 @@ function LedgerBodyRow({
           {place.name}
         </Text>
       </View>
-      <NumericCell width={COLUMNS[1].width} value={startLabel} />
       <NumericCell
-        width={COLUMNS[2].width}
+        width={columns[1]!.width}
+        value={startLabel}
+        cellPadV={cellPadV}
+        cellPadH={cellPadH}
+      />
+      <NumericCell
+        width={columns[2]!.width}
         value={pauseLabel}
         color={pauseMinutes > 0 ? undefined : t.color("color.fg3")}
+        cellPadV={cellPadV}
+        cellPadH={cellPadH}
       />
-      <NumericCell width={COLUMNS[3].width} value={endLabel} />
-      <NumericCell width={COLUMNS[4].width} value={netLabel} bold />
+      <NumericCell
+        width={columns[3]!.width}
+        value={endLabel}
+        cellPadV={cellPadV}
+        cellPadH={cellPadH}
+      />
+      <NumericCell
+        width={columns[4]!.width}
+        value={netLabel}
+        bold
+        cellPadV={cellPadV}
+        cellPadH={cellPadH}
+      />
       <View
         style={{
-          width: COLUMNS[5].width,
-          paddingVertical: CELL_PAD_H,
-          paddingHorizontal: CELL_PAD_H,
+          width: columns[5]!.width,
+          paddingVertical: cellPadH,
+          paddingHorizontal: cellPadH,
         }}
       >
         <Text
@@ -395,9 +476,17 @@ function LedgerBodyRow({
 function SumRow({
   totalMinutes,
   totalPauseMinutes,
+  columns,
+  gutterW,
+  cellPadV,
+  cellPadH,
 }: {
   totalMinutes: number;
   totalPauseMinutes: number;
+  columns: (Col & { width: number })[];
+  gutterW: number;
+  cellPadV: number;
+  cellPadH: number;
 }) {
   const t = useTheme();
   const netLabel = formatHoursMinutes(totalMinutes);
@@ -412,7 +501,9 @@ function SumRow({
         borderTopColor: t.color("color.border.strong"),
       }}
     >
-      <View style={[gutterBodyStyle(t), { backgroundColor: t.color("color.surface2") }]}>
+      <View
+        style={[gutterBodyStyle(t, gutterW, cellPadV), { backgroundColor: t.color("color.surface2") }]}
+      >
         <Text
           style={{
             color: t.color("color.fg3"),
@@ -427,9 +518,9 @@ function SumRow({
       </View>
       <View
         style={{
-          width: COLUMNS[0].width,
-          paddingVertical: CELL_PAD_H,
-          paddingHorizontal: CELL_PAD_H,
+          width: columns[0]!.width,
+          paddingVertical: cellPadH,
+          paddingHorizontal: cellPadH,
           borderRightWidth: 1,
           borderRightColor: t.color("color.border"),
         }}
@@ -446,20 +537,29 @@ function SumRow({
           TOTAL
         </Text>
       </View>
-      <NumericCell width={COLUMNS[1].width} value="" />
+      <NumericCell width={columns[1]!.width} value="" cellPadV={cellPadV} cellPadH={cellPadH} />
       <NumericCell
-        width={COLUMNS[2].width}
+        width={columns[2]!.width}
         value={pauseLabel}
         color={totalPauseMinutes > 0 ? undefined : t.color("color.fg3")}
         testID="ledger-sum-pause"
+        cellPadV={cellPadV}
+        cellPadH={cellPadH}
       />
-      <NumericCell width={COLUMNS[3].width} value="" />
-      <NumericCell width={COLUMNS[4].width} value={netLabel} bold testID="ledger-sum-duration" />
+      <NumericCell width={columns[3]!.width} value="" cellPadV={cellPadV} cellPadH={cellPadH} />
+      <NumericCell
+        width={columns[4]!.width}
+        value={netLabel}
+        bold
+        testID="ledger-sum-duration"
+        cellPadV={cellPadV}
+        cellPadH={cellPadH}
+      />
       <View
         style={{
-          width: COLUMNS[5].width,
-          paddingVertical: CELL_PAD_H,
-          paddingHorizontal: CELL_PAD_H,
+          width: columns[5]!.width,
+          paddingVertical: cellPadH,
+          paddingHorizontal: cellPadH,
         }}
       />
     </View>
@@ -472,20 +572,24 @@ function NumericCell({
   bold,
   color,
   testID,
+  cellPadV,
+  cellPadH,
 }: {
   width: number;
   value: string;
   bold?: boolean;
   color?: string;
   testID?: string;
+  cellPadV: number;
+  cellPadH: number;
 }) {
   const t = useTheme();
   return (
     <View
       style={{
         width,
-        paddingVertical: CELL_PAD_V,
-        paddingHorizontal: CELL_PAD_H,
+        paddingVertical: cellPadV,
+        paddingHorizontal: cellPadH,
         borderRightWidth: 1,
         borderRightColor: t.color("color.border"),
       }}
@@ -507,10 +611,10 @@ function NumericCell({
   );
 }
 
-function gutterHeaderStyle(t: Theme) {
+function gutterHeaderStyle(t: Theme, gutterW: number, letterPadV: number) {
   return {
-    width: GUTTER_W,
-    paddingVertical: LETTER_PAD_V,
+    width: gutterW,
+    paddingVertical: letterPadV,
     borderRightWidth: 1,
     borderRightColor: t.color("color.border"),
     alignItems: "center" as const,
@@ -518,10 +622,10 @@ function gutterHeaderStyle(t: Theme) {
   };
 }
 
-function gutterBodyStyle(t: Theme) {
+function gutterBodyStyle(t: Theme, gutterW: number, cellPadV: number) {
   return {
-    width: GUTTER_W,
-    paddingVertical: CELL_PAD_V,
+    width: gutterW,
+    paddingVertical: cellPadV,
     borderRightWidth: 1,
     borderRightColor: t.color("color.border"),
     alignItems: "center" as const,

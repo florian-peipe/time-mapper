@@ -39,7 +39,7 @@ describe("Chip", () => {
     const el = screen.getByTestId("chip");
     const s = flat(el.props.style);
     expect(s.backgroundColor).toBe("#FFE7DD"); // color.accent.soft light
-    expect(s.borderColor).toBe("#FF6A3D"); // color.accent light
+    expect(s.borderColor).toBe("#E85526"); // color.accent light
   });
 
   it("renders an optional leading icon when icon prop is set", () => {

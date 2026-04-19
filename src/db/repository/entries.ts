@@ -130,6 +130,46 @@ export class EntriesRepo {
   }
 
   /**
+   * List every non-deleted entry, oldest-first. Used by the CSV export —
+   * we want chronological order for a spreadsheet. Results include ongoing
+   * entries (endedAt null) so callers can decide how to render them.
+   */
+  listAll(): Entry[] {
+    return this.db
+      .select()
+      .from(entries)
+      .where(isNull(entries.deletedAt))
+      .orderBy(entries.startedAt)
+      .all() as Entry[];
+  }
+
+  /**
+   * Find every non-deleted entry whose time interval overlaps
+   * [`startedAt`, `endedAt`]. Two intervals overlap iff the candidate's
+   * start is strictly before our end AND the candidate's end (or "now"
+   * for ongoing entries) is strictly after our start.
+   *
+   * `excludeId` is the entry being edited — useful so EntryEditSheet
+   * doesn't flag the very row the user is saving.
+   */
+  findOverlapping(startedAt: number, endedAt: number, excludeId?: string): Entry[] {
+    // We can't express the "endedAt IS NULL → treat as +∞" fallback cleanly
+    // in a single drizzle WHERE, so we over-select and filter in JS. For
+    // a personal app this is fine (hundreds of entries, a few overlaps at
+    // most). We bound the query by startedAt < endedAt for correctness.
+    const candidates = this.db
+      .select()
+      .from(entries)
+      .where(and(isNull(entries.deletedAt), lte(entries.startedAt, endedAt)))
+      .all() as Entry[];
+    return candidates.filter((e) => {
+      if (excludeId && e.id === excludeId) return false;
+      const eEnd = e.endedAt ?? Number.MAX_SAFE_INTEGER;
+      return e.startedAt < endedAt && eEnd > startedAt;
+    });
+  }
+
+  /**
    * Merge `patch` into an existing entry row and bump `updatedAt` to the
    * current clock. Mirrors `PlacesRepo.update`. Used by EntryEditSheet when
    * saving edits to an existing entry. Throws if the id is unknown.

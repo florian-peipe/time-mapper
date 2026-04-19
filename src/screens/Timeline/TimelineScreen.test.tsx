@@ -4,8 +4,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { PlacesRepoProvider } from "@/features/places/usePlaces";
 import { EntriesRepoProvider } from "@/features/entries/useEntries";
+import { KvRepoProvider } from "@/features/onboarding/useOnboardingGate";
 import { PlacesRepo } from "@/db/repository/places";
 import { EntriesRepo } from "@/db/repository/entries";
+import { KvRepo } from "@/db/repository/kv";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import type { Entry } from "@/db/schema";
@@ -44,6 +46,7 @@ function setup(opts: {
   const db = createTestDb();
   const placesRepo = new PlacesRepo(db, { now: () => nowSeconds });
   const entriesRepo = new EntriesRepo(db, { now: () => nowSeconds });
+  const kvRepo = new KvRepo(db);
 
   const places = (opts.places ?? [{ name: "Home", color: "#FF6A3D", icon: "home" }]).map((p) =>
     placesRepo.create({
@@ -94,11 +97,13 @@ function setup(opts: {
       }}
     >
       <ThemeProvider schemeOverride="light">
-        <PlacesRepoProvider value={placesRepo}>
-          <EntriesRepoProvider value={entriesRepo}>
-            <TimelineScreen />
-          </EntriesRepoProvider>
-        </PlacesRepoProvider>
+        <KvRepoProvider value={kvRepo}>
+          <PlacesRepoProvider value={placesRepo}>
+            <EntriesRepoProvider value={entriesRepo}>
+              <TimelineScreen />
+            </EntriesRepoProvider>
+          </PlacesRepoProvider>
+        </KvRepoProvider>
       </ThemeProvider>
     </SafeAreaProvider>,
   );

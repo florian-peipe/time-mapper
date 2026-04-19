@@ -531,7 +531,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "lowerLimit": -9007199254740991,
                                         "maximumTrackTintColor": "#E9E4DD",
                                         "maximumValue": 300,
-                                        "minimumTrackTintColor": "#FF6A3D",
+                                        "minimumTrackTintColor": "#E85526",
                                         "minimumValue": 50,
                                         "onChange": [Function],
                                         "onRNCSliderAccessibilityAction": null,
@@ -557,7 +557,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "tapToSeek": false,
                                         "testID": "add-place-radius",
                                         "thumbImage": undefined,
-                                        "thumbTintColor": "#FF6A3D",
+                                        "thumbTintColor": "#E85526",
                                         "upperLimit": 9007199254740991,
                                         "value": 120,
                                       },
@@ -652,7 +652,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "lowerLimit": -9007199254740991,
                                         "maximumTrackTintColor": "#E9E4DD",
                                         "maximumValue": 15,
-                                        "minimumTrackTintColor": "#FF6A3D",
+                                        "minimumTrackTintColor": "#E85526",
                                         "minimumValue": 1,
                                         "onChange": [Function],
                                         "onRNCSliderAccessibilityAction": null,
@@ -678,7 +678,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "tapToSeek": false,
                                         "testID": "add-place-entry-buffer",
                                         "thumbImage": undefined,
-                                        "thumbTintColor": "#FF6A3D",
+                                        "thumbTintColor": "#E85526",
                                         "upperLimit": 9007199254740991,
                                         "value": 5,
                                       },
@@ -773,7 +773,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "lowerLimit": -9007199254740991,
                                         "maximumTrackTintColor": "#E9E4DD",
                                         "maximumValue": 10,
-                                        "minimumTrackTintColor": "#FF6A3D",
+                                        "minimumTrackTintColor": "#E85526",
                                         "minimumValue": 1,
                                         "onChange": [Function],
                                         "onRNCSliderAccessibilityAction": null,
@@ -799,7 +799,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "tapToSeek": false,
                                         "testID": "add-place-exit-buffer",
                                         "thumbImage": undefined,
-                                        "thumbTintColor": "#FF6A3D",
+                                        "thumbTintColor": "#E85526",
                                         "upperLimit": 9007199254740991,
                                         "value": 3,
                                       },
@@ -2957,9 +2957,9 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                             "accessibilityLabel": "Save changes",
                             "accessibilityRole": "button",
                             "accessibilityState": {
-                              "busy": undefined,
+                              "busy": false,
                               "checked": undefined,
-                              "disabled": undefined,
+                              "disabled": false,
                               "expanded": undefined,
                               "selected": undefined,
                             },
@@ -2990,7 +2990,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                 "justifyContent": "center",
                               },
                               {
-                                "backgroundColor": "#FF6A3D",
+                                "backgroundColor": "#E85526",
                                 "borderColor": "transparent",
                                 "borderRadius": 9999,
                                 "height": 48,
@@ -3460,7 +3460,7 @@ exports[`snapshots — main screens EntryEditSheet (new entry) 1`] = `
                             "onResponderTerminationRequest": [Function],
                             "onStartShouldSetResponder": [Function],
                             "style": {
-                              "backgroundColor": "#FF6A3D",
+                              "backgroundColor": "#E85526",
                               "borderRadius": 9999,
                               "paddingHorizontal": 14,
                               "paddingVertical": 7,
@@ -3882,6 +3882,7 @@ exports[`snapshots — main screens EntryEditSheet (new entry) 1`] = `
                                     {
                                       "children": null,
                                       "props": {
+                                        "accessibilityLabel": "Start",
                                         "keyboardType": "numbers-and-punctuation",
                                         "onBlur": [Function],
                                         "onChangeText": [Function],
@@ -3957,6 +3958,7 @@ exports[`snapshots — main screens EntryEditSheet (new entry) 1`] = `
                                     {
                                       "children": null,
                                       "props": {
+                                        "accessibilityLabel": "End",
                                         "keyboardType": "numbers-and-punctuation",
                                         "onBlur": [Function],
                                         "onChangeText": [Function],
@@ -4032,6 +4034,7 @@ exports[`snapshots — main screens EntryEditSheet (new entry) 1`] = `
                                     {
                                       "children": null,
                                       "props": {
+                                        "accessibilityLabel": "Pause",
                                         "keyboardType": "number-pad",
                                         "maxLength": 3,
                                         "onBlur": [Function],
@@ -4594,7 +4597,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                                   "strokeWidth",
                                                 ],
                                                 "stroke": {
-                                                  "payload": 4294928957,
+                                                  "payload": 4293416230,
                                                   "type": 0,
                                                 },
                                                 "strokeWidth": 0.8,
@@ -4750,12 +4753,12 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                               "props": {
                                 "style": {
                                   "alignItems": "center",
-                                  "backgroundColor": "#FF6A3D",
+                                  "backgroundColor": "#E85526",
                                   "borderRadius": 18,
                                   "elevation": 8,
                                   "height": 72,
                                   "justifyContent": "center",
-                                  "shadowColor": "#FF6A3D",
+                                  "shadowColor": "#E85526",
                                   "shadowOffset": {
                                     "height": 12,
                                     "width": 0,
@@ -4831,7 +4834,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                               "strokeLinejoin",
                                             ],
                                             "stroke": {
-                                              "payload": 4294928957,
+                                              "payload": 4293416230,
                                               "type": 0,
                                             },
                                             "strokeLinecap": 1,
@@ -4851,7 +4854,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                           "strokeLinejoin",
                                         ],
                                         "stroke": {
-                                          "payload": 4294928957,
+                                          "payload": 4293416230,
                                           "type": 0,
                                         },
                                         "strokeLinecap": 1,
@@ -4873,7 +4876,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                     "meetOrSlice": 0,
                                     "minX": 0,
                                     "minY": 0,
-                                    "stroke": "#FF6A3D",
+                                    "stroke": "#E85526",
                                     "strokeLinecap": "round",
                                     "strokeLinejoin": "round",
                                     "strokeWidth": 1.75,
@@ -4937,7 +4940,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                               "strokeLinejoin",
                                             ],
                                             "stroke": {
-                                              "payload": 4294928957,
+                                              "payload": 4293416230,
                                               "type": 0,
                                             },
                                             "strokeLinecap": 1,
@@ -4957,7 +4960,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                           "strokeLinejoin",
                                         ],
                                         "stroke": {
-                                          "payload": 4294928957,
+                                          "payload": 4293416230,
                                           "type": 0,
                                         },
                                         "strokeLinecap": 1,
@@ -4979,7 +4982,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                     "meetOrSlice": 0,
                                     "minX": 0,
                                     "minY": 0,
-                                    "stroke": "#FF6A3D",
+                                    "stroke": "#E85526",
                                     "strokeLinecap": "round",
                                     "strokeLinejoin": "round",
                                     "strokeWidth": 1.75,
@@ -5043,7 +5046,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                               "strokeLinejoin",
                                             ],
                                             "stroke": {
-                                              "payload": 4294928957,
+                                              "payload": 4293416230,
                                               "type": 0,
                                             },
                                             "strokeLinecap": 1,
@@ -5063,7 +5066,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                           "strokeLinejoin",
                                         ],
                                         "stroke": {
-                                          "payload": 4294928957,
+                                          "payload": 4293416230,
                                           "type": 0,
                                         },
                                         "strokeLinecap": 1,
@@ -5085,7 +5088,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                     "meetOrSlice": 0,
                                     "minX": 0,
                                     "minY": 0,
-                                    "stroke": "#FF6A3D",
+                                    "stroke": "#E85526",
                                     "strokeLinecap": "round",
                                     "strokeLinejoin": "round",
                                     "strokeWidth": 1.75,
@@ -5149,7 +5152,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                               "strokeLinejoin",
                                             ],
                                             "stroke": {
-                                              "payload": 4294928957,
+                                              "payload": 4293416230,
                                               "type": 0,
                                             },
                                             "strokeLinecap": 1,
@@ -5169,7 +5172,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                           "strokeLinejoin",
                                         ],
                                         "stroke": {
-                                          "payload": 4294928957,
+                                          "payload": 4293416230,
                                           "type": 0,
                                         },
                                         "strokeLinecap": 1,
@@ -5191,7 +5194,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                     "meetOrSlice": 0,
                                     "minX": 0,
                                     "minY": 0,
-                                    "stroke": "#FF6A3D",
+                                    "stroke": "#E85526",
                                     "strokeLinecap": "round",
                                     "strokeLinejoin": "round",
                                     "strokeWidth": 1.75,
@@ -5288,7 +5291,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                           ],
                                           "props": {
                                             "style": {
-                                              "backgroundColor": "#FF6A3D",
+                                              "backgroundColor": "#E85526",
                                               "borderRadius": 9999,
                                               "paddingHorizontal": 7,
                                               "paddingVertical": 2,
@@ -5377,7 +5380,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                 "style": {
                                   "alignItems": "center",
                                   "backgroundColor": "#FFE7DD",
-                                  "borderColor": "#FF6A3D",
+                                  "borderColor": "#E85526",
                                   "borderRadius": 14,
                                   "borderWidth": 2,
                                   "flexDirection": "row",
@@ -5584,7 +5587,7 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                                 "justifyContent": "center",
                               },
                               {
-                                "backgroundColor": "#FF6A3D",
+                                "backgroundColor": "#E85526",
                                 "borderColor": "transparent",
                                 "borderRadius": 9999,
                                 "height": 48,
@@ -5905,7 +5908,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                       "strokeWidth",
                                     ],
                                     "stroke": {
-                                      "payload": 4294928957,
+                                      "payload": 4293416230,
                                       "type": 0,
                                     },
                                     "strokeWidth": 0.8,
@@ -5981,7 +5984,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                       ],
                       "props": {
                         "style": {
-                          "color": "#FF6A3D",
+                          "color": "#E85526",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "700",
@@ -6052,7 +6055,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                         "onStartShouldSetResponder": [Function],
                         "style": {
                           "alignSelf": "flex-start",
-                          "backgroundColor": "#FF6A3D",
+                          "backgroundColor": "#E85526",
                           "borderRadius": 9999,
                           "marginTop": 14,
                           "opacity": 1,
@@ -7019,7 +7022,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                           "strokeLinejoin",
                                         ],
                                         "stroke": {
-                                          "payload": 4294928957,
+                                          "payload": 4293416230,
                                           "type": 0,
                                         },
                                         "strokeLinecap": 1,
@@ -7041,7 +7044,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                           "strokeLinejoin",
                                         ],
                                         "stroke": {
-                                          "payload": 4294928957,
+                                          "payload": 4293416230,
                                           "type": 0,
                                         },
                                         "strokeLinecap": 1,
@@ -7061,7 +7064,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                       "strokeLinejoin",
                                     ],
                                     "stroke": {
-                                      "payload": 4294928957,
+                                      "payload": 4293416230,
                                       "type": 0,
                                     },
                                     "strokeLinecap": 1,
@@ -7083,7 +7086,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "meetOrSlice": 0,
                                 "minX": 0,
                                 "minY": 0,
-                                "stroke": "#FF6A3D",
+                                "stroke": "#E85526",
                                 "strokeLinecap": "round",
                                 "strokeLinejoin": "round",
                                 "strokeWidth": 1.75,
@@ -8751,7 +8754,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                               ],
                               "props": {
                                 "style": {
-                                  "color": "#FF6A3D",
+                                  "color": "#E85526",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "700",
@@ -9328,6 +9331,310 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "children": [
                             {
                               "children": [
+                                "Export backup (JSON)",
+                              ],
+                              "props": {
+                                "style": {
+                                  "color": "#1A1714",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 15,
+                                },
+                              },
+                              "type": "Text",
+                            },
+                          ],
+                          "props": {
+                            "style": {
+                              "flex": 1,
+                            },
+                          },
+                          "type": "View",
+                        },
+                        {
+                          "children": [
+                            "Save everything to a file you can keep safe",
+                          ],
+                          "props": {
+                            "style": {
+                              "color": "#8A837A",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                            },
+                          },
+                          "type": "Text",
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "d": "m9 18 6-6-6-6",
+                                    "fill": null,
+                                    "propList": [
+                                      "fill",
+                                      "stroke",
+                                      "strokeWidth",
+                                      "strokeLinecap",
+                                      "strokeLinejoin",
+                                    ],
+                                    "stroke": {
+                                      "payload": 4287267706,
+                                      "type": 0,
+                                    },
+                                    "strokeLinecap": 1,
+                                    "strokeLinejoin": 1,
+                                    "strokeWidth": 1.75,
+                                  },
+                                  "type": "RNSVGPath",
+                                },
+                              ],
+                              "props": {
+                                "fill": null,
+                                "propList": [
+                                  "fill",
+                                  "stroke",
+                                  "strokeWidth",
+                                  "strokeLinecap",
+                                  "strokeLinejoin",
+                                ],
+                                "stroke": {
+                                  "payload": 4287267706,
+                                  "type": 0,
+                                },
+                                "strokeLinecap": 1,
+                                "strokeLinejoin": 1,
+                                "strokeWidth": 1.75,
+                              },
+                              "type": "RNSVGGroup",
+                            },
+                          ],
+                          "props": {
+                            "align": "xMidYMid",
+                            "bbHeight": 16,
+                            "bbWidth": 16,
+                            "className": undefined,
+                            "data-testid": undefined,
+                            "fill": "none",
+                            "focusable": false,
+                            "height": 16,
+                            "meetOrSlice": 0,
+                            "minX": 0,
+                            "minY": 0,
+                            "stroke": "#8A837A",
+                            "strokeLinecap": "round",
+                            "strokeLinejoin": "round",
+                            "strokeWidth": 1.75,
+                            "style": [
+                              {
+                                "backgroundColor": "transparent",
+                                "borderWidth": 0,
+                              },
+                              {
+                                "flex": 0,
+                                "height": 16,
+                                "width": 16,
+                              },
+                            ],
+                            "vbHeight": 24,
+                            "vbWidth": 24,
+                            "width": 16,
+                            "xmlns": "http://www.w3.org/2000/svg",
+                          },
+                          "type": "RNSVGSvgView",
+                        },
+                      ],
+                      "props": {
+                        "accessibilityLabel": "Export backup (JSON), Save everything to a file you can keep safe",
+                        "accessibilityRole": "button",
+                        "accessibilityState": {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        },
+                        "accessibilityValue": {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        },
+                        "accessible": true,
+                        "collapsable": false,
+                        "focusable": true,
+                        "hitSlop": 4,
+                        "onBlur": [Function],
+                        "onClick": [Function],
+                        "onFocus": [Function],
+                        "onResponderGrant": [Function],
+                        "onResponderMove": [Function],
+                        "onResponderRelease": [Function],
+                        "onResponderTerminate": [Function],
+                        "onResponderTerminationRequest": [Function],
+                        "onStartShouldSetResponder": [Function],
+                        "style": {
+                          "alignItems": "center",
+                          "backgroundColor": "transparent",
+                          "borderBottomColor": "#E9E4DD",
+                          "borderBottomWidth": 1,
+                          "flexDirection": "row",
+                          "gap": 12,
+                          "minHeight": 44,
+                          "paddingHorizontal": 14,
+                          "paddingVertical": 12,
+                        },
+                        "testID": "settings-row-backup",
+                      },
+                      "type": "View",
+                    },
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "d": "M12 15V3",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4283189057,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGPath",
+                                    },
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "d": "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4283189057,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGPath",
+                                    },
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "d": "m7 10 5 5 5-5",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4283189057,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGPath",
+                                    },
+                                  ],
+                                  "props": {
+                                    "fill": null,
+                                    "propList": [
+                                      "fill",
+                                      "stroke",
+                                      "strokeWidth",
+                                      "strokeLinecap",
+                                      "strokeLinejoin",
+                                    ],
+                                    "stroke": {
+                                      "payload": 4283189057,
+                                      "type": 0,
+                                    },
+                                    "strokeLinecap": 1,
+                                    "strokeLinejoin": 1,
+                                    "strokeWidth": 1.75,
+                                  },
+                                  "type": "RNSVGGroup",
+                                },
+                              ],
+                              "props": {
+                                "align": "xMidYMid",
+                                "bbHeight": 16,
+                                "bbWidth": 16,
+                                "className": undefined,
+                                "data-testid": undefined,
+                                "fill": "none",
+                                "focusable": false,
+                                "height": 16,
+                                "meetOrSlice": 0,
+                                "minX": 0,
+                                "minY": 0,
+                                "stroke": "#4C4741",
+                                "strokeLinecap": "round",
+                                "strokeLinejoin": "round",
+                                "strokeWidth": 1.75,
+                                "style": [
+                                  {
+                                    "backgroundColor": "transparent",
+                                    "borderWidth": 0,
+                                  },
+                                  {
+                                    "flex": 0,
+                                    "height": 16,
+                                    "width": 16,
+                                  },
+                                ],
+                                "vbHeight": 24,
+                                "vbWidth": 24,
+                                "width": 16,
+                                "xmlns": "http://www.w3.org/2000/svg",
+                              },
+                              "type": "RNSVGSvgView",
+                            },
+                          ],
+                          "props": {
+                            "style": {
+                              "alignItems": "center",
+                              "backgroundColor": "#F5F2EC",
+                              "borderRadius": 6,
+                              "height": 30,
+                              "justifyContent": "center",
+                              "width": 30,
+                            },
+                          },
+                          "type": "View",
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
                                 "Export diagnostic log",
                               ],
                               "props": {
@@ -9475,7 +9782,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "alignItems": "center",
                           "backgroundColor": "transparent",
                           "borderBottomColor": "#E9E4DD",
-                          "borderBottomWidth": 0,
+                          "borderBottomWidth": 1,
                           "flexDirection": "row",
                           "gap": 12,
                           "minHeight": 44,
@@ -9483,6 +9790,901 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "paddingVertical": 12,
                         },
                         "testID": "settings-row-diagnostics",
+                      },
+                      "type": "View",
+                    },
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "fill": null,
+                                        "height": "11",
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "rx": "2",
+                                        "ry": "2",
+                                        "stroke": {
+                                          "payload": 4283189057,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                        "width": "18",
+                                        "x": "3",
+                                        "y": "11",
+                                      },
+                                      "type": "RNSVGRect",
+                                    },
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "d": "M7 11V7a5 5 0 0 1 10 0v4",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4283189057,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGPath",
+                                    },
+                                  ],
+                                  "props": {
+                                    "fill": null,
+                                    "propList": [
+                                      "fill",
+                                      "stroke",
+                                      "strokeWidth",
+                                      "strokeLinecap",
+                                      "strokeLinejoin",
+                                    ],
+                                    "stroke": {
+                                      "payload": 4283189057,
+                                      "type": 0,
+                                    },
+                                    "strokeLinecap": 1,
+                                    "strokeLinejoin": 1,
+                                    "strokeWidth": 1.75,
+                                  },
+                                  "type": "RNSVGGroup",
+                                },
+                              ],
+                              "props": {
+                                "align": "xMidYMid",
+                                "bbHeight": 16,
+                                "bbWidth": 16,
+                                "className": undefined,
+                                "data-testid": undefined,
+                                "fill": "none",
+                                "focusable": false,
+                                "height": 16,
+                                "meetOrSlice": 0,
+                                "minX": 0,
+                                "minY": 0,
+                                "stroke": "#4C4741",
+                                "strokeLinecap": "round",
+                                "strokeLinejoin": "round",
+                                "strokeWidth": 1.75,
+                                "style": [
+                                  {
+                                    "backgroundColor": "transparent",
+                                    "borderWidth": 0,
+                                  },
+                                  {
+                                    "flex": 0,
+                                    "height": 16,
+                                    "width": 16,
+                                  },
+                                ],
+                                "vbHeight": 24,
+                                "vbWidth": 24,
+                                "width": 16,
+                                "xmlns": "http://www.w3.org/2000/svg",
+                              },
+                              "type": "RNSVGSvgView",
+                            },
+                          ],
+                          "props": {
+                            "style": {
+                              "alignItems": "center",
+                              "backgroundColor": "#F5F2EC",
+                              "borderRadius": 6,
+                              "height": 30,
+                              "justifyContent": "center",
+                              "width": 30,
+                            },
+                          },
+                          "type": "View",
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                "Crash reports",
+                              ],
+                              "props": {
+                                "style": {
+                                  "color": "#1A1714",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 15,
+                                },
+                              },
+                              "type": "Text",
+                            },
+                          ],
+                          "props": {
+                            "style": {
+                              "flex": 1,
+                            },
+                          },
+                          "type": "View",
+                        },
+                        {
+                          "children": [
+                            "Disabled",
+                          ],
+                          "props": {
+                            "style": {
+                              "color": "#8A837A",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                            },
+                          },
+                          "type": "Text",
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "d": "m9 18 6-6-6-6",
+                                    "fill": null,
+                                    "propList": [
+                                      "fill",
+                                      "stroke",
+                                      "strokeWidth",
+                                      "strokeLinecap",
+                                      "strokeLinejoin",
+                                    ],
+                                    "stroke": {
+                                      "payload": 4287267706,
+                                      "type": 0,
+                                    },
+                                    "strokeLinecap": 1,
+                                    "strokeLinejoin": 1,
+                                    "strokeWidth": 1.75,
+                                  },
+                                  "type": "RNSVGPath",
+                                },
+                              ],
+                              "props": {
+                                "fill": null,
+                                "propList": [
+                                  "fill",
+                                  "stroke",
+                                  "strokeWidth",
+                                  "strokeLinecap",
+                                  "strokeLinejoin",
+                                ],
+                                "stroke": {
+                                  "payload": 4287267706,
+                                  "type": 0,
+                                },
+                                "strokeLinecap": 1,
+                                "strokeLinejoin": 1,
+                                "strokeWidth": 1.75,
+                              },
+                              "type": "RNSVGGroup",
+                            },
+                          ],
+                          "props": {
+                            "align": "xMidYMid",
+                            "bbHeight": 16,
+                            "bbWidth": 16,
+                            "className": undefined,
+                            "data-testid": undefined,
+                            "fill": "none",
+                            "focusable": false,
+                            "height": 16,
+                            "meetOrSlice": 0,
+                            "minX": 0,
+                            "minY": 0,
+                            "stroke": "#8A837A",
+                            "strokeLinecap": "round",
+                            "strokeLinejoin": "round",
+                            "strokeWidth": 1.75,
+                            "style": [
+                              {
+                                "backgroundColor": "transparent",
+                                "borderWidth": 0,
+                              },
+                              {
+                                "flex": 0,
+                                "height": 16,
+                                "width": 16,
+                              },
+                            ],
+                            "vbHeight": 24,
+                            "vbWidth": 24,
+                            "width": 16,
+                            "xmlns": "http://www.w3.org/2000/svg",
+                          },
+                          "type": "RNSVGSvgView",
+                        },
+                      ],
+                      "props": {
+                        "accessibilityLabel": "Crash reports, Disabled",
+                        "accessibilityRole": "button",
+                        "accessibilityState": {
+                          "busy": undefined,
+                          "checked": false,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        },
+                        "accessibilityValue": {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        },
+                        "accessible": true,
+                        "collapsable": false,
+                        "focusable": true,
+                        "hitSlop": 4,
+                        "onBlur": [Function],
+                        "onClick": [Function],
+                        "onFocus": [Function],
+                        "onResponderGrant": [Function],
+                        "onResponderMove": [Function],
+                        "onResponderRelease": [Function],
+                        "onResponderTerminate": [Function],
+                        "onResponderTerminationRequest": [Function],
+                        "onStartShouldSetResponder": [Function],
+                        "style": {
+                          "alignItems": "center",
+                          "backgroundColor": "transparent",
+                          "borderBottomColor": "#E9E4DD",
+                          "borderBottomWidth": 1,
+                          "flexDirection": "row",
+                          "gap": 12,
+                          "minHeight": 44,
+                          "paddingHorizontal": 14,
+                          "paddingVertical": 12,
+                        },
+                        "testID": "settings-row-telemetry",
+                      },
+                      "type": "View",
+                    },
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "d": "m17 2 4 4-4 4",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4283189057,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGPath",
+                                    },
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "d": "M3 11v-1a4 4 0 0 1 4-4h14",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4283189057,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGPath",
+                                    },
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "d": "m7 22-4-4 4-4",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4283189057,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGPath",
+                                    },
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "d": "M21 13v1a4 4 0 0 1-4 4H3",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4283189057,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGPath",
+                                    },
+                                  ],
+                                  "props": {
+                                    "fill": null,
+                                    "propList": [
+                                      "fill",
+                                      "stroke",
+                                      "strokeWidth",
+                                      "strokeLinecap",
+                                      "strokeLinejoin",
+                                    ],
+                                    "stroke": {
+                                      "payload": 4283189057,
+                                      "type": 0,
+                                    },
+                                    "strokeLinecap": 1,
+                                    "strokeLinejoin": 1,
+                                    "strokeWidth": 1.75,
+                                  },
+                                  "type": "RNSVGGroup",
+                                },
+                              ],
+                              "props": {
+                                "align": "xMidYMid",
+                                "bbHeight": 16,
+                                "bbWidth": 16,
+                                "className": undefined,
+                                "data-testid": undefined,
+                                "fill": "none",
+                                "focusable": false,
+                                "height": 16,
+                                "meetOrSlice": 0,
+                                "minX": 0,
+                                "minY": 0,
+                                "stroke": "#4C4741",
+                                "strokeLinecap": "round",
+                                "strokeLinejoin": "round",
+                                "strokeWidth": 1.75,
+                                "style": [
+                                  {
+                                    "backgroundColor": "transparent",
+                                    "borderWidth": 0,
+                                  },
+                                  {
+                                    "flex": 0,
+                                    "height": 16,
+                                    "width": 16,
+                                  },
+                                ],
+                                "vbHeight": 24,
+                                "vbWidth": 24,
+                                "width": 16,
+                                "xmlns": "http://www.w3.org/2000/svg",
+                              },
+                              "type": "RNSVGSvgView",
+                            },
+                          ],
+                          "props": {
+                            "style": {
+                              "alignItems": "center",
+                              "backgroundColor": "#F5F2EC",
+                              "borderRadius": 6,
+                              "height": 30,
+                              "justifyContent": "center",
+                              "width": 30,
+                            },
+                          },
+                          "type": "View",
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                "Show setup again",
+                              ],
+                              "props": {
+                                "style": {
+                                  "color": "#1A1714",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 15,
+                                },
+                              },
+                              "type": "Text",
+                            },
+                          ],
+                          "props": {
+                            "style": {
+                              "flex": 1,
+                            },
+                          },
+                          "type": "View",
+                        },
+                        {
+                          "children": [
+                            "Walk through the intro screens",
+                          ],
+                          "props": {
+                            "style": {
+                              "color": "#8A837A",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                            },
+                          },
+                          "type": "Text",
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "d": "m9 18 6-6-6-6",
+                                    "fill": null,
+                                    "propList": [
+                                      "fill",
+                                      "stroke",
+                                      "strokeWidth",
+                                      "strokeLinecap",
+                                      "strokeLinejoin",
+                                    ],
+                                    "stroke": {
+                                      "payload": 4287267706,
+                                      "type": 0,
+                                    },
+                                    "strokeLinecap": 1,
+                                    "strokeLinejoin": 1,
+                                    "strokeWidth": 1.75,
+                                  },
+                                  "type": "RNSVGPath",
+                                },
+                              ],
+                              "props": {
+                                "fill": null,
+                                "propList": [
+                                  "fill",
+                                  "stroke",
+                                  "strokeWidth",
+                                  "strokeLinecap",
+                                  "strokeLinejoin",
+                                ],
+                                "stroke": {
+                                  "payload": 4287267706,
+                                  "type": 0,
+                                },
+                                "strokeLinecap": 1,
+                                "strokeLinejoin": 1,
+                                "strokeWidth": 1.75,
+                              },
+                              "type": "RNSVGGroup",
+                            },
+                          ],
+                          "props": {
+                            "align": "xMidYMid",
+                            "bbHeight": 16,
+                            "bbWidth": 16,
+                            "className": undefined,
+                            "data-testid": undefined,
+                            "fill": "none",
+                            "focusable": false,
+                            "height": 16,
+                            "meetOrSlice": 0,
+                            "minX": 0,
+                            "minY": 0,
+                            "stroke": "#8A837A",
+                            "strokeLinecap": "round",
+                            "strokeLinejoin": "round",
+                            "strokeWidth": 1.75,
+                            "style": [
+                              {
+                                "backgroundColor": "transparent",
+                                "borderWidth": 0,
+                              },
+                              {
+                                "flex": 0,
+                                "height": 16,
+                                "width": 16,
+                              },
+                            ],
+                            "vbHeight": 24,
+                            "vbWidth": 24,
+                            "width": 16,
+                            "xmlns": "http://www.w3.org/2000/svg",
+                          },
+                          "type": "RNSVGSvgView",
+                        },
+                      ],
+                      "props": {
+                        "accessibilityLabel": "Show setup again, Walk through the intro screens",
+                        "accessibilityRole": "button",
+                        "accessibilityState": {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        },
+                        "accessibilityValue": {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        },
+                        "accessible": true,
+                        "collapsable": false,
+                        "focusable": true,
+                        "hitSlop": 4,
+                        "onBlur": [Function],
+                        "onClick": [Function],
+                        "onFocus": [Function],
+                        "onResponderGrant": [Function],
+                        "onResponderMove": [Function],
+                        "onResponderRelease": [Function],
+                        "onResponderTerminate": [Function],
+                        "onResponderTerminationRequest": [Function],
+                        "onStartShouldSetResponder": [Function],
+                        "style": {
+                          "alignItems": "center",
+                          "backgroundColor": "transparent",
+                          "borderBottomColor": "#E9E4DD",
+                          "borderBottomWidth": 1,
+                          "flexDirection": "row",
+                          "gap": 12,
+                          "minHeight": 44,
+                          "paddingHorizontal": 14,
+                          "paddingVertical": 12,
+                        },
+                        "testID": "settings-row-show-onboarding",
+                      },
+                      "type": "View",
+                    },
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "d": "M18 6 6 18",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4291048990,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGPath",
+                                    },
+                                    {
+                                      "children": null,
+                                      "props": {
+                                        "d": "m6 6 12 12",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4291048990,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGPath",
+                                    },
+                                  ],
+                                  "props": {
+                                    "fill": null,
+                                    "propList": [
+                                      "fill",
+                                      "stroke",
+                                      "strokeWidth",
+                                      "strokeLinecap",
+                                      "strokeLinejoin",
+                                    ],
+                                    "stroke": {
+                                      "payload": 4291048990,
+                                      "type": 0,
+                                    },
+                                    "strokeLinecap": 1,
+                                    "strokeLinejoin": 1,
+                                    "strokeWidth": 1.75,
+                                  },
+                                  "type": "RNSVGGroup",
+                                },
+                              ],
+                              "props": {
+                                "align": "xMidYMid",
+                                "bbHeight": 16,
+                                "bbWidth": 16,
+                                "className": undefined,
+                                "data-testid": undefined,
+                                "fill": "none",
+                                "focusable": false,
+                                "height": 16,
+                                "meetOrSlice": 0,
+                                "minX": 0,
+                                "minY": 0,
+                                "stroke": "#C4361E",
+                                "strokeLinecap": "round",
+                                "strokeLinejoin": "round",
+                                "strokeWidth": 1.75,
+                                "style": [
+                                  {
+                                    "backgroundColor": "transparent",
+                                    "borderWidth": 0,
+                                  },
+                                  {
+                                    "flex": 0,
+                                    "height": 16,
+                                    "width": 16,
+                                  },
+                                ],
+                                "vbHeight": 24,
+                                "vbWidth": 24,
+                                "width": 16,
+                                "xmlns": "http://www.w3.org/2000/svg",
+                              },
+                              "type": "RNSVGSvgView",
+                            },
+                          ],
+                          "props": {
+                            "style": {
+                              "alignItems": "center",
+                              "backgroundColor": "#FBE4E0",
+                              "borderRadius": 6,
+                              "height": 30,
+                              "justifyContent": "center",
+                              "width": 30,
+                            },
+                          },
+                          "type": "View",
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                "Erase all data",
+                              ],
+                              "props": {
+                                "style": {
+                                  "color": "#1A1714",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 15,
+                                },
+                              },
+                              "type": "Text",
+                            },
+                          ],
+                          "props": {
+                            "style": {
+                              "flex": 1,
+                            },
+                          },
+                          "type": "View",
+                        },
+                        {
+                          "children": [
+                            "Removes every place, entry and preference",
+                          ],
+                          "props": {
+                            "style": {
+                              "color": "#8A837A",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                            },
+                          },
+                          "type": "Text",
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "d": "m9 18 6-6-6-6",
+                                    "fill": null,
+                                    "propList": [
+                                      "fill",
+                                      "stroke",
+                                      "strokeWidth",
+                                      "strokeLinecap",
+                                      "strokeLinejoin",
+                                    ],
+                                    "stroke": {
+                                      "payload": 4287267706,
+                                      "type": 0,
+                                    },
+                                    "strokeLinecap": 1,
+                                    "strokeLinejoin": 1,
+                                    "strokeWidth": 1.75,
+                                  },
+                                  "type": "RNSVGPath",
+                                },
+                              ],
+                              "props": {
+                                "fill": null,
+                                "propList": [
+                                  "fill",
+                                  "stroke",
+                                  "strokeWidth",
+                                  "strokeLinecap",
+                                  "strokeLinejoin",
+                                ],
+                                "stroke": {
+                                  "payload": 4287267706,
+                                  "type": 0,
+                                },
+                                "strokeLinecap": 1,
+                                "strokeLinejoin": 1,
+                                "strokeWidth": 1.75,
+                              },
+                              "type": "RNSVGGroup",
+                            },
+                          ],
+                          "props": {
+                            "align": "xMidYMid",
+                            "bbHeight": 16,
+                            "bbWidth": 16,
+                            "className": undefined,
+                            "data-testid": undefined,
+                            "fill": "none",
+                            "focusable": false,
+                            "height": 16,
+                            "meetOrSlice": 0,
+                            "minX": 0,
+                            "minY": 0,
+                            "stroke": "#8A837A",
+                            "strokeLinecap": "round",
+                            "strokeLinejoin": "round",
+                            "strokeWidth": 1.75,
+                            "style": [
+                              {
+                                "backgroundColor": "transparent",
+                                "borderWidth": 0,
+                              },
+                              {
+                                "flex": 0,
+                                "height": 16,
+                                "width": 16,
+                              },
+                            ],
+                            "vbHeight": 24,
+                            "vbWidth": 24,
+                            "width": 16,
+                            "xmlns": "http://www.w3.org/2000/svg",
+                          },
+                          "type": "RNSVGSvgView",
+                        },
+                      ],
+                      "props": {
+                        "accessibilityLabel": "Erase all data, Removes every place, entry and preference",
+                        "accessibilityRole": "button",
+                        "accessibilityState": {
+                          "busy": undefined,
+                          "checked": undefined,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        },
+                        "accessibilityValue": {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        },
+                        "accessible": true,
+                        "collapsable": false,
+                        "focusable": true,
+                        "hitSlop": 4,
+                        "onBlur": [Function],
+                        "onClick": [Function],
+                        "onFocus": [Function],
+                        "onResponderGrant": [Function],
+                        "onResponderMove": [Function],
+                        "onResponderRelease": [Function],
+                        "onResponderTerminate": [Function],
+                        "onResponderTerminationRequest": [Function],
+                        "onStartShouldSetResponder": [Function],
+                        "style": {
+                          "alignItems": "center",
+                          "backgroundColor": "transparent",
+                          "borderBottomColor": "#E9E4DD",
+                          "borderBottomWidth": 0,
+                          "flexDirection": "row",
+                          "gap": 12,
+                          "minHeight": 44,
+                          "paddingHorizontal": 14,
+                          "paddingVertical": 12,
+                        },
+                        "testID": "settings-row-reset",
                       },
                       "type": "View",
                     },
@@ -11938,6 +13140,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                             },
                           ],
                           "props": {
+                            "accessibilityLabel": "Monday, no tracking",
+                            "accessibilityRole": "text",
+                            "accessible": true,
                             "style": {
                               "alignItems": "center",
                               "flex": 1,
@@ -11980,6 +13185,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                             },
                           ],
                           "props": {
+                            "accessibilityLabel": "Tuesday, no tracking",
+                            "accessibilityRole": "text",
+                            "accessible": true,
                             "style": {
                               "alignItems": "center",
                               "flex": 1,
@@ -12022,6 +13230,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                             },
                           ],
                           "props": {
+                            "accessibilityLabel": "Wednesday, no tracking",
+                            "accessibilityRole": "text",
+                            "accessible": true,
                             "style": {
                               "alignItems": "center",
                               "flex": 1,
@@ -12064,6 +13275,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                             },
                           ],
                           "props": {
+                            "accessibilityLabel": "Thursday, no tracking",
+                            "accessibilityRole": "text",
+                            "accessible": true,
                             "style": {
                               "alignItems": "center",
                               "flex": 1,
@@ -12106,6 +13320,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                             },
                           ],
                           "props": {
+                            "accessibilityLabel": "Friday, no tracking",
+                            "accessibilityRole": "text",
+                            "accessible": true,
                             "style": {
                               "alignItems": "center",
                               "flex": 1,
@@ -12148,6 +13365,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                             },
                           ],
                           "props": {
+                            "accessibilityLabel": "Saturday, no tracking",
+                            "accessibilityRole": "text",
+                            "accessible": true,
                             "style": {
                               "alignItems": "center",
                               "flex": 1,
@@ -12190,6 +13410,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                             },
                           ],
                           "props": {
+                            "accessibilityLabel": "Sunday, no tracking",
+                            "accessibilityRole": "text",
+                            "accessible": true,
                             "style": {
                               "alignItems": "center",
                               "flex": 1,
@@ -12285,7 +13508,7 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "rx": "2",
                                         "ry": "2",
                                         "stroke": {
-                                          "payload": 4294928957,
+                                          "payload": 4293416230,
                                           "type": 0,
                                         },
                                         "strokeLinecap": 1,
@@ -12310,7 +13533,7 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                           "strokeLinejoin",
                                         ],
                                         "stroke": {
-                                          "payload": 4294928957,
+                                          "payload": 4293416230,
                                           "type": 0,
                                         },
                                         "strokeLinecap": 1,
@@ -12330,7 +13553,7 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                       "strokeLinejoin",
                                     ],
                                     "stroke": {
-                                      "payload": 4294928957,
+                                      "payload": 4293416230,
                                       "type": 0,
                                     },
                                     "strokeLinecap": 1,
@@ -12352,7 +13575,7 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                 "meetOrSlice": 0,
                                 "minX": 0,
                                 "minY": 0,
-                                "stroke": "#FF6A3D",
+                                "stroke": "#E85526",
                                 "strokeLinecap": "round",
                                 "strokeLinejoin": "round",
                                 "strokeWidth": 1.75,
@@ -12809,8 +14032,8 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
                                           "justifyContent": "center",
-                                          "paddingVertical": 6,
-                                          "width": 38,
+                                          "paddingVertical": 9,
+                                          "width": 57,
                                         },
                                       },
                                       "type": "View",
@@ -12838,9 +14061,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
-                                          "paddingHorizontal": 10,
-                                          "paddingVertical": 6,
-                                          "width": 108,
+                                          "paddingHorizontal": 15,
+                                          "paddingVertical": 9,
+                                          "width": 162,
                                         },
                                       },
                                       "type": "View",
@@ -12868,9 +14091,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
-                                          "paddingHorizontal": 10,
-                                          "paddingVertical": 6,
-                                          "width": 64,
+                                          "paddingHorizontal": 15,
+                                          "paddingVertical": 9,
+                                          "width": 96,
                                         },
                                       },
                                       "type": "View",
@@ -12898,9 +14121,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
-                                          "paddingHorizontal": 10,
-                                          "paddingVertical": 6,
-                                          "width": 52,
+                                          "paddingHorizontal": 15,
+                                          "paddingVertical": 9,
+                                          "width": 78,
                                         },
                                       },
                                       "type": "View",
@@ -12928,9 +14151,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
-                                          "paddingHorizontal": 10,
-                                          "paddingVertical": 6,
-                                          "width": 64,
+                                          "paddingHorizontal": 15,
+                                          "paddingVertical": 9,
+                                          "width": 96,
                                         },
                                       },
                                       "type": "View",
@@ -12958,9 +14181,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
-                                          "paddingHorizontal": 10,
-                                          "paddingVertical": 6,
-                                          "width": 72,
+                                          "paddingHorizontal": 15,
+                                          "paddingVertical": 9,
+                                          "width": 108,
                                         },
                                       },
                                       "type": "View",
@@ -12988,9 +14211,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 0,
-                                          "paddingHorizontal": 10,
-                                          "paddingVertical": 6,
-                                          "width": 180,
+                                          "paddingHorizontal": 15,
+                                          "paddingVertical": 9,
+                                          "width": 270,
                                         },
                                       },
                                       "type": "View",
@@ -13017,7 +14240,7 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                           "borderRightWidth": 1,
                                           "justifyContent": "center",
                                           "paddingVertical": 6,
-                                          "width": 38,
+                                          "width": 57,
                                         },
                                       },
                                       "type": "View",
@@ -13045,9 +14268,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
-                                          "paddingHorizontal": 10,
+                                          "paddingHorizontal": 15,
                                           "paddingVertical": 8,
-                                          "width": 108,
+                                          "width": 162,
                                         },
                                       },
                                       "type": "View",
@@ -13075,9 +14298,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
-                                          "paddingHorizontal": 10,
+                                          "paddingHorizontal": 15,
                                           "paddingVertical": 8,
-                                          "width": 64,
+                                          "width": 96,
                                         },
                                       },
                                       "type": "View",
@@ -13105,9 +14328,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
-                                          "paddingHorizontal": 10,
+                                          "paddingHorizontal": 15,
                                           "paddingVertical": 8,
-                                          "width": 52,
+                                          "width": 78,
                                         },
                                       },
                                       "type": "View",
@@ -13135,9 +14358,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
-                                          "paddingHorizontal": 10,
+                                          "paddingHorizontal": 15,
                                           "paddingVertical": 8,
-                                          "width": 64,
+                                          "width": 96,
                                         },
                                       },
                                       "type": "View",
@@ -13165,9 +14388,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 1,
-                                          "paddingHorizontal": 10,
+                                          "paddingHorizontal": 15,
                                           "paddingVertical": 8,
-                                          "width": 72,
+                                          "width": 108,
                                         },
                                       },
                                       "type": "View",
@@ -13195,9 +14418,9 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "style": {
                                           "borderRightColor": "#E9E4DD",
                                           "borderRightWidth": 0,
-                                          "paddingHorizontal": 10,
+                                          "paddingHorizontal": 15,
                                           "paddingVertical": 8,
-                                          "width": 180,
+                                          "width": 270,
                                         },
                                       },
                                       "type": "View",
@@ -13216,7 +14439,7 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                               ],
                               "props": {
                                 "style": {
-                                  "minWidth": 578,
+                                  "minWidth": 867,
                                 },
                               },
                               "type": "View",
@@ -13732,7 +14955,7 @@ exports[`snapshots — main screens Timeline with a single seeded place 1`] = `
                                           "strokeWidth",
                                         ],
                                         "stroke": {
-                                          "payload": 4294928957,
+                                          "payload": 4293416230,
                                           "type": 0,
                                         },
                                         "strokeWidth": 0.8,
@@ -13846,7 +15069,7 @@ exports[`snapshots — main screens Timeline with a single seeded place 1`] = `
                                   ],
                                   "props": {
                                     "style": {
-                                      "color": "#FF6A3D",
+                                      "color": "#E85526",
                                       "fontFamily": "Inter",
                                       "fontSize": 13,
                                       "fontWeight": "600",

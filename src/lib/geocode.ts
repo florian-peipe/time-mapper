@@ -82,6 +82,16 @@ const DEMO_DETAILS: Record<string, PlaceDetails> = {
 
 const AUTOCOMPLETE_URL = "https://maps.googleapis.com/maps/api/place/autocomplete/json";
 const DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json";
+const PHOTON_URL = "https://photon.komoot.io/api/";
+
+/**
+ * True when running inside Jest. Used to keep the no-key path on the
+ * deterministic demo list for tests while still letting dev builds hit
+ * Nominatim for real suggestions.
+ */
+function isJestEnv(): boolean {
+  return typeof process !== "undefined" && !!process.env.JEST_WORKER_ID;
+}
 
 function getApiKey(): string {
   return process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY ?? "";
@@ -168,7 +178,20 @@ export async function autocomplete(
   signal?: AbortSignal,
 ): Promise<PlaceSuggestion[]> {
   const key = getApiKey();
-  if (!key) return filterDemoSuggestions(query);
+  if (!key) {
+    // Dev builds (no Google key) hit Nominatim so the app is exercisable
+    // with real worldwide addresses without provisioning infra. The demo
+    // list only kicks in offline or inside Jest — it's a 3-entry Köln
+    // stub and not useful for end-to-end product work.
+    if (__DEV__ && !isJestEnv()) {
+      try {
+        return await photonAutocomplete(query, signal);
+      } catch {
+        return filterDemoSuggestions(query);
+      }
+    }
+    return filterDemoSuggestions(query);
+  }
   const trimmed = query.trim();
   if (!trimmed) return [];
 
@@ -208,6 +231,19 @@ export async function autocomplete(
  * returns the stubbed coordinates from `DEMO_DETAILS`.
  */
 export async function geocodePlace(placeId: string, sessionToken: string): Promise<PlaceDetails> {
+  // OSM / Photon suggestions carry their coordinates inside the synthetic
+  // placeId (see photonAutocomplete). Decode them directly — neither
+  // service has a cheap details-by-id endpoint worth a second round-trip.
+  if (placeId.startsWith("osm:")) {
+    const parts = placeId.split(":");
+    const lat = Number(parts[2]);
+    const lng = Number(parts[3]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      throw new Error(`geocodePlace: invalid OSM placeId ${placeId}`);
+    }
+    return { lat, lng, formattedAddress: "" };
+  }
+
   const key = getApiKey();
   if (!key) {
     const demo = DEMO_DETAILS[placeId];
@@ -238,4 +274,75 @@ export async function geocodePlace(placeId: string, sessionToken: string): Promi
     lng: loc.lng,
     formattedAddress: data.result?.formatted_address ?? "",
   };
+}
+
+type PhotonFeature = {
+  properties?: {
+    osm_id?: number | string;
+    name?: string;
+    street?: string;
+    housenumber?: string;
+    city?: string;
+    postcode?: string;
+    state?: string;
+    country?: string;
+  };
+  geometry?: {
+    coordinates?: [number, number]; // [lng, lat]
+  };
+};
+
+type PhotonResponse = {
+  features?: PhotonFeature[];
+};
+
+/**
+ * Photon autocomplete (Komoot's OSM-backed search-as-you-type service).
+ * Much faster than Nominatim — typically 100-300ms vs 500-2000ms — and
+ * specifically designed for incremental typing. Free, no API key, fair-use
+ * policy (not for heavy commercial traffic). Gated to __DEV__ so
+ * production builds don't accidentally hammer it.
+ *
+ * Short queries (<2 chars) skip the network. Throws on HTTP errors so the
+ * outer autocomplete() can fall back to the demo list.
+ */
+async function photonAutocomplete(query: string, signal?: AbortSignal): Promise<PlaceSuggestion[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+  const params = new URLSearchParams({
+    q: trimmed,
+    limit: "8",
+  });
+  const res = await fetch(`${PHOTON_URL}?${params.toString()}`, { signal });
+  if (!res.ok) throw new Error(`Photon HTTP ${res.status}`);
+  const data = (await res.json()) as PhotonResponse;
+  const features = data.features ?? [];
+  return features
+    .map((f, idx) => {
+      const coords = f.geometry?.coordinates;
+      if (!coords || coords.length < 2) return null;
+      const [lng, lat] = coords;
+      if (typeof lat !== "number" || typeof lng !== "number") return null;
+
+      const p = f.properties ?? {};
+      // Main line: street + housenumber if we have them, else the POI name,
+      // else the city. Falls back to a best-effort join so every row
+      // renders something useful.
+      const streetLine =
+        p.street && p.housenumber
+          ? `${p.street} ${p.housenumber}`
+          : (p.street ?? p.name ?? p.city ?? "");
+      const tail = [p.postcode, p.city, p.state, p.country]
+        .filter((v): v is string => typeof v === "string" && v.length > 0)
+        .join(", ");
+      const description = [streetLine, tail].filter((s) => s.length > 0).join(", ");
+      const id = p.osm_id != null ? String(p.osm_id) : `photon-${idx}`;
+      return {
+        placeId: `osm:${id}:${lat}:${lng}`,
+        description,
+        mainText: streetLine || description,
+        secondaryText: tail,
+      } satisfies PlaceSuggestion;
+    })
+    .filter((v): v is PlaceSuggestion => v !== null);
 }

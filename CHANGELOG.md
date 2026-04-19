@@ -172,6 +172,7 @@ Release polish pass — everything between working billing and a
 submittable TestFlight / Play Internal build. Shipped in 14 commits.
 
 ### Geocoding + map
+
 - **Google Places autocomplete wired**. `src/lib/geocode.ts` exposes
   `autocomplete()`, `geocodePlace()`, `createSessionToken()`. Reads
   `EXPO_PUBLIC_GOOGLE_PLACES_API_KEY`; missing key → demo suggestions
@@ -181,6 +182,7 @@ submittable TestFlight / Play Internal build. Shipped in 14 commits.
   banner when the native module isn't available.
 
 ### Accessibility
+
 - Every primitive now supports `accessibilityLabel`, `accessibilityHint`,
   `accessibilityState`, and composes sensible defaults (ListRow folds
   title + string detail into a single label).
@@ -189,6 +191,7 @@ submittable TestFlight / Play Internal build. Shipped in 14 commits.
 - Sheet header X-button + scrim both meet the 44pt touch target.
 
 ### i18n (German audit)
+
 - Every user-facing string routes through `i18n.t()`. 80+ new keys
   covering Settings, Stats, Paywall, AddPlace, Onboarding, legal surfaces.
 - Strict coverage test: fails on inline English sentences in screen files,
@@ -196,12 +199,14 @@ submittable TestFlight / Play Internal build. Shipped in 14 commits.
   aren't brand strings or placeholder templates.
 
 ### Crash reporting
+
 - `src/lib/crash.ts` — opt-in Sentry wrapper. Lazy-requires
   `@sentry/react-native`, no-ops without DSN or module. Scrubs
   location/lat/lng from breadcrumbs + extras before send.
 - Boot path in `_layout.tsx` routes errors through `captureException`.
 
 ### Legal pages
+
 - `/legal/{privacy,terms,impressum}` routes with an accessibility-aware
   `LegalScreen` renderer. Document content lives in
   `src/screens/Legal/documents.ts` (runtime source of truth) and
@@ -212,6 +217,7 @@ submittable TestFlight / Play Internal build. Shipped in 14 commits.
   provides table.
 
 ### EAS + app.json
+
 - Version bump **0.5.0 → 1.0.0**, `ios.buildNumber=1`,
   `android.versionCode=1`.
 - Android: added `com.android.vending.BILLING` permission for IAP.
@@ -223,6 +229,7 @@ submittable TestFlight / Play Internal build. Shipped in 14 commits.
   path — with placeholder tokens and a `_submitNotes` array).
 
 ### Store metadata
+
 - `store/ios/metadata.yaml` — app name, subtitle, EN+DE descriptions,
   keywords, privacy labels, reviewer notes.
 - `store/android/metadata.yaml` — title, descriptions, Play Data Safety
@@ -230,6 +237,7 @@ submittable TestFlight / Play Internal build. Shipped in 14 commits.
 - `store/screenshots/README.md` — size matrix and capture commands.
 
 ### Diagnostics + developer tools
+
 - Settings → Developer → **Export diagnostic log** — shares a JSON
   payload with app version, environment flags, and the last 50 pending
   transitions from the DB.
@@ -238,6 +246,7 @@ submittable TestFlight / Play Internal build. Shipped in 14 commits.
   richer hero backdrop.
 
 ### Tests
+
 - **553 tests passing** (up from 454 at v0.5.0, +99 tests).
 - New files:
   - `src/__tests__/a11y.test.tsx` — 29 assertions across primitives + screens.
@@ -256,6 +265,7 @@ submittable TestFlight / Play Internal build. Shipped in 14 commits.
   strict inline-English heuristic.
 
 ### What the user still provides
+
 See the table in README.md — Apple Dev, Play Console, RevenueCat
 project + product configuration, Google Places API key, optional
 Sentry DSN, Impressum contact details, Apple/ASC/Team IDs, Play
@@ -274,11 +284,11 @@ service account JSON, app icon + screenshots.
 - Settings: new Subscription section with a "Time Mapper Pro · Active"
   row that deep-links to App Store / Play Store subscription management,
   plus an always-visible Restore purchases row that reflects in-flight
-  + completion state.
+  - completion state.
 - Anon RevenueCat user-id persisted in `kv['revenuecat.user_id']` and
   passed to `Purchases.configure(...)` so entitlements survive
   reinstalls on the same Apple/Google account.
-- `.env.example` + README section document the EXPO_PUBLIC_REVENUECAT_*
+- `.env.example` + README section document the EXPO*PUBLIC_REVENUECAT*\*
   env vars the user must supply before a real build, with concrete
   dashboard URLs and product IDs.
 - **Mock-mode fallback**: when RC keys are missing the SDK wrapper

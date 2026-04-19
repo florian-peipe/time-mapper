@@ -1,3 +1,4 @@
+import { AppState, type AppStateStatus } from "react-native";
 import type * as DbClientModule from "@/db/client";
 import { PlacesRepo } from "@/db/repository/places";
 import { KvRepo } from "@/db/repository/kv";
@@ -58,4 +59,27 @@ export async function reconcileAfterPlaceChange(): Promise<void> {
   } catch (err) {
     console.warn("[reconcileAfterPlaceChange] failed:", err);
   }
+}
+
+/**
+ * Wire an AppState listener that re-reconciles geofences when the app
+ * becomes active AND location permission is granted. Without this, a
+ * permission downgrade ("Always" → "While in use") made in system settings
+ * while the app is backgrounded silently stops the tracking until the
+ * next cold kill. Returns the AppState subscription so the caller (the
+ * root layout) can clean up on unmount.
+ */
+export function startForegroundReconcileWatcher() {
+  let last: AppStateStatus = AppState.currentState;
+  return AppState.addEventListener("change", (next) => {
+    // Only act on a real inactive/background → active transition. Guard
+    // against active → active churn that the OS occasionally emits on iOS.
+    const becameActive = last !== "active" && next === "active";
+    last = next;
+    if (!becameActive) return;
+    void reconcileAfterPlaceChange();
+    // Opportunistic resolve also catches pending transitions that might
+    // have elapsed while the JS runtime was suspended.
+    void runOpportunisticResolve();
+  });
 }

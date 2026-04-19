@@ -2,13 +2,13 @@
 
 The MVP spec ([lets-deisgn-an-native-tidy-pudding.md](../../../../../Users/flori/.claude/plans/lets-deisgn-an-native-tidy-pudding.md)) is decomposed into 5 sequenced plans. Each plan produces working, testable software on its own and is written only when its predecessor is complete (rolling plans — avoids stale detail).
 
-| # | Plan | Goal | Produces | Status |
-|---|------|------|----------|--------|
-| 1 | **Foundation** | Scaffold Expo app, data layer, theme, i18n, navigation skeleton | App launches on iOS + Android with empty tabs, SQLite migrated, theme respects system, DE/EN string fallbacks wired | **Written** |
-| 2 | **Core UI with mock data** | Implement all screens (onboarding, places CRUD, entry CRUD, timeline, stats, settings, paywall) against an in-memory mock repository | A clickable app you can navigate end-to-end, no real geofencing or billing yet | Pending |
-| 3 | **Location engine** | Buffer state machine (TDD) → geofence service → background task → notifications. Wire to real repository. | Auto-tracking works on a real device end-to-end | Pending |
-| 4 | **Billing + paywall** | RevenueCat SDK, `usePro()` hook, paywall modal, gating in places/export/history/stats/categories | Free → Pro upgrade flows in sandbox; gates work | Pending |
-| 5 | **Release polish** | a11y pass, DE translation pass, App Store/Play listings, privacy docs, EAS build/submit, acceptance checklist | TestFlight build + Play internal track, ready for store review | Pending |
+| #   | Plan                       | Goal                                                                                                                                 | Produces                                                                                                            | Status      |
+| --- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 1   | **Foundation**             | Scaffold Expo app, data layer, theme, i18n, navigation skeleton                                                                      | App launches on iOS + Android with empty tabs, SQLite migrated, theme respects system, DE/EN string fallbacks wired | **Written** |
+| 2   | **Core UI with mock data** | Implement all screens (onboarding, places CRUD, entry CRUD, timeline, stats, settings, paywall) against an in-memory mock repository | A clickable app you can navigate end-to-end, no real geofencing or billing yet                                      | Pending     |
+| 3   | **Location engine**        | Buffer state machine (TDD) → geofence service → background task → notifications. Wire to real repository.                            | Auto-tracking works on a real device end-to-end                                                                     | Pending     |
+| 4   | **Billing + paywall**      | RevenueCat SDK, `usePro()` hook, paywall modal, gating in places/export/history/stats/categories                                     | Free → Pro upgrade flows in sandbox; gates work                                                                     | Pending     |
+| 5   | **Release polish**         | a11y pass, DE translation pass, App Store/Play listings, privacy docs, EAS build/submit, acceptance checklist                        | TestFlight build + Play internal track, ready for store review                                                      | Pending     |
 
 ## Execution order + rationale
 

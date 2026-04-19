@@ -37,28 +37,28 @@ lists the same set so nothing gets missed.
 
 ### iOS
 
-| File | Simulator | Size | Screen |
-| --- | --- | --- | --- |
-| `iphone-67-1-timeline.png` | iPhone 15 Pro Max | 1290 × 2796 | Timeline, 3+ entries, dark mode |
-| `iphone-67-2-running.png`  | iPhone 15 Pro Max | 1290 × 2796 | Running timer card visible, Timeline below |
-| `iphone-67-3-addplace.png` | iPhone 15 Pro Max | 1290 × 2796 | AddPlaceSheet Phase 2, map preview Cologne |
-| `iphone-67-4-stats.png`    | iPhone 15 Pro Max | 1290 × 2796 | Stats week chart + ledger |
-| `iphone-67-5-paywall.png`  | iPhone 15 Pro Max | 1290 × 2796 | Paywall sheet, yearly selected |
-| `iphone-67-6-onboarding.png` | iPhone 15 Pro Max | 1290 × 2796 | Permissions screen (step 2/3) |
-| `iphone-61-*.png`          | iPhone 15        | 1179 × 2556 | Same six shots |
-| `iphone-55-*.png`          | iPhone 8 Plus    | 1242 × 2208 | Same six shots |
+| File                         | Simulator         | Size        | Screen                                     |
+| ---------------------------- | ----------------- | ----------- | ------------------------------------------ |
+| `iphone-67-1-timeline.png`   | iPhone 15 Pro Max | 1290 × 2796 | Timeline, 3+ entries, dark mode            |
+| `iphone-67-2-running.png`    | iPhone 15 Pro Max | 1290 × 2796 | Running timer card visible, Timeline below |
+| `iphone-67-3-addplace.png`   | iPhone 15 Pro Max | 1290 × 2796 | AddPlaceSheet Phase 2, map preview Cologne |
+| `iphone-67-4-stats.png`      | iPhone 15 Pro Max | 1290 × 2796 | Stats week chart + ledger                  |
+| `iphone-67-5-paywall.png`    | iPhone 15 Pro Max | 1290 × 2796 | Paywall sheet, yearly selected             |
+| `iphone-67-6-onboarding.png` | iPhone 15 Pro Max | 1290 × 2796 | Permissions screen (step 2/3)              |
+| `iphone-61-*.png`            | iPhone 15         | 1179 × 2556 | Same six shots                             |
+| `iphone-55-*.png`            | iPhone 8 Plus     | 1242 × 2208 | Same six shots                             |
 
 ### Android
 
-| File | AVD | Size | Screen |
-| --- | --- | --- | --- |
-| `android-phone-1-timeline.png` | Pixel 7 | 1080 × 2400 | Same as iOS 67-1 |
-| `android-phone-2-running.png`  | Pixel 7 | 1080 × 2400 | Same as iOS 67-2 |
-| `android-phone-3-addplace.png` | Pixel 7 | 1080 × 2400 | Same as iOS 67-3 |
-| `android-phone-4-stats.png`    | Pixel 7 | 1080 × 2400 | Same as iOS 67-4 |
-| `android-phone-5-paywall.png`  | Pixel 7 | 1080 × 2400 | Same as iOS 67-5 |
-| `android-phone-6-onboarding.png` | Pixel 7 | 1080 × 2400 | Same as iOS 67-6 |
-| `android-feature-graphic.png`  | — | 1024 × 500 | Marketing banner (brand rings + wordmark) |
+| File                             | AVD     | Size        | Screen                                    |
+| -------------------------------- | ------- | ----------- | ----------------------------------------- |
+| `android-phone-1-timeline.png`   | Pixel 7 | 1080 × 2400 | Same as iOS 67-1                          |
+| `android-phone-2-running.png`    | Pixel 7 | 1080 × 2400 | Same as iOS 67-2                          |
+| `android-phone-3-addplace.png`   | Pixel 7 | 1080 × 2400 | Same as iOS 67-3                          |
+| `android-phone-4-stats.png`      | Pixel 7 | 1080 × 2400 | Same as iOS 67-4                          |
+| `android-phone-5-paywall.png`    | Pixel 7 | 1080 × 2400 | Same as iOS 67-5                          |
+| `android-phone-6-onboarding.png` | Pixel 7 | 1080 × 2400 | Same as iOS 67-6                          |
+| `android-feature-graphic.png`    | —       | 1024 × 500  | Marketing banner (brand rings + wordmark) |
 
 ## Steps (iOS, 6.7")
 
@@ -126,6 +126,7 @@ The on-device navigation sequence matches iOS 1-6.
 
 `android-feature-graphic.png` is a marketing banner (1024 × 500). Use
 any vector tool (Figma, Sketch) to compose:
+
 - Brand accent `#FF6A3D` background
 - Centered white concentric Rings (`docs/design-system/project/assets/patterns/rings.svg`)
 - Wordmark "Time Mapper" in Inter Bold, white, right-aligned

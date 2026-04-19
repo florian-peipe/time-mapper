@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import Slider from "@react-native-community/slider";
 import { useTheme } from "@/theme/useTheme";
 import { PLACE_COLORS } from "@/theme/tokens";
 import { Banner, Button, Icon, Input, Sheet, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { usePro } from "@/features/billing/usePro";
+import { useSnackbarStore } from "@/state/snackbarStore";
 import { useSheetStore, type AddPlaceSource, type PendingPlaceForm } from "@/state/sheetStore";
 import { MAX_PLACES } from "@/features/tracking/geofenceService";
 import { useKvRepo } from "@/features/onboarding/useOnboardingGate";
@@ -101,7 +102,7 @@ const EXIT_BUFFER_MAX_MIN = 10;
  */
 export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: AddPlaceSheetProps) {
   const t = useTheme();
-  const { places, create, update, remove, count } = usePlaces();
+  const { places, create, update, remove, restore, count } = usePlaces();
   const { isPro } = usePro();
   const openSheet = useSheetStore((s) => s.openSheet);
   const pendingPlaceForm = useSheetStore((s) => s.pendingPlaceForm);
@@ -130,6 +131,13 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
 
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
+  // Tracks whether a suggestion is being resolved via geocodePlace — used to
+  // block Save in Phase 2 while coords are still arriving, preventing a
+  // race where the user can save before lat/lng land.
+  const [resolvingPick, setResolvingPick] = useState(false);
+  // Tracks whether autocomplete is currently fetching. Drives the spinner
+  // hint shown below the search input.
+  const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<Selection | null>(
     editingPlace
       ? {
@@ -243,6 +251,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
     let cancelled = false;
     const controller = new AbortController();
     const handle = setTimeout(() => {
+      setSearching(true);
       void (async () => {
         try {
           const results = await autocomplete(query, sessionTokenRef.current, controller.signal);
@@ -257,6 +266,8 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
           const msg = err instanceof Error ? err.message : String(err);
           setApiError(msg);
           setSuggestions([]);
+        } finally {
+          if (!cancelled) setSearching(false);
         }
       })();
     }, AUTOCOMPLETE_DEBOUNCE_MS);
@@ -272,9 +283,9 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   const shouldPaywall = !isPro && count >= 1 && !editing;
 
   const handlePickSuggestion = async (s: PlaceSuggestion) => {
-    // Optimistically set the name from the main text so users see progress
-    // while Place Details resolves in the background.
-    setName(s.mainText || s.description.split(",")[0] || s.description);
+    // Intentionally leave `name` blank — the user labels the place ("Arbeit",
+    // "Sport", …); the picked address is shown separately in the preview card.
+    setResolvingPick(true);
     try {
       const details = await geocodePlace(s.placeId, sessionTokenRef.current);
       setSelected({
@@ -288,7 +299,9 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setApiError(null);
     } catch (err) {
       // If geocoding fails, still let the user proceed with description
-      // only (lat/lng zero). Surface the error in a Banner.
+      // only (lat/lng zero). Surface the error in a Banner. The Save guard
+      // (in handleSave) refuses 0/0 coords so the user can't accidentally
+      // create a broken place.
       const msg = err instanceof Error ? err.message : String(err);
       setApiError(msg);
       setSelected({
@@ -297,6 +310,8 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
         latitude: 0,
         longitude: 0,
       });
+    } finally {
+      setResolvingPick(false);
     }
   };
 
@@ -335,6 +350,16 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       return;
     }
     if (!selected) return;
+    // Defensive: a geocodePlace failure leaves lat=lng=0 on `selected`. A
+    // geofence at Null Island will never fire — refuse to save a fresh
+    // place with unresolved coords and leave the Banner in place so the
+    // user picks another suggestion. We scope to new-place mode only —
+    // edit mode preserves whatever coords were already on the row (which
+    // could legitimately be 0/0 on legacy data).
+    if (!editing && selected.latitude === 0 && selected.longitude === 0) {
+      setApiError(i18n.t("addPlace.search.errorBody"));
+      return;
+    }
     const chosenColor = PLACE_COLORS[colorIdx] ?? PLACE_COLORS[0];
     const chosenIcon = ICON_CHOICES[iconIdx] ?? ICON_CHOICES[0];
 
@@ -379,6 +404,23 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
         style: "destructive",
         onPress: () => {
           remove(placeId);
+          // Offer a 5 s Undo via the global snackbar — mirrors the pattern
+          // used by EntryEditSheet so delete recovery feels symmetric
+          // across the two object types.
+          useSnackbarStore.getState().show({
+            message: i18n.t("addPlace.delete.snack"),
+            action: {
+              label: i18n.t("addPlace.delete.undo"),
+              onPress: () => {
+                try {
+                  restore(placeId);
+                } catch {
+                  // Row was hard-purged already — nothing we can do.
+                }
+              },
+            },
+            ttlMs: 5000,
+          });
           onClose();
         },
       },
@@ -413,6 +455,8 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
               size="md"
               full
               onPress={handleSave}
+              loading={resolvingPick}
+              disabled={resolvingPick}
               testID="add-place-save"
               accessibilityLabel={saveLabel}
               accessibilityHint={shouldPaywall ? i18n.t("addPlace.cta.unlockPro.hint") : undefined}
@@ -457,6 +501,31 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
                 body={i18n.t("addPlace.search.errorBody")}
                 testID="add-place-api-error"
               />
+            </View>
+          ) : null}
+          {searching ? (
+            <View
+              testID="add-place-searching"
+              accessible
+              accessibilityLiveRegion="polite"
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: t.space[2],
+                paddingVertical: t.space[2],
+                paddingHorizontal: t.space[1],
+              }}
+            >
+              <ActivityIndicator size="small" color={t.color("color.accent")} />
+              <Text
+                style={{
+                  fontSize: t.type.size.s,
+                  color: t.color("color.fg3"),
+                  fontFamily: t.type.family.sans,
+                }}
+              >
+                {i18n.t("addPlace.search.searching")}
+              </Text>
             </View>
           ) : null}
           {suggestions.map((s, i) => (

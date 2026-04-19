@@ -3,7 +3,14 @@ import { Pressable, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Button, Sheet } from "@/components";
 import { useKvRepo } from "@/features/onboarding/useOnboardingGate";
-import { getQuietHours, setQuietHours, type QuietHours } from "@/features/notifications/notifier";
+import {
+  getQuietHours,
+  setQuietHours,
+  type QuietHours,
+  getDailyDigestEnabled,
+  getDailyDigestHour,
+  setDailyDigestSchedule,
+} from "@/features/notifications/notifier";
 import { i18n } from "@/lib/i18n";
 
 export type NotificationsSheetProps = {
@@ -32,6 +39,8 @@ export function NotificationsSheet({ visible, onClose }: NotificationsSheetProps
   const [enabled, setEnabled] = useState(false);
   const [startH, setStartH] = useState(DEFAULT_QUIET_START_H);
   const [endH, setEndH] = useState(DEFAULT_QUIET_END_H);
+  const [digestEnabled, setDigestEnabled] = useState(false);
+  const [digestHour, setDigestHour] = useState(8);
 
   useEffect(() => {
     if (!visible) return;
@@ -45,24 +54,26 @@ export function NotificationsSheet({ visible, onClose }: NotificationsSheetProps
       setStartH(DEFAULT_QUIET_START_H);
       setEndH(DEFAULT_QUIET_END_H);
     }
+    setDigestEnabled(getDailyDigestEnabled(kv));
+    setDigestHour(getDailyDigestHour(kv));
   }, [visible, kv]);
 
   const handleSave = useCallback(() => {
+    // Persist quiet hours first (synchronous KV). Save is blocked on an
+    // invalid zero-width window — handled by the disabled-Save + error
+    // message already rendered below.
     if (!enabled) {
       setQuietHours(kv, null);
-      onClose();
-      return;
+    } else {
+      if (startH === endH) return;
+      const q: QuietHours = { startH, endH };
+      setQuietHours(kv, q);
     }
-    if (startH === endH) {
-      // Backend treats zero-length windows as "never quiet". We refuse to
-      // save and let the user adjust. Fail via surface feedback rather than
-      // silently clearing the setting.
-      return;
-    }
-    const q: QuietHours = { startH, endH };
-    setQuietHours(kv, q);
+    // Fire-and-forget the digest schedule — it needs a native call but
+    // we don't want to block the user on it. Errors are logged inside.
+    void setDailyDigestSchedule(kv, { enabled: digestEnabled, hour: digestHour });
     onClose();
-  }, [enabled, startH, endH, kv, onClose]);
+  }, [enabled, startH, endH, digestEnabled, digestHour, kv, onClose]);
 
   const rangeInvalid = enabled && startH === endH;
 
@@ -178,6 +189,81 @@ export function NotificationsSheet({ visible, onClose }: NotificationsSheetProps
           {i18n.t("settings.notifications.rangeInvalid")}
         </Text>
       ) : null}
+
+      {/* Daily digest — scheduled reminder at a user-chosen hour. Independent
+          of quiet hours: you can turn either on or off on its own. */}
+      <Text
+        style={{
+          fontSize: t.type.size.xs,
+          color: t.color("color.fg3"),
+          fontFamily: t.type.family.sans,
+          fontWeight: t.type.weight.bold,
+          letterSpacing: 0.5,
+          textTransform: "uppercase",
+          marginTop: t.space[6],
+          marginBottom: t.space[3],
+        }}
+      >
+        {i18n.t("settings.notifications.digest.header")}
+      </Text>
+      <Pressable
+        testID="notifications-digest-toggle"
+        accessibilityRole="switch"
+        accessibilityLabel={i18n.t("settings.notifications.digest.toggle")}
+        accessibilityState={{ checked: digestEnabled }}
+        onPress={() => setDigestEnabled((v) => !v)}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingVertical: t.space[3],
+          paddingHorizontal: t.space[4],
+          borderWidth: 1,
+          borderColor: t.color("color.border"),
+          borderRadius: t.radius.md,
+          marginBottom: t.space[4],
+        }}
+      >
+        <Text
+          style={{
+            fontSize: t.type.size.body,
+            color: t.color("color.fg"),
+            fontFamily: t.type.family.sans,
+            fontWeight: t.type.weight.medium,
+          }}
+        >
+          {i18n.t("settings.notifications.digest.toggle")}
+        </Text>
+        <View
+          style={{
+            width: 44,
+            height: 26,
+            borderRadius: t.radius.pill,
+            backgroundColor: digestEnabled
+              ? t.color("color.accent")
+              : t.color("color.border.strong"),
+            justifyContent: "center",
+            paddingHorizontal: 3,
+          }}
+        >
+          <View
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: t.radius.pill,
+              backgroundColor: t.color("color.accent.contrast"),
+              alignSelf: digestEnabled ? "flex-end" : "flex-start",
+            }}
+          />
+        </View>
+      </Pressable>
+      <HourRow
+        label={i18n.t("settings.notifications.digest.hour")}
+        hour={digestHour}
+        onChange={setDigestHour}
+        disabled={!digestEnabled}
+        testID="notifications-digest-hour"
+      />
     </Sheet>
   );
 }

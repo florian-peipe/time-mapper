@@ -13,7 +13,24 @@ type Props = {
   testID?: string;
 };
 
-const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+const DAY_KEYS = [
+  "stats.weekday.mon",
+  "stats.weekday.tue",
+  "stats.weekday.wed",
+  "stats.weekday.thu",
+  "stats.weekday.fri",
+  "stats.weekday.sat",
+  "stats.weekday.sun",
+] as const;
+const DAY_KEYS_LONG = [
+  "stats.weekday.mon.long",
+  "stats.weekday.tue.long",
+  "stats.weekday.wed.long",
+  "stats.weekday.thu.long",
+  "stats.weekday.fri.long",
+  "stats.weekday.sat.long",
+  "stats.weekday.sun.long",
+] as const;
 
 /**
  * Stacked bar chart (one column per weekday) + color-dot legend.
@@ -52,12 +69,30 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
           height: 180, // mono grid, design-system chart height
         }}
       >
-        {DAY_LABELS.map((label, i) => {
+        {DAY_KEYS.map((dayKey, i) => {
+          const label = i18n.t(dayKey);
+          const longLabel = i18n.t(DAY_KEYS_LONG[i]!);
           const dayBuckets = byDay[i] ?? {};
+          const daySumMinutes = Object.values(dayBuckets).reduce((a, b) => a + b, 0);
+          const breakdown = placeLegend
+            .map((p) => ({ name: p.name, minutes: dayBuckets[p.name] ?? 0 }))
+            .filter((x) => x.minutes > 0);
+          const a11yLabel =
+            breakdown.length === 0
+              ? i18n.t("stats.a11y.dayEmpty", { day: longLabel })
+              : i18n.t("stats.a11y.dayTotal", {
+                  day: longLabel,
+                  total: formatTotal(daySumMinutes),
+                }) +
+                " — " +
+                breakdown.map((x) => `${x.name}: ${formatTotal(x.minutes)}`).join(", ");
           return (
             <View
-              key={label}
+              key={dayKey}
               testID={`week-bar-${label.toLowerCase()}`}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={a11yLabel}
               style={{
                 flex: 1,
                 alignItems: "center",

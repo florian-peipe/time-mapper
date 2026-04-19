@@ -43,6 +43,8 @@ export type UseOnboardingGateResult = {
   needsOnboarding: boolean;
   /** Writes the KV flag and mirrors into `uiStore.onboardingComplete`. */
   markComplete: () => void;
+  /** Clear the flag so the user is routed back through onboarding on next boot. */
+  reset: () => void;
 };
 
 /**
@@ -75,10 +77,16 @@ export function useOnboardingGate(): UseOnboardingGateResult {
     completeOnboardingInStore();
   }, [repo, completeOnboardingInStore]);
 
+  const reset = useCallback(() => {
+    repo.delete(ONBOARDING_COMPLETE_KEY);
+    setKvFlagPresent(false);
+    useUiStore.setState({ onboardingComplete: false });
+  }, [repo]);
+
   // `needsOnboarding` is true until EITHER source says we're done.
   // The store slice lets a sibling flow (e.g. skip button) short-circuit
   // without waiting for the next KV read.
   const needsOnboarding = hydrated && !kvFlagPresent && !onboardingComplete;
 
-  return { hydrated, needsOnboarding, markComplete };
+  return { hydrated, needsOnboarding, markComplete, reset };
 }

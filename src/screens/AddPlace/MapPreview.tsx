@@ -1,5 +1,6 @@
 import React from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
+import Constants from "expo-constants";
 import { useTheme } from "@/theme/useTheme";
 import { Banner } from "@/components";
 import { i18n } from "@/lib/i18n";
@@ -40,6 +41,23 @@ function tryLoadMap(): MapModule | null {
 }
 
 /**
+ * Android's `react-native-maps` always uses Google Maps, which requires a
+ * Google Maps SDK key in `app.json → android.config.googleMaps.apiKey`. If
+ * the key is missing, the native MapView still mounts but its GL surface
+ * fails to initialise — the emulator reports "bad color buffer handle" and
+ * the sheet appears frozen. iOS uses Apple Maps (no key) so it's always
+ * safe there.
+ */
+function isNativeMapUsable(): boolean {
+  if (Platform.OS !== "android") return true;
+  const cfg = Constants.expoConfig?.android?.config as
+    | { googleMaps?: { apiKey?: unknown } }
+    | undefined;
+  const key = cfg?.googleMaps?.apiKey;
+  return typeof key === "string" && key.length > 0;
+}
+
+/**
  * Derive a latitude/longitude delta pair from a radius. The iOS MapKit
  * `region` API wants a viewport in degrees, not meters: 1° of latitude ≈
  * 111_320m regardless of location, so we convert the radius to lat-degrees,
@@ -73,12 +91,13 @@ function regionFromRadius(lat: number, lng: number, radiusM: number) {
 export function MapPreview({ latitude, longitude, radiusM, color, testID }: MapPreviewProps) {
   const t = useTheme();
   const Maps = React.useMemo(() => tryLoadMap(), []);
+  const mapUsable = React.useMemo(() => isNativeMapUsable(), []);
 
-  if (!Maps) {
+  if (!Maps || !mapUsable) {
     return (
       <View testID={testID}>
         <Banner
-          tone="info"
+          tone="warning"
           title={i18n.t("addPlace.map.unavailable")}
           testID={testID ? `${testID}-fallback` : undefined}
         />

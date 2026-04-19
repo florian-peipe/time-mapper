@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import {
   Button,
@@ -146,24 +146,56 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
     if (endedAt < startedAt) endedAt += 86_400;
     const pauseS = pauseMin * 60;
 
-    if (isNew) {
-      entriesRepo.createManual({
-        placeId,
-        startedAt,
-        endedAt,
-        note: note || undefined,
-        pauseS,
-      });
-    } else if (entryId) {
-      entriesRepo.update(entryId, {
-        placeId,
-        startedAt,
-        endedAt,
-        note: note || null,
-        pauseS,
-      });
+    const commit = (opts?: { replace?: Entry[] }) => {
+      if (opts?.replace) {
+        for (const r of opts.replace) {
+          entriesRepo.softDelete(r.id);
+        }
+      }
+      if (isNew) {
+        entriesRepo.createManual({
+          placeId,
+          startedAt,
+          endedAt,
+          note: note || undefined,
+          pauseS,
+        });
+      } else if (entryId) {
+        entriesRepo.update(entryId, {
+          placeId,
+          startedAt,
+          endedAt,
+          note: note || null,
+          pauseS,
+        });
+      }
+      onClose();
+    };
+
+    // Check for overlapping entries. For a brand-new entry this is
+    // purely additive; for an edit we exclude the row under edit so the
+    // "overlap with itself" trivially isn't flagged.
+    const overlaps = entriesRepo.findOverlapping(startedAt, endedAt, entryId ?? undefined);
+    if (overlaps.length > 0) {
+      Alert.alert(
+        i18n.t("entryEdit.overlap.title"),
+        i18n.t("entryEdit.overlap.body", { count: overlaps.length }),
+        [
+          { text: i18n.t("common.cancel"), style: "cancel" },
+          {
+            text: i18n.t("entryEdit.overlap.keepBoth"),
+            onPress: () => commit(),
+          },
+          {
+            text: i18n.t("entryEdit.overlap.replace"),
+            style: "destructive",
+            onPress: () => commit({ replace: overlaps }),
+          },
+        ],
+      );
+      return;
     }
-    onClose();
+    commit();
   }, [
     runValidation,
     placeId,
@@ -581,6 +613,7 @@ function FieldRow({
           placeholder={placeholder}
           keyboardType={keyboardType}
           maxLength={maxLength}
+          accessibilityLabel={label}
           // Match the spreadsheet-like inline input — transparent, right-aligned,
           // mono where tabular numbers matter.
           style={{

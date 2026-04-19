@@ -21,7 +21,7 @@ describe("useTheme", () => {
         <Probe />
       </ThemeProvider>,
     );
-    expect(screen.getByTestId("probe")).toHaveTextContent("#FF6A3D");
+    expect(screen.getByTestId("probe")).toHaveTextContent("#E85526");
   });
 
   it("returns dark accent when scheme is dark", () => {
@@ -30,7 +30,7 @@ describe("useTheme", () => {
         <Probe />
       </ThemeProvider>,
     );
-    expect(screen.getByTestId("probe")).toHaveTextContent("#FF7B52");
+    expect(screen.getByTestId("probe")).toHaveTextContent("#F36433");
   });
 
   it("exposes motion tokens with the default 200ms base duration", () => {

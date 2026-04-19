@@ -4,7 +4,9 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { PlacesRepoProvider } from "@/features/places/usePlaces";
+import { EntriesRepoProvider } from "@/features/entries/useEntries";
 import { PlacesRepo } from "@/db/repository/places";
+import { EntriesRepo } from "@/db/repository/entries";
 import { KvRepo } from "@/db/repository/kv";
 import { KvRepoProvider } from "@/features/onboarding/useOnboardingGate";
 import { createTestDb } from "@/db/testClient";
@@ -27,6 +29,7 @@ jest.mock("expo-router", () => ({
 function makeEnv(seeded: { name: string; address?: string; color?: string; icon?: string }[] = []) {
   const db = createTestDb();
   const repo = new PlacesRepo(db);
+  const entries = new EntriesRepo(db);
   const kv = new KvRepo(db);
   for (const p of seeded) {
     repo.create({
@@ -38,10 +41,13 @@ function makeEnv(seeded: { name: string; address?: string; color?: string; icon?
       icon: p.icon,
     });
   }
-  return { repo, kv };
+  return { repo, entries, kv };
 }
 
-const wrap = (ui: React.ReactNode, env: { repo: PlacesRepo; kv: KvRepo } = makeEnv()) => (
+const wrap = (
+  ui: React.ReactNode,
+  env: { repo: PlacesRepo; entries: EntriesRepo; kv: KvRepo } = makeEnv(),
+) => (
   <SafeAreaProvider
     initialMetrics={{
       frame: { x: 0, y: 0, width: 320, height: 640 },
@@ -50,7 +56,9 @@ const wrap = (ui: React.ReactNode, env: { repo: PlacesRepo; kv: KvRepo } = makeE
   >
     <ThemeProvider schemeOverride="light">
       <KvRepoProvider value={env.kv}>
-        <PlacesRepoProvider value={env.repo}>{ui}</PlacesRepoProvider>
+        <PlacesRepoProvider value={env.repo}>
+          <EntriesRepoProvider value={env.entries}>{ui}</EntriesRepoProvider>
+        </PlacesRepoProvider>
       </KvRepoProvider>
     </ThemeProvider>
   </SafeAreaProvider>

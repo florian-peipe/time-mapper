@@ -36,8 +36,14 @@ export function isCrashReportingEnabled(): boolean {
  * Initialize Sentry if the DSN + module are available. Safe to call more
  * than once — subsequent calls become no-ops. Call from `_layout.tsx` boot.
  */
-export function initCrashReporting(): void {
+export function initCrashReporting(options?: { consent?: boolean }): void {
   if (initialized) return;
+  // GDPR opt-in gate — the caller (app/_layout.tsx at boot) reads the KV
+  // flag and passes `consent` in. No consent → no Sentry init, regardless
+  // of DSN presence. Default is false.
+  if (options && options.consent === false) {
+    return;
+  }
   const dsn = getDsn();
   if (!dsn) {
     if (!warnedNoDsn) {

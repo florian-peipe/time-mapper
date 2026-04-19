@@ -6,7 +6,7 @@ app:
   packageName: "com.timemapper.app"
   defaultLanguage: "en-US"
   category: "PRODUCTIVITY"
-  contentRating: "EVERYONE"  # IARC — equivalent to iOS 4+
+  contentRating: "EVERYONE" # IARC — equivalent to iOS 4+
 
 pricing:
   - model: "FREE_WITH_IN_APP_PURCHASES"
@@ -115,8 +115,8 @@ dataSafety:
     - "App activity"
     - "Web browsing"
   securityPractices:
-    encryptedInTransit: true  # any Places/RevenueCat calls use HTTPS
-    userCanRequestDeletion: true  # uninstall = delete
+    encryptedInTransit: true # any Places/RevenueCat calls use HTTPS
+    userCanRequestDeletion: true # uninstall = delete
 
 permissions:
   # These match the declarations in app.json → expo.android.permissions.

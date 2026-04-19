@@ -55,13 +55,17 @@ const FEATURE_KEYS: readonly string[] = [
  * On user cancel / network error we surface a `Banner` tone="danger"
  * with a "Try again" action so the user isn't stranded.
  */
-export function PaywallScreen({ visible = true, onClose, source: _source }: PaywallScreenProps) {
+export function PaywallScreen({ visible = true, onClose, source }: PaywallScreenProps) {
   const t = useTheme();
   const { offerings, purchase, restore } = usePro();
   const [plan, setPlan] = useState<PlanId>("year");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [restoreState, setRestoreState] = useState<"idle" | "busy" | "done">("idle");
+  // When the paywall was triggered mid-save of a new place (2nd-place gate),
+  // show a small breadcrumb so the user understands why the sheet appeared
+  // and that their form is preserved underneath.
+  const pausedForm = source === "2nd-place";
 
   // The currently-selected RevenueCat package (annual vs monthly). Null
   // when the offering hasn't loaded — in that case the CTA falls back to
@@ -172,6 +176,17 @@ export function PaywallScreen({ visible = true, onClose, source: _source }: Payw
         </View>
       }
     >
+      {pausedForm ? (
+        <View style={{ marginBottom: t.space[3] }}>
+          <Banner
+            tone="info"
+            title={i18n.t("paywall.pausedForm.title")}
+            body={i18n.t("paywall.pausedForm.body")}
+            testID="paywall-paused-form"
+          />
+        </View>
+      ) : null}
+
       {/* Hero */}
       <View style={{ alignItems: "center", position: "relative" }}>
         {/* Rings backdrop, behind the accent star square. */}

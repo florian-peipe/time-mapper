@@ -36,7 +36,6 @@ function makePlace(id: string, name = "Home"): Place {
     radiusM: 100,
     entryBufferS: 300,
     exitBufferS: 180,
-    categoryId: null,
     color: "#FF7A1A",
     icon: "pin",
     createdAt: 0,

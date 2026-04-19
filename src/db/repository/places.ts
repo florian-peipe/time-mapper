@@ -15,7 +15,6 @@ export type CreatePlaceInput = {
   radiusM?: number;
   entryBufferS?: number;
   exitBufferS?: number;
-  categoryId?: string | null;
   color?: string;
   icon?: string;
 };
@@ -37,7 +36,6 @@ export class PlacesRepo {
       radiusM: input.radiusM ?? 100,
       entryBufferS: input.entryBufferS ?? 300,
       exitBufferS: input.exitBufferS ?? 180,
-      categoryId: input.categoryId ?? null,
       color: input.color ?? "#FF7A1A",
       icon: input.icon ?? "pin",
       createdAt: now,
@@ -81,5 +79,11 @@ export class PlacesRepo {
   softDelete(id: string): void {
     const now = this.clock.now();
     this.db.update(places).set({ deletedAt: now, updatedAt: now }).where(eq(places.id, id)).run();
+  }
+
+  /** Clear the deletedAt mark — used by the undo-on-delete snackbar. */
+  restore(id: string): void {
+    const now = this.clock.now();
+    this.db.update(places).set({ deletedAt: null, updatedAt: now }).where(eq(places.id, id)).run();
   }
 }

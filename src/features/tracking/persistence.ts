@@ -80,12 +80,20 @@ export function loadState(
 
 /**
  * Apply the reducer's effects to the DB. The state machine produces effects
- * in deterministic order; this module executes them transactionally where
- * the underlying driver supports it. Writes the true `entry.id` back into
- * the machine state on `open_entry` (replacing the `pending:<tid>`
- * placeholder the reducer uses for determinism).
+ * in deterministic order; caller is expected to wrap this call in a
+ * drizzle `db.transaction(...)` callback, passing tx-scoped repos built
+ * from the transaction handle. See `background/tasks.ts` for the
+ * canonical call pattern. Running inside a transaction means a mid-batch
+ * JS crash rolls back every write atomically; `loadState` on the next
+ * wake sees a pre-batch snapshot rather than a half-applied one.
  *
- * Returns the final state, with any entryId placeholders replaced.
+ * The function itself is repo-agnostic — unit tests can still call it
+ * without a transaction by passing repos backed by an in-memory db; each
+ * statement is individually atomic so test semantics aren't affected.
+ *
+ * Writes the true `entry.id` back into the machine state on `open_entry`
+ * (replacing the `pending:<tid>` placeholder the reducer uses for
+ * determinism). Returns the final state, with entryId placeholders replaced.
  */
 export function applyEffects(
   effects: Effect[],

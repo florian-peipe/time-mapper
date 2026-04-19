@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Icon, PlaceBubble, SourceChip } from "@/components";
 import type { IconName, SourceKind } from "@/components";
+import { i18n } from "@/lib/i18n";
 
 type Props = {
   /** Entry id forwarded to onPress — callers usually open the edit sheet with it. */
@@ -48,7 +49,7 @@ export function EntryRow({
   const t = useTheme();
 
   const startLabel = formatClock(startedAt);
-  const endLabel = endedAt == null ? "now" : formatClock(endedAt);
+  const endLabel = endedAt == null ? i18n.t("entryRow.ongoing") : formatClock(endedAt);
   const hours = Math.floor(netMinutes / 60);
   const minutes = netMinutes % 60;
 

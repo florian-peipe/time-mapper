@@ -244,31 +244,52 @@ describe("a11y — screens", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { EntriesRepo } = require("@/db/repository/entries");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { KvRepo } = require("@/db/repository/kv");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { createTestDb } = require("@/db/testClient");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepoProvider } = require("@/features/places/usePlaces");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { EntriesRepoProvider } = require("@/features/entries/useEntries");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { KvRepoProvider } = require("@/features/onboarding/useOnboardingGate");
     const db = createTestDb();
     const placesRepo = new PlacesRepo(db);
     const entriesRepo = new EntriesRepo(db);
+    const kvRepo = new KvRepo(db);
     if (seeded) {
       placesRepo.create({ name: "Home", address: "1 Example Ln", latitude: 0, longitude: 0 });
     }
-    return { placesRepo, entriesRepo, PlacesRepoProvider, EntriesRepoProvider };
+    return {
+      placesRepo,
+      entriesRepo,
+      kvRepo,
+      PlacesRepoProvider,
+      EntriesRepoProvider,
+      KvRepoProvider,
+    };
   }
 
   it("Timeline FAB and empty-state header carry a11y attributes", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { TimelineScreen } = require("@/screens/Timeline/TimelineScreen");
-    const { placesRepo, entriesRepo, PlacesRepoProvider, EntriesRepoProvider } = wrapTimeline(true);
+    const {
+      placesRepo,
+      entriesRepo,
+      kvRepo,
+      PlacesRepoProvider,
+      EntriesRepoProvider,
+      KvRepoProvider,
+    } = wrapTimeline(true);
     const { getByTestId } = render(
       wrap(
-        <PlacesRepoProvider value={placesRepo}>
-          <EntriesRepoProvider value={entriesRepo}>
-            <TimelineScreen />
-          </EntriesRepoProvider>
-        </PlacesRepoProvider>,
+        <KvRepoProvider value={kvRepo}>
+          <PlacesRepoProvider value={placesRepo}>
+            <EntriesRepoProvider value={entriesRepo}>
+              <TimelineScreen />
+            </EntriesRepoProvider>
+          </PlacesRepoProvider>
+        </KvRepoProvider>,
       ),
     );
     const fab = getByTestId("timeline-fab");
@@ -280,15 +301,23 @@ describe("a11y — screens", () => {
   it("Timeline NoPlaces empty state uses a header on the title", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { TimelineScreen } = require("@/screens/Timeline/TimelineScreen");
-    const { placesRepo, entriesRepo, PlacesRepoProvider, EntriesRepoProvider } =
-      wrapTimeline(false);
+    const {
+      placesRepo,
+      entriesRepo,
+      kvRepo,
+      PlacesRepoProvider,
+      EntriesRepoProvider,
+      KvRepoProvider,
+    } = wrapTimeline(false);
     const { getByText } = render(
       wrap(
-        <PlacesRepoProvider value={placesRepo}>
-          <EntriesRepoProvider value={entriesRepo}>
-            <TimelineScreen />
-          </EntriesRepoProvider>
-        </PlacesRepoProvider>,
+        <KvRepoProvider value={kvRepo}>
+          <PlacesRepoProvider value={placesRepo}>
+            <EntriesRepoProvider value={entriesRepo}>
+              <TimelineScreen />
+            </EntriesRepoProvider>
+          </PlacesRepoProvider>
+        </KvRepoProvider>,
       ),
     );
     const header = getByText(/add a place/i);
@@ -342,6 +371,10 @@ describe("a11y — screens", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepoProvider } = require("@/features/places/usePlaces");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { EntriesRepoProvider } = require("@/features/entries/useEntries");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { EntriesRepo } = require("@/db/repository/entries");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { KvRepoProvider } = require("@/features/onboarding/useOnboardingGate");
     const db = createTestDb();
     const repo = new PlacesRepo(db);
@@ -350,7 +383,9 @@ describe("a11y — screens", () => {
       wrap(
         <KvRepoProvider value={kv}>
           <PlacesRepoProvider value={repo}>
-            <SettingsScreen />
+            <EntriesRepoProvider value={new EntriesRepo(db)}>
+              <SettingsScreen />
+            </EntriesRepoProvider>
           </PlacesRepoProvider>
         </KvRepoProvider>,
       ),
@@ -374,6 +409,10 @@ describe("a11y — screens", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepoProvider } = require("@/features/places/usePlaces");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { EntriesRepoProvider } = require("@/features/entries/useEntries");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { EntriesRepo } = require("@/db/repository/entries");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { KvRepoProvider } = require("@/features/onboarding/useOnboardingGate");
     const db = createTestDb();
     const repo = new PlacesRepo(db);
@@ -388,7 +427,9 @@ describe("a11y — screens", () => {
       wrap(
         <KvRepoProvider value={kv}>
           <PlacesRepoProvider value={repo}>
-            <SettingsScreen />
+            <EntriesRepoProvider value={new EntriesRepo(db)}>
+              <SettingsScreen />
+            </EntriesRepoProvider>
           </PlacesRepoProvider>
         </KvRepoProvider>,
       ),
@@ -409,6 +450,10 @@ describe("a11y — screens", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepoProvider } = require("@/features/places/usePlaces");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { EntriesRepoProvider } = require("@/features/entries/useEntries");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { EntriesRepo } = require("@/db/repository/entries");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { KvRepoProvider } = require("@/features/onboarding/useOnboardingGate");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { grantProMock, resetProMock } = require("@/features/billing/useProMock");
@@ -421,7 +466,9 @@ describe("a11y — screens", () => {
       wrap(
         <KvRepoProvider value={kv}>
           <PlacesRepoProvider value={repo}>
-            <SettingsScreen />
+            <EntriesRepoProvider value={new EntriesRepo(db)}>
+              <SettingsScreen />
+            </EntriesRepoProvider>
           </PlacesRepoProvider>
         </KvRepoProvider>,
       ),

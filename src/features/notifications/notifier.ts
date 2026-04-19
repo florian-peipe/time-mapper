@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import type * as ExpoNotifications from "expo-notifications";
 import type * as KvModule from "@/db/repository/kv";
 import type * as EntriesModule from "@/db/repository/entries";
@@ -11,6 +12,9 @@ type KvRepo = InstanceType<typeof KvModule.KvRepo>;
 const KV_RECENT_TIMESTAMPS = "notifier.recent";
 const KV_QUIET_HOURS = "notifier.quiet_hours";
 const KV_CHANNELS_CONFIGURED = "notifier.channels_configured";
+const KV_DIGEST_ENABLED = "notifier.digest.enabled";
+const KV_DIGEST_HOUR = "notifier.digest.hour";
+const KV_DIGEST_ID = "notifier.digest.scheduled_id";
 
 const RING_CAPACITY = 10;
 const CONSOLIDATION_THRESHOLD = 3;
@@ -189,15 +193,94 @@ export async function configureNotificationChannels(kv: KvRepo): Promise<void> {
   try {
     const N = getNotifications();
     await N.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
-      name: "Tracking",
+      name: i18n.t("notifier.channel.name"),
       importance: N.AndroidImportance.LOW,
       vibrationPattern: [0, 100, 0, 100],
       lightColor: "#FF7A1A",
     });
-    await N.setNotificationCategoryAsync(IOS_CATEGORY_ID, []);
+    // iOS categories only — Android's setNotificationCategoryAsync rejects
+    // an empty actions array with InvalidArgumentException; we don't need
+    // any category on Android since we don't attach action buttons.
+    if (Platform.OS === "ios") {
+      await N.setNotificationCategoryAsync(IOS_CATEGORY_ID, []);
+    }
     kv.set(KV_CHANNELS_CONFIGURED, "1");
   } catch (err) {
     console.warn("[notifier] channel config failed:", err);
+  }
+}
+
+/** Read the stored daily-digest enabled flag. Default: disabled. */
+export function getDailyDigestEnabled(kv: KvRepo): boolean {
+  return kv.get(KV_DIGEST_ENABLED) === "1";
+}
+
+/** Read the stored daily-digest hour (0-23). Default: 8. */
+export function getDailyDigestHour(kv: KvRepo): number {
+  const raw = kv.get(KV_DIGEST_HOUR);
+  const n = raw == null ? 8 : Number(raw);
+  return Number.isFinite(n) && n >= 0 && n <= 23 ? n : 8;
+}
+
+/**
+ * Turn the daily digest reminder on / off, persisting enabled state and
+ * hour to KV, and scheduling/cancelling the native daily notification.
+ * Re-scheduling the same hour after a change is fine — we cancel the
+ * previous id first so duplicates don't pile up.
+ *
+ * Uses expo-notifications' `DailyTriggerInput`: fires every day at
+ * `hour:00`. Body copy is static ("Your daily summary is ready") because
+ * we can't compute yesterday's totals inside a pre-scheduled payload —
+ * the user tapping the notification opens the app which can then show
+ * the fresh data.
+ */
+export async function setDailyDigestSchedule(
+  kv: KvRepo,
+  opts: { enabled: boolean; hour: number },
+): Promise<void> {
+  const { enabled, hour } = opts;
+  const clampedHour = Math.min(23, Math.max(0, Math.floor(hour)));
+  kv.set(KV_DIGEST_HOUR, String(clampedHour));
+  // Always cancel any previously scheduled id before (re-)scheduling.
+  const prevId = kv.get(KV_DIGEST_ID);
+  if (prevId) {
+    try {
+      const N = getNotifications();
+      await N.cancelScheduledNotificationAsync(prevId);
+    } catch {
+      // Ignore — the id may have already been consumed or the platform
+      // may not expose cancellation; either way we'll overwrite below.
+    }
+    kv.delete(KV_DIGEST_ID);
+  }
+  if (!enabled) {
+    kv.delete(KV_DIGEST_ENABLED);
+    return;
+  }
+  kv.set(KV_DIGEST_ENABLED, "1");
+  try {
+    const N = getNotifications();
+    const id = await N.scheduleNotificationAsync({
+      content: {
+        title: i18n.t("notifier.digest.title"),
+        body: i18n.t("notifier.digest.body"),
+        sound: "default",
+        categoryIdentifier: IOS_CATEGORY_ID,
+      },
+      trigger: {
+        // Drizzle-style: cast the shape to `any` is unnecessary —
+        // expo-notifications' DailyTriggerInput is `{ hour, minute, repeats }`.
+        // `type: "daily"` in SDK 54+. We target both shapes with a cast so
+        // the call works across point releases.
+        hour: clampedHour,
+        minute: 0,
+        repeats: true,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+    });
+    kv.set(KV_DIGEST_ID, id);
+  } catch (err) {
+    console.warn("[notifier] daily digest schedule failed:", err);
   }
 }
 

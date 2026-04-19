@@ -5,6 +5,11 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { TrackingBanner } from "./TrackingBanner";
 import * as Location from "expo-location";
+import { KvRepoProvider } from "@/features/onboarding/useOnboardingGate";
+import { PlacesRepoProvider } from "@/features/places/usePlaces";
+import { KvRepo } from "@/db/repository/kv";
+import { PlacesRepo } from "@/db/repository/places";
+import { createTestDb } from "@/db/testClient";
 
 const mLoc = Location as jest.Mocked<typeof Location>;
 
@@ -26,6 +31,14 @@ function deny(): Location.LocationPermissionResponse {
 }
 
 function wrap(ui: React.ReactNode) {
+  // The tracking-health derivation in TrackingBanner needs a KvRepo + a
+  // PlacesRepo to read the last-fire timestamp + places count — seed with
+  // a single place so the "empty → unknown" short-circuit doesn't swallow
+  // the permission banner under test.
+  const db = createTestDb();
+  const kv = new KvRepo(db);
+  const places = new PlacesRepo(db);
+  places.create({ name: "Home", address: "a", latitude: 0, longitude: 0 });
   return (
     <SafeAreaProvider
       initialMetrics={{
@@ -33,7 +46,11 @@ function wrap(ui: React.ReactNode) {
         insets: { top: 0, left: 0, right: 0, bottom: 0 },
       }}
     >
-      <ThemeProvider schemeOverride="light">{ui}</ThemeProvider>
+      <ThemeProvider schemeOverride="light">
+        <KvRepoProvider value={kv}>
+          <PlacesRepoProvider value={places}>{ui}</PlacesRepoProvider>
+        </KvRepoProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

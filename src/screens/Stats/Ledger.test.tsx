@@ -19,7 +19,6 @@ function makePlace(partial: Partial<Place> & Pick<Place, "id" | "name">): Place 
     radiusM: 100,
     entryBufferS: 300,
     exitBufferS: 180,
-    categoryId: null,
     color: partial.color ?? "#FF6A3D",
     icon: partial.icon ?? "home",
     createdAt: 0,
