@@ -32,7 +32,7 @@ _Generated during the final verification pass before store submission._
 | --- | ------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
 | 1   | First-run onboarding (3 screens)                        | Yes     | `src/screens/Onboarding/{WelcomeScreen,PermissionsScreen,FirstPlaceScreen}.tsx`                             |
 | 2   | Places management (all fields + per-place buffers)      | Yes     | `src/screens/AddPlace/AddPlaceSheet.tsx` + `src/db/repository/places.ts`                                    |
-| 3   | Address autocomplete (Google Places + fallback)         | Yes     | `src/lib/geocode.ts`                                                                                        |
+| 3   | Address autocomplete (Photon + offline fallback)        | Yes     | `src/lib/geocode.ts`                                                                                        |
 | 4   | Auto-tracking geofence (state machine + service + task) | Yes     | `src/features/tracking/{stateMachine,geofenceService,persistence,bootstrap}.ts` + `src/background/tasks.ts` |
 | 5   | Timeline view (today + history)                         | Yes     | `src/screens/Timeline/TimelineScreen.tsx`                                                                   |
 | 6   | Manual entry                                            | Yes     | `src/screens/EntryEdit/EntryEditSheet.tsx` (new mode)                                                       |
@@ -57,7 +57,7 @@ file and rebuild.
 | Google Play Console account | Service-account JSON at `play-service-account.json` (gitignored)                  |
 | RevenueCat iOS key          | `EXPO_PUBLIC_REVENUECAT_IOS_KEY`                                                  |
 | RevenueCat Android key      | `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`                                              |
-| Google Places API key       | `EXPO_PUBLIC_GOOGLE_PLACES_API_KEY`                                               |
+| Google Maps for Android SDK key (Android map preview) | `app.json → android.config.googleMaps.apiKey` — free 28.5k loads/mo; GCP billing account required |
 | Sentry DSN (optional)       | `EXPO_PUBLIC_SENTRY_DSN` — disables gracefully when missing                       |
 | Impressum contact details   | `src/screens/Legal/contact.local.ts` (gitignored, copy from `.example.ts`)        |
 | Support email               | Replace `support@timemapper.app` placeholder in `SettingsScreen.tsx` + `app.json` |
@@ -71,7 +71,7 @@ production builds:
 ```sh
 npx eas secret:create --name EXPO_PUBLIC_REVENUECAT_IOS_KEY     --value appl_...
 npx eas secret:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value goog_...
-npx eas secret:create --name EXPO_PUBLIC_GOOGLE_PLACES_API_KEY  --value AIza...
+# (No Mapbox / Places secrets — Photon is keyless. Google Maps Android SDK key lives in app.json, not here.)
 npx eas secret:create --name EXPO_PUBLIC_SENTRY_DSN             --value https://...
 ```
 
@@ -104,8 +104,9 @@ npx eas secret:create --name EXPO_PUBLIC_SENTRY_DSN             --value https://
 
 ## Next steps for the user
 
-1. **Provision third-party accounts** (RevenueCat, Google Places, Apple
-   Developer, Play Console). See the checklist above.
+1. **Provision third-party accounts** (RevenueCat, Apple Developer,
+   Play Console, and a GCP project for the free Android Maps SDK key).
+   See the checklist above. Photon needs no account.
 2. **Fill `src/screens/Legal/contact.local.ts`** with real Impressum
    contact details.
 3. **Push EAS secrets** for all `EXPO_PUBLIC_*` keys.

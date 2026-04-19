@@ -8,6 +8,7 @@ import { ListRow, Section, type IconName } from "@/components";
 import { usePlaces, usePlacesRepo } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { usePro } from "@/features/billing/usePro";
+import { isMockMode } from "@/features/billing/revenuecat";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore, type ThemeOverride } from "@/state/uiStore";
 import { useSnackbarStore } from "@/state/snackbarStore";
@@ -64,8 +65,11 @@ const SUPPORT_MAILTO_URL = "mailto:support@timemapper.app?subject=Time%20Mapper%
  *   3. fire a platform-level side-effect (`Linking.openURL`,
  *      `Linking.openSettings`, `StoreReview.requestReview`).
  *
- * The "Developer" section is gated behind `__DEV__` so it never ships in
- * production builds.
+ * The "Developer" section is gated behind `__DEV__ || isMockMode()`. Real
+ * production builds configure RevenueCat with valid keys so `isMockMode()`
+ * returns false and the section stays hidden. Sideloaded Release builds
+ * (no keys) stay in mock mode and therefore expose the Pro toggle so the
+ * tester can flip Pro state without a real purchase.
  */
 export function SettingsScreen() {
   const t = useTheme();
@@ -627,7 +631,7 @@ export function SettingsScreen() {
           />
         </Section>
 
-        {__DEV__ ? (
+        {__DEV__ || isMockMode() ? (
           <Section title={i18n.t("settings.section.dev")} testID="settings-section-dev">
             <ListRow
               icon="settings"

@@ -41,12 +41,16 @@ function tryLoadMap(): MapModule | null {
 }
 
 /**
- * Android's `react-native-maps` always uses Google Maps, which requires a
- * Google Maps SDK key in `app.json → android.config.googleMaps.apiKey`. If
- * the key is missing, the native MapView still mounts but its GL surface
- * fails to initialise — the emulator reports "bad color buffer handle" and
- * the sheet appears frozen. iOS uses Apple Maps (no key) so it's always
- * safe there.
+ * iOS uses Apple Maps natively (free, no key). Android's `react-native-maps`
+ * talks to the Google Maps for Android SDK, which requires a (free-tier)
+ * Google Maps SDK key at `app.json → android.config.googleMaps.apiKey`.
+ * Without the key, the native MapView mounts but its GL surface fails to
+ * init and the sheet appears frozen — so we fall back to an informational
+ * Banner in that case.
+ *
+ * Note: this is the Maps *SDK* key, not a Places/Geocoding key. The app's
+ * autocomplete + geocoding uses Photon (OSM, Komoot DE) — no Google API
+ * involvement there.
  */
 function isNativeMapUsable(): boolean {
   if (Platform.OS !== "android") return true;
@@ -78,15 +82,14 @@ function regionFromRadius(lat: number, lng: number, radiusM: number) {
 
 /**
  * 180-pt tall map preview centered on a place, with a marker pin and a
- * translucent circle at the geofence radius. Non-interactive in v1 — the user
- * picks the address via autocomplete, then sees what the geofence will
- * actually cover.
+ * translucent circle at the geofence radius. Non-interactive in v1 — the
+ * user picks the address via autocomplete, then sees what the geofence
+ * will actually cover.
  *
  * Graceful degradation: when `react-native-maps` fails to load (Expo Go,
- * Jest, a hypothetical platform where the module is absent), we render an
- * info-tone Banner explaining the preview is available in a dev build so
- * developers don't hit a white square. Production managed builds bundle the
- * module and see the real map.
+ * Jest, a hypothetical platform where the module is absent) or the Google
+ * Maps for Android SDK key is missing on Android, we render an info-tone
+ * Banner explaining the preview is available once the build is configured.
  */
 export function MapPreview({ latitude, longitude, radiusM, color, testID }: MapPreviewProps) {
   const t = useTheme();

@@ -7,7 +7,6 @@ describe("diagnostics", () => {
     expect(payload).toHaveProperty("platform");
     expect(payload).toHaveProperty("appVersion");
     expect(payload).toHaveProperty("environment");
-    expect(payload.environment).toHaveProperty("hasPlacesKey");
     expect(payload.environment).toHaveProperty("hasRevenueCatIos");
     expect(Array.isArray(payload.pendingTransitions)).toBe(true);
     expect(Array.isArray(payload.recentEvents)).toBe(true);

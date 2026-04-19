@@ -1,37 +1,17 @@
-import {
-  autocomplete,
-  geocodePlace,
-  createSessionToken,
-  hasApiKey,
-  DEMO_SUGGESTIONS,
-} from "../geocode";
+import { autocomplete, geocodePlace, createSessionToken, DEMO_SUGGESTIONS } from "../geocode";
 
-// Ensure the module reads the env var at call time — mutate it per test. Jest
-// resets modules between test files automatically, but env vars set by
-// process.env are module-scoped within a single file, so we read/write the
-// live object here.
-const KEY = "EXPO_PUBLIC_GOOGLE_PLACES_API_KEY";
+// The geocode module uses Photon (photon.komoot.io) as the sole
+// autocomplete + geocode provider. Inside Jest (`JEST_WORKER_ID` set) the
+// module short-circuits to a deterministic demo list so tests don't hit
+// the network. When we want to exercise the real Photon code path we
+// temporarily unset `JEST_WORKER_ID`, mock fetch, and run the assertions.
 
-describe("geocode — demo fallback (no API key)", () => {
-  let originalKey: string | undefined;
-  beforeEach(() => {
-    originalKey = process.env[KEY];
-    delete process.env[KEY];
-  });
-  afterEach(() => {
-    if (originalKey !== undefined) process.env[KEY] = originalKey;
-  });
-
-  it("hasApiKey returns false when no key", () => {
-    expect(hasApiKey()).toBe(false);
-  });
-
-  it("autocomplete returns all demo suggestions for empty query", async () => {
+describe("geocode — Jest demo fallback", () => {
+  it("autocomplete returns the full demo list for empty query (seeds the sheet on open)", async () => {
     const token = createSessionToken();
     const r = await autocomplete("", token);
     expect(r.length).toBe(DEMO_SUGGESTIONS.length);
     expect(r[0]).toHaveProperty("placeId");
-    expect(r[0]).toHaveProperty("mainText");
   });
 
   it("autocomplete filters demo by keyword", async () => {
@@ -63,54 +43,72 @@ describe("geocode — demo fallback (no API key)", () => {
 
   it("geocodePlace throws for unknown demo id", async () => {
     const token = createSessionToken();
-    await expect(geocodePlace("not-a-demo-id", token)).rejects.toThrow(/demo placeId/);
+    await expect(geocodePlace("not-a-demo-id", token)).rejects.toThrow(/unknown placeId/);
   });
 
-  it("createSessionToken returns a non-empty string", () => {
+  it("geocodePlace decodes coordinates from an OSM-style placeId without hitting the network", async () => {
+    const token = createSessionToken();
+    const details = await geocodePlace("osm:123456:52.52:13.405", token);
+    expect(details.lat).toBeCloseTo(52.52, 3);
+    expect(details.lng).toBeCloseTo(13.405, 3);
+    expect(details.formattedAddress).toBe("");
+  });
+
+  it("geocodePlace rejects malformed OSM-style placeId", async () => {
+    const token = createSessionToken();
+    await expect(geocodePlace("osm:x:not-a-number:13.4", token)).rejects.toThrow(/invalid OSM/);
+  });
+
+  it("createSessionToken returns a non-empty unique string", () => {
     const a = createSessionToken();
     const b = createSessionToken();
     expect(a.length).toBeGreaterThan(0);
     expect(b.length).toBeGreaterThan(0);
     expect(a).not.toBe(b);
   });
+
+  it("DEMO_SUGGESTIONS is non-empty and well-formed", () => {
+    expect(DEMO_SUGGESTIONS.length).toBeGreaterThan(0);
+    for (const s of DEMO_SUGGESTIONS) {
+      expect(s.placeId).toMatch(/^demo-/);
+      expect(s.mainText.length).toBeGreaterThan(0);
+    }
+  });
 });
 
-describe("geocode — live API (mocked fetch)", () => {
-  let originalKey: string | undefined;
+describe("geocode — Photon live API (mocked fetch)", () => {
+  let originalWorkerId: string | undefined;
   let originalFetch: typeof fetch | undefined;
 
   beforeEach(() => {
-    originalKey = process.env[KEY];
+    // Exit Jest demo-mode so the real Photon branch runs.
+    originalWorkerId = process.env.JEST_WORKER_ID;
+    delete process.env.JEST_WORKER_ID;
     originalFetch = globalThis.fetch;
-    process.env[KEY] = "TEST_KEY_12345";
   });
   afterEach(() => {
-    if (originalKey !== undefined) process.env[KEY] = originalKey;
-    else delete process.env[KEY];
+    if (originalWorkerId !== undefined) process.env.JEST_WORKER_ID = originalWorkerId;
     if (originalFetch) globalThis.fetch = originalFetch;
   });
 
-  it("hasApiKey returns true when key is set", () => {
-    expect(hasApiKey()).toBe(true);
-  });
-
-  it("autocomplete builds the expected URL and maps the response", async () => {
+  it("autocomplete builds a Photon URL and maps a feature into a PlaceSuggestion", async () => {
     const mockFetch = jest.fn(async (url: string) => {
-      expect(url).toContain("place/autocomplete/json");
-      expect(url).toContain("key=TEST_KEY_12345");
-      expect(url).toContain("sessiontoken=session-abc");
-      expect(url).toContain("input=Berlin");
+      expect(url).toContain("photon.komoot.io");
+      expect(url).toContain("q=Berlin");
+      expect(url).toContain("limit=8");
       return new Response(
         JSON.stringify({
-          status: "OK",
-          predictions: [
+          features: [
             {
-              place_id: "berlin-main",
-              description: "Berlin, Germany",
-              structured_formatting: {
-                main_text: "Berlin",
-                secondary_text: "Germany",
+              properties: {
+                osm_id: 240109189,
+                name: "Berlin",
+                city: "Berlin",
+                postcode: "10115",
+                state: "Berlin",
+                country: "Germany",
               },
+              geometry: { coordinates: [13.405, 52.52] },
             },
           ],
         }),
@@ -120,89 +118,57 @@ describe("geocode — live API (mocked fetch)", () => {
     globalThis.fetch = mockFetch as unknown as typeof fetch;
 
     const r = await autocomplete("Berlin", "session-abc");
-    expect(r).toEqual([
-      {
-        placeId: "berlin-main",
-        description: "Berlin, Germany",
-        mainText: "Berlin",
-        secondaryText: "Germany",
-      },
-    ]);
+    expect(r).toHaveLength(1);
+    expect(r[0]!.placeId).toBe("osm:240109189:52.52:13.405");
+    expect(r[0]!.description).toContain("Berlin");
+    expect(r[0]!.secondaryText).toContain("Germany");
   });
 
-  it("autocomplete returns empty for ZERO_RESULTS", async () => {
-    globalThis.fetch = jest.fn(
-      async () => new Response(JSON.stringify({ status: "ZERO_RESULTS" }), { status: 200 }),
-    ) as unknown as typeof fetch;
-    const r = await autocomplete("nothingmatches", "tok");
-    expect(r).toEqual([]);
-  });
-
-  it("autocomplete throws on non-OK status", async () => {
-    globalThis.fetch = jest.fn(
-      async () =>
-        new Response(JSON.stringify({ status: "REQUEST_DENIED", error_message: "Bad key" }), {
-          status: 200,
-        }),
-    ) as unknown as typeof fetch;
-    await expect(autocomplete("x", "tok")).rejects.toThrow(/REQUEST_DENIED/);
-  });
-
-  it("autocomplete throws on HTTP error", async () => {
-    globalThis.fetch = jest.fn(
-      async () => new Response("oops", { status: 500 }),
-    ) as unknown as typeof fetch;
-    await expect(autocomplete("x", "tok")).rejects.toThrow(/HTTP 500/);
-  });
-
-  it("autocomplete returns empty for whitespace query (skips network)", async () => {
+  it("autocomplete returns the empty array for <2 char queries (skips network)", async () => {
     const mockFetch = jest.fn();
     globalThis.fetch = mockFetch as unknown as typeof fetch;
-    const r = await autocomplete("   ", "tok");
+    const r = await autocomplete("a", "tok");
     expect(r).toEqual([]);
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("geocodePlace maps geometry + formatted_address", async () => {
-    globalThis.fetch = jest.fn(async (url: string) => {
-      expect(url).toContain("place/details/json");
-      expect(url).toContain("place_id=xyz");
-      expect(url).toContain("sessiontoken=tok");
-      return new Response(
-        JSON.stringify({
-          status: "OK",
-          result: {
-            formatted_address: "123 Main St, London, UK",
-            geometry: { location: { lat: 51.5, lng: -0.12 } },
-          },
-        }),
-        { status: 200 },
-      );
+  it("autocomplete falls back to the demo list on HTTP failure", async () => {
+    globalThis.fetch = jest.fn(
+      async () => new Response("server on fire", { status: 500 }),
+    ) as unknown as typeof fetch;
+    const r = await autocomplete("Köln", "tok");
+    // Photon threw → fallback kicks in → demo list is filtered by "Köln"
+    // and returns the Köln demo entries.
+    expect(r.length).toBeGreaterThan(0);
+    expect(r.every((s) => s.placeId.startsWith("demo-"))).toBe(true);
+  });
+
+  it("autocomplete propagates AbortError so callers can tell cancel apart from failure", async () => {
+    globalThis.fetch = jest.fn(async () => {
+      const err = new Error("aborted");
+      err.name = "AbortError";
+      throw err;
     }) as unknown as typeof fetch;
-
-    const r = await geocodePlace("xyz", "tok");
-    expect(r.lat).toBeCloseTo(51.5, 2);
-    expect(r.lng).toBeCloseTo(-0.12, 2);
-    expect(r.formattedAddress).toBe("123 Main St, London, UK");
+    await expect(autocomplete("anywhere", "tok")).rejects.toThrow(/aborted/);
   });
 
-  it("geocodePlace throws when geometry is missing", async () => {
+  it("autocomplete handles features with missing properties gracefully", async () => {
     globalThis.fetch = jest.fn(
       async () =>
-        new Response(JSON.stringify({ status: "OK", result: { formatted_address: "no geo" } }), {
-          status: 200,
-        }),
+        new Response(
+          JSON.stringify({
+            features: [
+              {
+                // No `properties` — should not crash; gets a best-effort id.
+                geometry: { coordinates: [8.1, 50.3] },
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
     ) as unknown as typeof fetch;
-    await expect(geocodePlace("xyz", "tok")).rejects.toThrow(/geometry/);
-  });
-
-  it("geocodePlace throws on API error status", async () => {
-    globalThis.fetch = jest.fn(
-      async () =>
-        new Response(JSON.stringify({ status: "NOT_FOUND", error_message: "gone" }), {
-          status: 200,
-        }),
-    ) as unknown as typeof fetch;
-    await expect(geocodePlace("xyz", "tok")).rejects.toThrow(/NOT_FOUND/);
+    const r = await autocomplete("Mainz", "tok");
+    expect(r).toHaveLength(1);
+    expect(r[0]!.placeId).toMatch(/^osm:/);
   });
 });

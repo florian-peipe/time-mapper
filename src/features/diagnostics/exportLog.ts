@@ -20,7 +20,6 @@ export type DiagnosticPayload = {
   pendingTransitions: unknown[];
   recentEvents: unknown[];
   environment: {
-    hasPlacesKey: boolean;
     hasRevenueCatIos: boolean;
     hasRevenueCatAndroid: boolean;
     hasSentryDsn: boolean;
@@ -43,7 +42,6 @@ export function buildDiagnosticPayload(extra: Partial<DiagnosticPayload> = {}): 
     pendingTransitions: extra.pendingTransitions ?? loadPendingTransitionsSafely(),
     recentEvents: extra.recentEvents ?? [],
     environment: extra.environment ?? {
-      hasPlacesKey: !!process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY,
       hasRevenueCatIos: !!process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
       hasRevenueCatAndroid: !!process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
       hasSentryDsn: !!process.env.EXPO_PUBLIC_SENTRY_DSN,

@@ -45,13 +45,25 @@ Geräte-ID.
 - **RevenueCat** — plattformübergreifender Abgleich der
   Berechtigungen. Siehe
   [revenuecat.com/privacy](https://www.revenuecat.com/privacy).
-- **Google Places** — Adress-Autovervollständigung beim Hinzufügen von
-  Orten. Anfragen werden mit einem zufällig erzeugten Session-Token an
-  Google gesendet. Siehe
-  [policies.google.com/privacy](https://policies.google.com/privacy).
+- **Photon (Komoot GmbH, Potsdam, Deutschland)** —
+  Adress-Autovervollständigung beim Hinzufügen von Orten.
+  Tippeingaben werden an Photon-Server in der EU gesendet. Deine
+  GPS-Koordinaten werden NICHT mit übertragen. Die Datenbasis ist
+  OpenStreetMap. Siehe
+  [komoot.com/privacy](https://www.komoot.com/privacy).
+- **Apple Maps / Google Maps for Android** — Kartenvorschau für den
+  gewählten Ort. Unter iOS kommt Apple Maps zum Einsatz (kein Konto,
+  keine personenbezogenen Daten); unter Android zeichnet Google Maps
+  for Android die Kacheln (kein Konto, keine personenbezogenen Daten,
+  nur die Kachelanfrage selbst).
 - **Sentry (optional)** — Absturzberichte, falls der Entwickler eine
   DSN konfiguriert hat. Siehe
   [sentry.io/privacy](https://sentry.io/privacy/).
+
+### Attribution
+
+© OpenStreetMap-Mitwirkende. Kartenkacheln © Apple oder © Google,
+je nach Plattform.
 
 ## DSGVO-Rechte
 

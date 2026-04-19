@@ -155,6 +155,19 @@ export const LEGAL_DOCS: Record<DocumentKey, Record<Locale, LegalDoc>> = {
           type: "p",
           text: "Nothing, aside from an anonymous RevenueCat user id generated at first install. That id is used only to verify your Pro entitlement across installs and is never linked to your name, email, or device id.",
         },
+        { type: "h2", text: "Third-party services" },
+        {
+          type: "p",
+          text: "Address autocomplete is provided by Photon (photon.komoot.io), operated by Komoot GmbH in Potsdam, Germany. When you type an address into Add Place, the partial query is sent to Photon's servers in the EU — your GPS coordinates are NOT included. Photon's data is based on OpenStreetMap.",
+        },
+        {
+          type: "p",
+          text: "Map previews: on iOS the preview uses Apple Maps (no data leaves the device beyond the tile request, which Apple handles). On Android the preview uses Google Maps for Android — Google receives tile-render requests but no account or personal data.",
+        },
+        {
+          type: "p",
+          text: "Attribution: © OpenStreetMap contributors. Map tiles © Apple or © Google depending on platform.",
+        },
         { type: "h2", text: "GDPR rights" },
         {
           type: "p",
@@ -183,6 +196,19 @@ export const LEGAL_DOCS: Record<DocumentKey, Record<Locale, LegalDoc>> = {
         {
           type: "p",
           text: "Nichts, abgesehen von einer anonymen RevenueCat-Nutzer-ID, die beim ersten Start erzeugt wird. Diese ID dient ausschließlich dem Abgleich deiner Pro-Berechtigung über Geräte hinweg und wird nie mit deinem Namen, deiner E-Mail oder einer Geräte-ID verknüpft.",
+        },
+        { type: "h2", text: "Drittanbieter-Dienste" },
+        {
+          type: "p",
+          text: "Die Adress-Autovervollständigung stellt Photon (photon.komoot.io) bereit, betrieben von der Komoot GmbH in Potsdam. Wenn du in „Ort hinzufügen“ eine Adresse tippst, wird die Teileingabe an Photon-Server in der EU gesendet — deine GPS-Koordinaten werden NICHT mit übertragen. Photons Daten basieren auf OpenStreetMap.",
+        },
+        {
+          type: "p",
+          text: "Kartenvorschau: Unter iOS verwendet die Vorschau Apple Maps (der Kachel-Abruf läuft über Apple, verlässt dein Gerät aber nur für diesen Zweck). Unter Android nutzt die Vorschau Google Maps for Android — Google erhält Kachel-Anfragen, aber keine Kontodaten oder personenbezogenen Informationen.",
+        },
+        {
+          type: "p",
+          text: "Attribution: © OpenStreetMap-Mitwirkende. Kartenkacheln © Apple oder © Google, je nach Plattform.",
         },
         { type: "h2", text: "DSGVO-Rechte" },
         {

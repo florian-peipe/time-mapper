@@ -5,9 +5,9 @@
 // crash reporting isn't showing up.
 //
 // Why a lazy require? `@sentry/react-native` is a heavy native dep that's
-// optional for hobbyist builds. The same "works without a key" posture we use
-// for RevenueCat + Google Places applies here: the app bundles fine without
-// the module, and production builds that want Sentry can `npm install
+// optional for hobbyist builds. The same "works without a key" posture we
+// use for RevenueCat applies here: the app bundles fine without the
+// module, and production builds that want Sentry can `npm install
 // @sentry/react-native` alongside setting the DSN.
 
 type SentryLike = {

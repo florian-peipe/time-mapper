@@ -40,11 +40,22 @@ name, email, or device id by us.
   their respective privacy policies.
 - **RevenueCat** — subscription entitlement cross-referencing. See
   [revenuecat.com/privacy](https://www.revenuecat.com/privacy).
-- **Google Places** — address autocomplete when you add a place.
-  Searches are sent to Google with a randomly-minted session token. See
-  [policies.google.com/privacy](https://policies.google.com/privacy).
+- **Photon (Komoot GmbH, Potsdam, Germany)** — address autocomplete
+  when you add a place. Typed queries are sent to Photon's EU servers.
+  Your GPS coordinates are NOT included in those requests. Data is
+  based on OpenStreetMap. See
+  [komoot.com/privacy](https://www.komoot.com/privacy).
+- **Apple Maps / Google Maps for Android** — map tile rendering for
+  the place preview. iOS uses Apple Maps (no account, no personal
+  data); Android uses Google Maps for Android to render tiles (no
+  account, no personal data, just the viewport request).
 - **Sentry (optional)** — crash reporting if the developer has
   configured a DSN. See [sentry.io/privacy](https://sentry.io/privacy/).
+
+### Attribution
+
+© OpenStreetMap contributors. Map tiles © Apple or © Google depending
+on your device platform.
 
 ## GDPR rights
 

@@ -84,11 +84,13 @@ const EXIT_BUFFER_MAX_MIN = 10;
 /**
  * AddPlaceSheet — two-phase flow for creating (or, in v0.3, editing) a place.
  *
- * Phase 1: Search input (leading icon) + list of suggestion rows. In Plan 5+
- * suggestions come from `@/lib/geocode.autocomplete`, which calls Google
- * Places if `EXPO_PUBLIC_GOOGLE_PLACES_API_KEY` is set or falls back to a
- * hardcoded demo list otherwise. Tap a suggestion to trigger `geocodePlace`
- * (resolves to lat/lng) and transition to Phase 2 with the name pre-filled.
+ * Phase 1: Search input (leading icon) + list of suggestion rows.
+ * Suggestions come from `@/lib/geocode.autocomplete`, which calls Photon
+ * (photon.komoot.io — OSM-backed, free, EU-hosted) and falls back to a
+ * small hardcoded Köln/Düsseldorf demo list if the service is unreachable
+ * or during Jest runs. Tap a suggestion to trigger `geocodePlace`
+ * (decodes lat/lng from the synthetic placeId — no second HTTP round-trip)
+ * and transition to Phase 2 with the name pre-filled.
  *
  * Phase 2: Name input, address preview card, geofence radius slider
  * (50–300 m), color picker (8 swatches), icon picker (9 tiles), and a
@@ -169,10 +171,10 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   const [entryBufferMin, setEntryBufferMin] = useState(initialEntryBufferMin);
   const [exitBufferMin, setExitBufferMin] = useState(initialExitBufferMin);
 
-  // Places session token — minted per "open search → select" interaction so
-  // Google bills a single transaction across the autocomplete keystrokes and
-  // the final details call. Refreshed when a selection completes (prep for
-  // the next search) or when the sheet opens fresh.
+  // Opaque session token — historically used for Google Places per-session
+  // billing. Photon doesn't need one, but the `geocode` module still
+  // accepts it for API stability, so we mint one per "open search →
+  // select" interaction and refresh it when a selection completes.
   const sessionTokenRef = useRef<string>(createSessionToken());
 
   // When the sheet is reused for a different placeId (edit vs. new vs.
@@ -635,7 +637,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
 
           {/*
             Map preview — only rendered when we have real coordinates.
-            Demo-mode picks (free-mock path) + freshly-resolved Google Places
+            Demo-mode picks (offline fallback) + freshly-resolved Photon
             picks both carry lat/lng; but a legacy edited place from pre-v0.6
             might have lat=lng=0 and we'd rather hide the preview than draw a
             pin in the middle of the Atlantic.

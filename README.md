@@ -14,8 +14,9 @@ Everything the MVP scope asks for is shipped and tested:
 - First-run onboarding (welcome → permissions → add your first place).
 - Places — add/edit/delete with name, address, color, icon, radius, and
   per-place entry + exit buffers.
-- Address autocomplete via Google Places, with a hardcoded-address
-  fallback when the key is missing.
+- Address autocomplete via Photon (Komoot's OSM-backed service, hosted
+  in Germany — no key, no sign-up, no US data transfer). Falls back to a
+  small hardcoded demo list if Photon is unreachable.
 - Auto-tracking via OS geofencing. A state machine sits behind a
   background task; the UI reconciles OS state on every cold boot so
   crashes never leak into double-counting.
@@ -55,7 +56,7 @@ Everything the MVP scope asks for is shipped and tested:
 | Apple Developer account         | App Store Connect                                             | [developer.apple.com](https://developer.apple.com)                            |
 | Google Play Console account     | Play Console                                                  | [play.google.com/console](https://play.google.com/console)                    |
 | RevenueCat project + API keys   | `EXPO_PUBLIC_REVENUECAT_{IOS,ANDROID}_KEY`                    | [revenuecat.com](https://www.revenuecat.com)                                  |
-| Google Places API key           | `EXPO_PUBLIC_GOOGLE_PLACES_API_KEY`                           | [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) |
+| Google Maps for Android SDK key | `app.json → android.config.googleMaps.apiKey`                 | [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) — free tier (28.5k loads/mo), GCP billing account required |
 | Sentry DSN (optional)           | `EXPO_PUBLIC_SENTRY_DSN`                                      | [sentry.io](https://sentry.io)                                                |
 | Impressum contact details       | `src/screens/Legal/contact.local.ts` (gitignored)             | See § 5 TMG                                                                   |
 | Support email                   | `src/screens/Settings/SettingsScreen.tsx` (mailto) + app.json | Placeholder `support@timemapper.app`                                          |
@@ -78,7 +79,7 @@ cp .env.example .env.local   # fill in the keys you have
 ```sh
 npx eas secret:create --name EXPO_PUBLIC_REVENUECAT_IOS_KEY --value appl_...
 npx eas secret:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value goog_...
-npx eas secret:create --name EXPO_PUBLIC_GOOGLE_PLACES_API_KEY --value AIza...
+# (No Mapbox / Google Places secrets — Photon is keyless, Apple Maps is keyless, Google Maps Android SDK key lives in app.json not EAS secrets)
 npx eas secret:create --name EXPO_PUBLIC_SENTRY_DSN --value https://...   # optional
 ```
 
@@ -144,8 +145,12 @@ local mock so dev workflows keep working:
   Pro flag so you can preview Pro-gated UI without a real subscription.
   Purchases throw a "mock mode" error if attempted; the paywall surfaces
   this in its error Banner.
-- **No Google Places key**: AddPlaceSheet renders three hardcoded
-  Cologne / Düsseldorf addresses (the same ones used in screenshots).
+- **Photon unreachable** (or inside Jest): AddPlaceSheet falls back to
+  three hardcoded Cologne / Düsseldorf addresses (the same ones used in
+  screenshots). Photon itself needs no key.
+- **No Google Maps for Android SDK key**: Android map preview falls
+  back to a warning Banner. iOS is always fine — Apple Maps needs no
+  keys.
 - **No Sentry DSN**: crash reporting is disabled; `captureException`
   falls through to `console.error`.
 
@@ -171,15 +176,44 @@ keys from `EXPO_PUBLIC_*` env vars (which Expo substitutes into
    - Create an entitlement called `pro` and link both products to it.
 4. Copy the iOS + Android public API keys into `.env.local`.
 
-### Google Places
+### Photon (address autocomplete + geocoding)
 
-1. Enable the Places API in Google Cloud Console.
-2. Create an API key restricted to the iOS + Android bundle id
-   `com.timemapper.app`.
-3. Add to `.env.local`:
+No setup needed. Photon (photon.komoot.io) is OSM-backed, hosted by
+Komoot GmbH in Potsdam, Germany. No API key, no sign-up, free forever
+for fair-use. Typed addresses never leave the EU — the main reason we
+prefer Photon over Google Places for a privacy-positioned app.
+
+If Photon is unreachable, `src/lib/geocode.ts` falls back to a three-row
+Köln / Düsseldorf demo list so the AddPlaceSheet flow still works.
+
+### Google Maps for Android SDK (Android map preview only)
+
+iOS renders the map preview via Apple Maps natively — no key, no
+account, no card. Android uses Google Maps for Android under the hood
+via `react-native-maps`, which requires a free SDK key embedded in
+`app.json → android.config.googleMaps.apiKey`.
+
+1. Create a GCP project at https://console.cloud.google.com.
+2. Enable the **Maps SDK for Android** only (leave Places, Directions,
+   and friends disabled — the app uses none of them).
+3. Create an API key and restrict it to the Android bundle id
+   `com.timemapper.app` + the Maps SDK for Android.
+4. Enable billing on the GCP project. **This is a GCP requirement
+   even for free-tier usage** — you won't be charged unless you
+   exceed 28,500 map loads/month.
+5. Paste the key into `app.json`:
+   ```json
+   "android": {
+     "package": "com.timemapper.app",
+     "config": {
+       "googleMaps": { "apiKey": "AIza..." }
+     }
+   }
    ```
-   EXPO_PUBLIC_GOOGLE_PLACES_API_KEY=AIza...
-   ```
+
+When the key is missing, the Android map preview degrades to a warning
+Banner ("map preview unavailable") — the rest of the app (Timeline,
+Stats, Settings, auto-tracking) works fine.
 
 ### Sentry (optional)
 
