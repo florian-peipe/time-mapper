@@ -21,7 +21,7 @@ import {
   JetBrainsMono_500Medium,
 } from "@expo-google-fonts/jetbrains-mono";
 import { ThemeProvider } from "@/theme/ThemeProvider";
-import { useUiStore } from "@/state/uiStore";
+import { useHydrateUiStoreFromKv, useUiStore } from "@/state/uiStore";
 import { initI18n } from "@/lib/i18n";
 import { captureException, initCrashReporting } from "@/lib/crash";
 import { runMigrations } from "@/db/client";
@@ -40,6 +40,11 @@ function pickInitialLocale(override: string | null): string {
 }
 
 export default function RootLayout() {
+  // Must be called unconditionally — hydrates persisted theme/locale
+  // overrides from the KV store on first mount. Runs once even across
+  // re-renders triggered by locale changes below.
+  useHydrateUiStoreFromKv();
+
   const themeOverride = useUiStore((s) => s.themeOverride);
   const localeOverride = useUiStore((s) => s.localeOverride);
   const [dbReady, setDbReady] = useState(false);
