@@ -75,15 +75,21 @@ function loadPendingTransitionsSafely(): unknown[] {
 
 /**
  * Write the diagnostic payload to a temp JSON file and invoke the platform
- * share sheet. Falls back to console.log when the native modules aren't
- * available (Expo Go, Jest).
+ * share sheet. In development builds only (__DEV__), also logs the payload
+ * to the console. Production builds never log diagnostics locally — the
+ * user's only exit is the share sheet.
  */
 export async function exportDiagnosticLog(extra: Partial<DiagnosticPayload> = {}): Promise<void> {
   const payload = buildDiagnosticPayload(extra);
   const json = JSON.stringify(payload, null, 2);
 
-  // eslint-disable-next-line no-console
-  console.log("[diagnostics]", json);
+  // Dev-only dump. In production the user shares via the native share
+  // sheet below; we never log their diagnostic blob to the device console
+  // in a release build.
+  if (__DEV__) {
+    // eslint-disable-next-line no-console
+    console.log("[diagnostics]", json);
+  }
 
   try {
     const dir = (FileSystem as unknown as { documentDirectory?: string | null }).documentDirectory;
@@ -101,7 +107,12 @@ export async function exportDiagnosticLog(extra: Partial<DiagnosticPayload> = {}
       });
     }
   } catch (err) {
-    // Share/file-system failed — console.log above is the only exit.
-    console.warn("[diagnostics] export failed", err);
+    // Share/file-system failed — nothing else we can do cleanly here.
+    // The __DEV__ console.log above is the only observable exit in dev;
+    // in production the error is swallowed silently rather than nagging
+    // the user with a technical toast they can't act on.
+    if (__DEV__) {
+      console.warn("[diagnostics] export failed", err);
+    }
   }
 }

@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View, Pressable } from "react-native";
 import { captureException } from "@/lib/crash";
 import { i18n } from "@/lib/i18n";
+import { tokens } from "@/theme/tokens";
 
 type Props = {
   children: React.ReactNode;
@@ -50,14 +51,17 @@ export class ErrorBoundary extends React.Component<Props, State> {
  * catch a crash inside ThemeProvider itself.
  */
 function ErrorFallback({ onReset }: { onReset: () => void }) {
-  // Deliberately raw styles — avoid the theme context path in case it was
-  // the thing that crashed.
+  // Deliberately raw styles via direct token lookup — we skip the theme
+  // context (useTheme/ThemeProvider) since that might be what crashed.
+  // The light palette is hardcoded: if the theme context is broken, we
+  // can't consult the user's dark-mode preference anyway.
+  const c = tokens.light;
   return (
     <View
       testID="error-boundary-fallback"
       style={{
         flex: 1,
-        backgroundColor: "#FCFBF9",
+        backgroundColor: c["color.bg"],
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
@@ -67,7 +71,7 @@ function ErrorFallback({ onReset }: { onReset: () => void }) {
         style={{
           fontSize: 20,
           fontWeight: "700",
-          color: "#1A1714",
+          color: c["color.fg"],
           textAlign: "center",
           marginBottom: 12,
         }}
@@ -77,7 +81,7 @@ function ErrorFallback({ onReset }: { onReset: () => void }) {
       <Text
         style={{
           fontSize: 14,
-          color: "#4C4741",
+          color: c["color.fg2"],
           textAlign: "center",
           marginBottom: 24,
         }}
@@ -93,10 +97,10 @@ function ErrorFallback({ onReset }: { onReset: () => void }) {
           paddingVertical: 12,
           paddingHorizontal: 24,
           borderRadius: 9999,
-          backgroundColor: "#FF6A3D",
+          backgroundColor: c["color.accent"],
         }}
       >
-        <Text style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 15 }}>
+        <Text style={{ color: c["color.accent.contrast"], fontWeight: "600", fontSize: 15 }}>
           {i18n.t("errorBoundary.restart")}
         </Text>
       </Pressable>

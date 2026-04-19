@@ -141,7 +141,7 @@ export function NotificationsSheet({ visible, onClose }: NotificationsSheetProps
               width: 20,
               height: 20,
               borderRadius: t.radius.pill,
-              backgroundColor: "#FFFFFF",
+              backgroundColor: t.color("color.accent.contrast"),
               alignSelf: enabled ? "flex-end" : "flex-start",
             }}
           />
