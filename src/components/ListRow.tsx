@@ -32,13 +32,8 @@ type Props = {
 };
 
 /**
- * Settings-style row. Source: Screens.jsx SettingsScreen `Row` helper —
- * `padding: '12px 14px'`, gap 12, optional IconBadge on the left,
- * chevron-right when tappable.
- *
- * The 12 vertical / 14 horizontal padding is design-driven: the system
- * README calls out `14px` as the list-row vertical rhythm. We write the
- * numbers directly with a comment; adding space[3.5] would pollute the grid.
+ * Settings-style row — padding 12/14, gap 12, optional IconBadge on
+ * the left, chevron-right when tappable.
  */
 export function ListRow({
   icon,
@@ -59,9 +54,8 @@ export function ListRow({
 
   const borderBottomWidth = last ? 0 : 1;
 
-  // 12px vertical / 14px horizontal — design-system row in Screens.jsx.
-  // Space[3] is 12 (matches). Horizontal 14 has no matching token; written
-  // as a literal on purpose so we don't invent a 3.5 bucket.
+  // 12/14 padding — space[3] is 12 (vertical). Horizontal 14 has no
+  // matching token; written as a literal rather than inventing a 3.5.
   const style: StyleProp<ViewStyle> = {
     flexDirection: "row",
     alignItems: "center",

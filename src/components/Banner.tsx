@@ -27,10 +27,10 @@ const TONE_ICON: Record<BannerTone, IconName> = {
   danger: "alert-circle",
 };
 
-// Design-system README insists "do not invent new hues": semantic colors are
-// green (success), amber (warning), red (danger). For `info` we reuse the
-// `chip.auto.*` tokens — the existing cool-blue pair used for auto-tracked
-// source chips, which matches the neutral/informational semantic we need.
+// Semantic colors: green (success), amber (warning), red (danger). For
+// `info` we reuse the `chip.auto.*` tokens — the cool-blue pair used for
+// auto-tracked source chips, which matches the neutral/informational semantic
+// we need (no new hues introduced).
 const TONE_TOKENS: Record<BannerTone, { bg: ColorTokenKey; fg: ColorTokenKey }> = {
   info: { bg: "color.chip.auto.bg", fg: "color.chip.auto.fg" },
   warning: { bg: "color.warning.soft", fg: "color.warning" },
@@ -43,9 +43,8 @@ function resolveTone(t: Theme, tone: BannerTone) {
 }
 
 /**
- * Inline message surface. Source: design-system README "Semantic" rule —
- * green for currently-tracking, amber for permission warnings, red for
- * destructive. Banner maps tone → soft bg + strong fg.
+ * Inline message surface — tone maps to soft bg + strong fg. Green for
+ * currently-tracking, amber for permission warnings, red for destructive.
  *
  * Used for permission primers, "location denied", "notifications off", etc.
  * Keep copy second-person per the voice guidelines.

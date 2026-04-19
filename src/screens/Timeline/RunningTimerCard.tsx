@@ -15,25 +15,17 @@ type Props = {
 
 /**
  * Tile-card showing the currently running entry with a live, tick-per-second
- * elapsed clock. Source: design-system Screens.jsx → TimelineScreen
- * `running && today` block.
- *
- * Why a local `setInterval` rather than reactive time-of-day:
- * - We only need to tick while this card is on-screen; `useEffect` cleanup
- *   handles unmount and the Timeline mounts/unmounts the card based on
- *   `useOngoingEntry()`.
- * - No shared ticking source exists yet (Plan 3+ may introduce a
- *   `useClock(1000)` hook if other screens need it).
+ * elapsed clock. Uses a local `setInterval` rather than a shared clock hook
+ * — only this card needs to tick, and `useEffect` cleanup handles unmount.
  */
 export function RunningTimerCard({ placeName, startedAt, onStop, testID }: Props) {
   const t = useTheme();
   const elapsed = useElapsed(startedAt);
 
   return (
-    // v0.3 polish: subtle accent.soft background tints the running card so
-    // it stands out from the neutral list rhythm below — "this is the active
-    // session" reads at a glance. Card primitive owns radius + shadow; the
-    // fill override layers on top.
+    // Accent.soft tint so the running card stands out from the neutral
+    // list rhythm below. Card primitive owns radius + shadow; the fill
+    // override layers on top.
     <View
       accessible
       accessibilityLiveRegion="polite"
@@ -52,11 +44,7 @@ export function RunningTimerCard({ placeName, startedAt, onStop, testID }: Props
             gap: t.space[3],
           }}
         >
-          {/*
-          v0.3 polish: pulsing success-green TrackingDot replaces the static
-          accent dot. Reads as "live, currently tracking" more than a solid
-          circle. Size 10 matches the original design-system spec.
-        */}
+          {/* Pulsing success-green dot reads as "live, currently tracking". */}
           <TrackingDot size={10} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text
@@ -80,7 +68,7 @@ export function RunningTimerCard({ placeName, startedAt, onStop, testID }: Props
             <Text
               testID={testID ? `${testID}-elapsed` : "running-timer-elapsed"}
               style={{
-                fontSize: 26, // design-system spec: 26px running-timer size, no token
+                fontSize: 26, // running-timer display size — intentionally above the type scale
                 fontWeight: t.type.weight.bold,
                 color: t.color("color.fg"),
                 fontFamily: t.type.family.sans,

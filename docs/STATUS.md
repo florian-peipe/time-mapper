@@ -75,32 +75,22 @@ npx eas secret:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value goog_...
 npx eas secret:create --name EXPO_PUBLIC_SENTRY_DSN             --value https://...
 ```
 
-## Limitations (cannot be verified in this sandbox)
+## Limitations (require real-device validation)
 
 1. **Expo Go cannot run the geofence background task.** The auto-tracking
-   end-to-end path has been unit + integration tested with mocked native
-   modules (`__mocks__/`), but real-device validation requires a dev
-   client (`npx eas build --profile development`). The task registers at
-   module-eval time in `src/background/tasks.ts`; the OS cold-wake path
-   only runs when a standalone app (or dev client) is installed on the
+   end-to-end path is unit + integration tested, but real-device
+   validation requires a dev client (`npx eas build --profile
+   development`) or a sideloaded build (see `docs/SIDELOAD.md`). The task
+   registers at module-eval time in `src/background/tasks.ts`; the OS
+   cold-wake path only runs when a standalone app is installed on the
    device.
-2. **Icons look correct in screenshots, but app-store asset validation
-   needs a real device.** Icon files are 1024×1024 PNGs in `assets/`;
-   Expo auto-generates the per-density variants at build time. A
-   sanity-check render on-device is still recommended before submission.
-3. **CSV export is a no-op.** The paywall correctly gates the row, and
-   unlocking Pro surfaces the button, but the file-writing path is
-   intentionally empty (it lands in v1.0.0-GA). Users who tap Export
-   while on Pro will not see an error — the action just silently
-   completes.
-4. **Screenshots are placeholders.** `store/screenshots/` ships the
-   simctl/adb capture commands and a README, but no actual images.
-   Capture them after installing a dev build.
-5. **Store version string includes a pre-release suffix.** Both
-   `package.json` and `app.json` currently read `1.0.0-beta.1`. App
-   Store Connect and Play Console reject semver pre-release suffixes in
-   `expo.version`; reset to `1.0.0` (keeping `buildNumber` / `versionCode`
-   as the incrementing differentiator) before the first production build.
+2. **App-store icon validation needs a real device.** Icon files are
+   1024×1024 PNGs in `assets/`; Expo auto-generates per-density variants
+   at build time. A sanity-check render on-device is still recommended
+   before submission.
+3. **Screenshots are not yet captured.** `store/screenshots/` ships the
+   simctl/adb capture commands and a README but no actual images. Run
+   the checklist once a dev build is installed on each target device.
 
 ## Next steps for the user
 

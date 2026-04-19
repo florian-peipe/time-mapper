@@ -20,7 +20,7 @@ type Props = {
   testID?: string;
 };
 
-// shadow-md from design-system README, mapped to RN's ios + android shadow props
+// shadow-md mapped to RN's iOS + Android shadow props.
 function shadowMd(t: Theme) {
   return {
     // iOS — color sourced from the theme's shadow token

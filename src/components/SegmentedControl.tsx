@@ -15,13 +15,12 @@ type Props<T extends string> = {
 };
 
 /**
- * Two- or three-value toggle. Source: design-system README "Animation" rules
- * (base 200ms, standard easing) — we reuse tokens.motion for duration.
+ * Two- or three-value toggle. Animation uses the base 200ms duration + standard
+ * easing from `tokens.motion`.
  *
  * Implementation: animated thumb slides left/right over the surface2
- * background. Reduce Motion support isn't explicitly needed here per the
- * design-system spec (which only calls out Reduce Motion for the signature
- * ring pulse), but the thumb motion is short and subtle.
+ * background. Reduce Motion is not applied here — the thumb motion is short
+ * and subtle (Reduce Motion is reserved for the signature ring pulse).
  */
 export function SegmentedControl<T extends string>({ value, onChange, options, testID }: Props<T>) {
   const t = useTheme();
@@ -81,7 +80,7 @@ export function SegmentedControl<T extends string>({ value, onChange, options, t
               flex: 1,
               backgroundColor: t.color("color.surface"),
               borderRadius: t.radius.pill,
-              // shadow-sm (from README) — subtle lift on the thumb
+              // shadow-sm — subtle lift on the thumb.
               shadowColor: t.color("color.shadow"),
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.06,

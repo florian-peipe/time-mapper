@@ -20,10 +20,10 @@ type Props = {
   testID?: string;
 };
 
-// Base column widths per the design-system mono-grid spec. Actual rendered
-// widths scale with `PixelRatio.getFontScale()` so text doesn't clip at
-// large Dynamic Type / Font Scale settings. Clamped on both ends so the
-// spreadsheet stays legible even at extreme values.
+// Base column widths for the mono-grid ledger. Actual rendered widths scale
+// with `PixelRatio.getFontScale()` so text doesn't clip at large Dynamic Type
+// / Font Scale settings. Clamped on both ends so the spreadsheet stays
+// legible even at extreme values.
 type Col = {
   key: "place" | "start" | "pause" | "end" | "duration" | "note";
   label: string;
@@ -50,9 +50,9 @@ const BASE_CELL_PAD_H = 10;
 const BASE_LETTER_PAD_V = 6;
 
 /**
- * Spreadsheet-style ledger table used by the Stats screen. Source:
- * design-system Screens.jsx → Ledger. The two header rows (Excel letter
- * A/B/C/.. + field name) and the final Σ sum row are all mono-formatted.
+ * Spreadsheet-style ledger table used by the Stats screen. The two header
+ * rows (Excel letter A/B/C/... + field name) and the final Σ sum row are all
+ * mono-formatted.
  *
  * Numeric cells use `type.family.mono` for alignment — the only place in
  * the app that surfaces the mono family. Text cells (place name, note) fall
@@ -211,10 +211,9 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
           </View>
         </ScrollView>
         {/*
-          v0.3 polish: when the ledger is empty, the user's screenshot showed
-          just column headers floating above a blank bar — reads as broken.
-          A single muted "No entries yet" row below the headers makes the
-          zero state legible without breaking the mono grid.
+          When the ledger is empty, just column headers floating above a blank
+          bar reads as broken. A single muted "No entries yet" row below the
+          headers makes the zero state legible without breaking the mono grid.
         */}
         {rows.length === 0 ? (
           <View
@@ -280,7 +279,7 @@ function ColumnLetterHeader({ columns, gutterW, letterPadV, cellPadH }: MetricsP
             style={{
               textAlign: c.align,
               color: t.color("color.fg3"),
-              fontSize: t.type.size.xs, // smallest token (11) — design-system used 10 but we keep ≥xs
+              fontSize: t.type.size.xs, // smallest token (11) — keep ≥xs for legibility
               fontWeight: t.type.weight.semibold,
               fontFamily: t.type.family.mono,
             }}
@@ -405,7 +404,7 @@ function LedgerBodyRow({
       >
         <View
           style={{
-            width: 8, // color swatch, design-system 8
+            width: 8, // color swatch
             height: 8,
             borderRadius: t.radius.sm,
             backgroundColor: place.color,
@@ -497,7 +496,7 @@ function SumRow({
       style={{
         flexDirection: "row",
         backgroundColor: t.color("color.bg"),
-        borderTopWidth: 2, // design-system borderTop: 2px borderStrong
+        borderTopWidth: 2, // 2px borderStrong separates the sum row
         borderTopColor: t.color("color.border.strong"),
       }}
     >

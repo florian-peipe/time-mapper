@@ -16,11 +16,10 @@ type Props = {
 
 /**
  * Small squircle wrapping an Icon. Used inside ListRow, the Settings Pro
- * upsell card, and the Stats upsell card — per design-system Screens.jsx
- * Row helper where the badge is a `30×30` square with `radius.sm`.
+ * upsell card, and the Stats upsell card. Default 30x30 square with `radius.sm`.
  *
  * Icon size scales with the container: ~53% of the outer square so the default
- * 30px badge renders a 16px icon (matches the Row helper in Screens.jsx).
+ * 30px badge renders a 16px icon.
  */
 export function IconBadge({ icon, bg, color, size = 30, testID }: Props) {
   const t = useTheme();

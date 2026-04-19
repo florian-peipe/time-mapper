@@ -27,8 +27,7 @@ type Props = TextInputProps & {
 };
 
 /**
- * Token-styled TextInput. Source: Screens.jsx `inputStyle` (height 48, radius
- * md, 1px border, padding horizontal 16).
+ * Token-styled TextInput (height 48, radius md, 1px border, horizontal padding 16).
  *
  * Focused border uses `color.border.strong` to give a subtle depth cue without
  * relying on a glow or outline (no native outline on web/RN).
@@ -84,7 +83,7 @@ export function Input({
           borderWidth: 1,
           borderColor,
           paddingHorizontal: t.space[4],
-          // 42 matches the design-system search input (icon sits at left: 14 with ~18 icon)
+          // 42 accommodates the left-aligned search icon (left: 14 + ~18 icon width).
           paddingLeft: leading ? 42 : t.space[4],
           color: t.color("color.fg"),
           backgroundColor: t.color("color.surface"),
@@ -103,7 +102,7 @@ export function Input({
         color: t.color("color.danger"),
         fontSize: t.type.size.xs,
         fontFamily: t.type.family.sans,
-        // design-source: 4px gap between field and inline validation text.
+        // 4px gap between field and inline validation text.
         marginTop: t.space[1],
       }}
     >
@@ -128,7 +127,7 @@ export function Input({
           pointerEvents="none"
           style={{
             position: "absolute",
-            // 14 matches Screens.jsx AddPlaceSheet search-icon left offset
+            // 14px left offset for the search-icon adornment.
             left: 14,
             top: 0,
             bottom: 0,

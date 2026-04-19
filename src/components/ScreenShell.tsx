@@ -13,7 +13,7 @@ type Props = {
 
 /**
  * Wraps every screen with safe-area top + theme bg + 20px horizontal padding
- * (per design-system "Spacing" rule: screen horizontal padding is 20px).
+ * (the shared screen-padding rule).
  *
  * Set `padding={false}` for screens whose own content owns the inset (e.g.
  * full-bleed map). Set `scroll` for vertically scrollable content.

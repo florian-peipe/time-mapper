@@ -50,7 +50,7 @@ describe("ScreenShell", () => {
     let node = child.parent;
     while (node && !(node.props as { style?: unknown }).style) node = node.parent;
     const s = flat((node?.props as { style?: unknown })?.style);
-    // tokens.space[5] = 20 — design-system rule: 20px screen horizontal padding
+    // tokens.space[5] = 20 — 20px screen horizontal padding.
     expect(s.paddingHorizontal).toBe(20);
   });
 

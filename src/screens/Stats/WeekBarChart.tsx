@@ -34,12 +34,11 @@ const DAY_KEYS_LONG = [
 
 /**
  * Stacked bar chart (one column per weekday) + color-dot legend.
- * Source: design-system Screens.jsx → StatsScreen chart block.
  *
  * Scaling: we use a fixed `720` as the "full bar" reference (12 hours of
- * tracked time) — matches the design-system mock and is a reasonable cap
- * for a stacked weekday column. If a day exceeds this, segments for that
- * day still render proportional-to-max (clamped to 100% of the bar height).
+ * tracked time) — a reasonable cap for a stacked weekday column. If a day
+ * exceeds this, segments for that day still render proportional-to-max
+ * (clamped to 100% of the bar height).
  *
  * We derive a stable rendering order across days by iterating `byPlace` (the
  * legend order). Missing places on a given day show as a zero-height strip
@@ -65,8 +64,8 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
           flexDirection: "row",
           alignItems: "flex-end",
           gap: t.space[3],
-          // 180 == design-system chart height (bars are 160, label row adds ~20)
-          height: 180, // mono grid, design-system chart height
+          // 180 chart height (bars 160 + label row ~20).
+          height: 180,
         }}
       >
         {DAY_KEYS.map((dayKey, i) => {
@@ -102,8 +101,8 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
             >
               <View
                 style={{
-                  height: 160, // bar column height, design-system 160
-                  width: 18, // bar column width, design-system 18
+                  height: 160, // bar column height
+                  width: 18, // bar column width
                   backgroundColor: t.color("color.surface2"),
                   borderRadius: t.radius.sm,
                   overflow: "hidden",
@@ -155,7 +154,7 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
             >
               <View
                 style={{
-                  width: 10, // legend dot, design-system 10
+                  width: 10, // legend dot
                   height: 10,
                   borderRadius: t.radius.sm,
                   backgroundColor: p.color,
@@ -186,9 +185,9 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
           ))}
         </View>
       ) : (
-        // v0.3 polish: an empty bar chart with no legend reads "broken"
-        // without copy. Soft muted line below the (empty) columns so users
-        // know it's a zero state, not a fetch failure.
+        // An empty bar chart with no legend reads "broken" without copy. Soft
+        // muted line below the (empty) columns so users know it's a zero
+        // state, not a fetch failure.
         <View style={{ marginTop: t.space[5], alignItems: "center" }}>
           <Text
             testID="week-bar-chart-empty"

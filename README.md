@@ -266,9 +266,9 @@ src/
   locales/         en.json + de.json
   __tests__/       barrel, a11y, critical-flows, snapshots, sanity
 docs/
-  design-system/   tokens + UI kit
   legal/           privacy/terms/impressum (markdown source of truth)
-  superpowers/     implementation plans
+  SIDELOAD.md      zero-cost iPhone sideload guide
+  STATUS.md        release status + third-party checklist
 store/
   ios/             App Store Connect metadata.yaml
   android/         Play Console metadata.yaml

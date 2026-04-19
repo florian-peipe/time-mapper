@@ -17,12 +17,8 @@ type Props = {
 };
 
 /**
- * Small pill used for benefit badges, place-picker chips in EntryEditSheet,
- * and filter pills. Source: Screens.jsx EntryEditSheet place picker
- * (`padding: '7px 12px 7px 8px'`, accent highlight when selected) + paywall
- * feature chips.
- *
- * Tone:
+ * Small pill used for benefit badges, place-picker chips, and filter
+ * pills. Tone:
  * - `neutral` — default. Unselected: surface2 bg + border; selected: accent
  *   tint + accent border.
  * - `accent` — same as neutral's selected state regardless of `selected`

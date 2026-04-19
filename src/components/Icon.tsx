@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  // Place icons (the 18 curated subset from design-system README)
+  // Place icons (18 curated names users can assign to a place)
   House,
   Briefcase,
   Dumbbell,
@@ -43,11 +43,9 @@ import {
 } from "lucide-react-native";
 import { useTheme } from "@/theme/useTheme";
 
-// Stable string-based name → lucide component map.
-// Keys use kebab-case to match the design-system source (Icon.jsx).
-// We deliberately restrict the surface area to the 18 place icons + the
-// system icons referenced by Plan 1/Plan 2 screens — adding new ones here
-// is the only allowed extension point.
+// Stable string-based name → lucide component map. Keys use kebab-case.
+// The surface is deliberately narrow (18 place icons + a small system
+// set) — adding a new icon means adding a row here, explicitly.
 const ICONS = {
   // Place icons
   home: House,

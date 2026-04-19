@@ -18,8 +18,8 @@ const UNTRANSLATED_ALLOWLIST: { suffix: string; reason: string }[] = [
   },
   // Repository + schema + migration code.
   { suffix: "db/", reason: "persistence layer (no UI strings)" },
-  // Theme tokens + design-system literal color/type values.
-  { suffix: "theme/tokens", reason: "design-system tokens (no UI strings)" },
+  // Theme tokens — literal color/type values.
+  { suffix: "theme/tokens", reason: "theme tokens (no UI strings)" },
   // LegalScreen's `documents.ts` contains the legal copy inline by design —
   // translation-source for the legal surfaces.
   { suffix: "screens/Legal/documents", reason: "legal copy source" },

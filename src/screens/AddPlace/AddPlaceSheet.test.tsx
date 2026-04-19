@@ -205,7 +205,7 @@ describe("AddPlaceSheet — Phase 2 (editor)", () => {
 describe("AddPlaceSheet — Save", () => {
   it("Save button CTA reads 'Save place' on an empty-places free user", async () => {
     const { placesRepo } = setup({});
-    expect(placesRepo.count()).toBe(0);
+    expect(placesRepo.list()).toHaveLength(0);
     await gotoPhase2();
     expect(screen.getByText("Save place")).toBeTruthy();
   });

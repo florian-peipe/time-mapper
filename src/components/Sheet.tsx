@@ -17,8 +17,8 @@ type Props = {
   onClose: () => void;
   /**
    * Percent of screen height the sheet should occupy (0-100). Default 88.
-   * Design source uses 88% for AddPlaceSheet, 86% for EntryEditSheet, 92%
-   * for Paywall — callers override as needed.
+   * Typical overrides: 88% for AddPlaceSheet, 86% for EntryEditSheet, 92%
+   * for Paywall.
    */
   heightPercent?: number;
   title?: string;
@@ -36,17 +36,14 @@ type Props = {
 };
 
 /**
- * Bottom sheet. Source: Screens.jsx `sheetOverlay` + `sheet` + `sheetGrabber`.
- *
- * Implementation decision (confirmed for v1): we use React Native's built-in
- * `Modal` with `animationType="slide"` rather than pulling in
- * react-native-reanimated + react-native-gesture-handler for drag-to-dismiss.
- * Rationale:
+ * Bottom sheet built on React Native's built-in `Modal` with
+ * `animationType="slide"`, rather than reanimated +
+ * react-native-gesture-handler for drag-to-dismiss. Rationale:
  * - native RN slide-up is already smooth on both platforms;
  * - the feature set (tap-outside to close, X button) covers every sheet we
- *   need in v1 — AddPlaceSheet, EntryEditSheet, Paywall, onboarding steps;
+ *   need — AddPlaceSheet, EntryEditSheet, Paywall, onboarding steps;
  * - reanimated pulls additional Babel config and binary size;
- * - if v2 wants drag-to-dismiss we can swap the implementation without
+ * - if drag-to-dismiss is ever needed we can swap the implementation without
  *   changing the public API.
  */
 export function Sheet({
@@ -74,7 +71,7 @@ export function Sheet({
     borderTopLeftRadius: t.radius.lg,
     borderTopRightRadius: t.radius.lg,
     flexDirection: "column",
-    // shadow-lg from README — sheet elevates above the scrim
+    // shadow-lg — sheet elevates above the scrim.
     shadowColor: t.color("color.shadow"),
     shadowOffset: { width: 0, height: -8 },
     shadowOpacity: 0.12,

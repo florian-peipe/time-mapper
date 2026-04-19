@@ -10,14 +10,11 @@ type Props = {
 };
 
 /**
- * Grouped list card. Source: Screens.jsx SettingsScreen `Section` helper —
- * an uppercase caption with `padding: '0 20px 8px'` and a rounded card
- * `margin: '0 16px'` with `radius.md`, 1px border, and the children (usually
- * a stack of ListRows).
+ * Grouped list card used in Settings. Renders an optional uppercase caption
+ * above a rounded card wrapping a stack of ListRows.
  *
- * We use `space[5]` (20) for the horizontal margin — the README explicitly
- * calls out 20px as the mobile screen horizontal padding; matching it keeps
- * Settings aligned with everything else (ScreenShell also uses space[5]).
+ * Horizontal margin uses `space[5]` (20) to match ScreenShell's 20px screen
+ * padding so the card edges line up with every other screen.
  */
 export function Section({ title, children, testID }: Props) {
   const t = useTheme();

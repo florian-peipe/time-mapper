@@ -31,14 +31,12 @@ const DEFAULT_START = "09:00";
 const DEFAULT_END = "10:00";
 
 /**
- * EntryEditSheet — manual add/edit flow. Source: Screens.jsx EntryEditSheet
- * (lines 515-654). Ports the full form: net-duration readout, place picker
- * (collapsed row + chip list), HH:MM time fields, pause minutes, note
- * textarea, optional source chip, and a destructive delete button in Edit
- * mode.
+ * EntryEditSheet — manual add/edit flow. Full form: net-duration readout,
+ * place picker (collapsed row + chip list), HH:MM time fields, pause
+ * minutes, note textarea, optional source chip, and a destructive
+ * delete button in Edit mode.
  *
- * Design-source notable numeric constants (kept as literals with inline
- * justification, not invented tokens):
+ * Notable numeric constants (kept as literals with inline justification):
  *   - heightPercent 86 (sheet height)
  *   - 44px display for the net-duration readout
  *   - pause input cap at 720 minutes

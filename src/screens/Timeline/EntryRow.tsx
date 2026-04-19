@@ -25,13 +25,12 @@ type Props = {
 };
 
 /**
- * Single entry row on the Timeline. Source: design-system Screens.jsx →
- * TimelineScreen entries map. Layout: `[PlaceBubble] [name + source chip on
- * line 1, start–end on line 2] [right-aligned duration]`.
+ * Single entry row on the Timeline. Layout: `[PlaceBubble] [name + source
+ * chip on line 1, start–end on line 2] [right-aligned duration]`.
  *
  * The entire row is tappable — opens the EntryEditSheet. We reuse `PlaceBubble`
  * (40px default) and the shared `SourceChip`; the hairline-below pattern is
- * implemented as `borderBottom`, identical to the design.
+ * implemented as `borderBottom`.
  */
 export function EntryRow({
   entryId,
@@ -63,8 +62,8 @@ export function EntryRow({
         flexDirection: "row",
         alignItems: "center",
         gap: t.space[3],
-        // 14px matches the design-system row vertical rhythm (see ListRow comment).
-        paddingVertical: 14, // design-system row rhythm
+        // 14px vertical rhythm — matches ListRow.
+        paddingVertical: 14,
         borderBottomWidth: last ? 0 : 1,
         borderBottomColor: t.color("color.border"),
       }}
@@ -116,9 +115,9 @@ export function EntryRow({
         {hours}h {String(minutes).padStart(2, "0")}m
       </Text>
       {/*
-        v0.3 polish: chevron-right trailing accessory signals "this row is
-        tappable → opens the edit sheet". Same affordance ListRow uses in
-        Settings so the gesture vocabulary stays consistent.
+        chevron-right trailing accessory signals "this row is tappable →
+        opens the edit sheet". Same affordance ListRow uses in Settings so
+        the gesture vocabulary stays consistent.
       */}
       <Icon name="chevron-right" size={18} color={t.color("color.fg3")} />
     </Pressable>

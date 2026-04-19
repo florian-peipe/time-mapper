@@ -12,8 +12,7 @@ type Props = TextInputProps & {
 };
 
 /**
- * Multiline token-styled TextInput. Source: Screens.jsx EntryEditSheet note
- * field (textarea with `minHeight: 60`, padding 0, body font, Inter).
+ * Multiline token-styled TextInput used for notes.
  *
  * Content-aware growing: the input starts at `minHeightLines` lines, expands
  * with typed content (via `onContentSizeChange`) and caps at `maxHeightLines`.
@@ -36,8 +35,7 @@ export function TextArea({
 
   // Body font size is 15, line-height multiplier is "body" (1.5) → 22.5, rounded.
   const lineHeight = Math.round(t.type.size.body * t.type.lineHeight.body);
-  // Inner vertical padding (top + bottom). Design-system textarea uses 14px
-  // vertical (see Screens.jsx row: "padding: '14px 16px'"). We mirror that.
+  // Inner vertical padding (top + bottom). 14px matches the shared row rhythm.
   const padV = 14;
   const minHeight = minHeightLines * lineHeight + padV * 2;
   const maxHeight = maxHeightLines * lineHeight + padV * 2;
@@ -89,7 +87,7 @@ export function TextArea({
           borderWidth: 1,
           borderColor,
           paddingHorizontal: t.space[4],
-          // 14 is the design-system row vertical padding — documented above.
+          // 14px vertical padding — documented above.
           paddingVertical: padV,
           color: t.color("color.fg"),
           backgroundColor: t.color("color.surface"),

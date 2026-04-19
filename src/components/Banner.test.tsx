@@ -24,7 +24,7 @@ describe("Banner", () => {
     expect(screen.getByText("Details here.")).toBeTruthy();
   });
 
-  it("uses the chip.auto pair for the info tone (design-system 'do not invent hues' rule)", () => {
+  it("uses the chip.auto pair for the info tone (no new hues)", () => {
     render(wrap(<Banner testID="b" tone="info" title="FYI" />));
     const el = screen.getByTestId("b");
     const s = flat(el.props.style);

@@ -53,7 +53,7 @@ describe("PaywallScreen — content", () => {
     ).toBeTruthy();
   });
 
-  it("renders all four feature bullets (no categories — dropped in v0.6.1)", () => {
+  it("renders all four feature bullets", () => {
     render(wrap(<PaywallScreen onClose={() => {}} />));
     expect(screen.getByText("Unlimited places")).toBeTruthy();
     expect(screen.getByText("Full history (no 14-day limit)")).toBeTruthy();
@@ -245,8 +245,8 @@ describe("PaywallScreen — close + props", () => {
   it("tapping the close (X) button calls onClose without invoking purchase", () => {
     const onClose = jest.fn();
     const { getAllByLabelText } = render(wrap(<PaywallScreen onClose={onClose} />));
-    // Both the scrim and the X button now carry the label "Close" (sheet
-    // a11y audit in Plan 5). Find the one that's NOT the scrim overlay.
+    // Both the scrim and the X button carry the label "Close". Pick the
+    // one that's NOT the scrim overlay.
     const closeButtons = getAllByLabelText("Close");
     const xButton = closeButtons.find((n) => n.props.testID !== "sheet-overlay");
     expect(xButton).toBeTruthy();

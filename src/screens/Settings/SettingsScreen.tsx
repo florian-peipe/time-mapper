@@ -56,10 +56,8 @@ const SUPPORT_MAILTO_URL = "mailto:support@timemapper.app?subject=Time%20Mapper%
 
 /**
  * Settings tab — vertical list of grouped sections, with a Pro upsell banner
- * pinned at the top when the user is on the free plan. Source: Screens.jsx
- * SettingsScreen lines 271-325.
- *
- * Each section is a `Section` shell wrapping `ListRow`s. Tap handlers either:
+ * pinned at the top when the user is on the free plan. Each section is a
+ * `Section` shell wrapping `ListRow`s. Tap handlers either:
  *   1. flip a piece of UI state (`themeOverride`, language),
  *   2. open a sheet (`paywall`, new NotificationsSheet / BuffersSheet),
  *   3. fire a platform-level side-effect (`Linking.openURL`,

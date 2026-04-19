@@ -47,10 +47,8 @@ type Props = {
 };
 
 /**
- * Two-card vertical plan picker for the Paywall sheet.
- * Source: Screens.jsx Paywall lines 469-489.
- *
- * Visual recipe per card:
+ * Two-card vertical plan picker for the Paywall sheet. Visual recipe
+ * per card:
  * - 16px padding, 14 radius, 2px border.
  * - Selected: `accent` border + `accent.soft` background.
  * - Unselected: `border` border + `surface` background.

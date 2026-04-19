@@ -111,10 +111,10 @@ export function PermissionsScreen() {
           {i18n.t("onboarding.permissions.body")}
         </Text>
         {/*
-          Privacy callout — design-system voice says "reassure on every
-          permission screen". Uses accent-soft surface + lock glyph to signal
-          "on-device" without reaching for a Banner primitive (Banner is
-          reserved for actionable warnings).
+          Privacy callout — reassure on every permission screen. Uses
+          accent-soft surface + lock glyph to signal "on-device" without
+          reaching for a Banner primitive (Banner is reserved for actionable
+          warnings).
         */}
         <View
           style={{

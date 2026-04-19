@@ -5,7 +5,7 @@ import { useTheme } from "@/theme/useTheme";
 
 type Props = {
   size?: number;
-  /** 0..1, default 0.08 per design-system. */
+  /** 0..1, default 0.08. */
   opacity?: number;
   /** Stroke color override. Defaults to theme accent. */
   color?: string;
@@ -16,7 +16,7 @@ type Props = {
 /**
  * Concentric-ring decoration — Time Mapper's signature visual motif (the
  * geofence radius). Used as background art on empty states and the
- * onboarding hero. Source: design-system Components.jsx Rings.
+ * onboarding hero.
  */
 export function Rings({ size = 180, opacity = 0.08, color, style, testID }: Props) {
   const t = useTheme();

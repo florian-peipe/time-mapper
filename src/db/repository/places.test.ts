@@ -42,11 +42,11 @@ describe("PlacesRepo", () => {
     expect(updated.updatedAt).toBe(2000);
   });
 
-  it("counts non-deleted places", () => {
+  it("list() excludes soft-deleted rows", () => {
     const repo = makeRepo();
     repo.create({ name: "A", address: "", latitude: 0, longitude: 0 });
     const b = repo.create({ name: "B", address: "", latitude: 0, longitude: 0 });
     repo.softDelete(b.id);
-    expect(repo.count()).toBe(1);
+    expect(repo.list()).toHaveLength(1);
   });
 });

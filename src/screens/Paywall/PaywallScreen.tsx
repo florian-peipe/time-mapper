@@ -18,17 +18,12 @@ export type PaywallScreenProps = {
   onClose: () => void;
   /**
    * Optional analytics breadcrumb so the screen knows where the user came
-   * from (e.g. "settings", "export", "history", "2nd-place"). Plan 4
-   * keeps the prop for downstream analytics; the screen itself doesn't
-   * branch on it (the value is forwarded to RevenueCat via the offering's
-   * `presentedOfferingContext` automatically).
+   * from (e.g. "settings", "export", "history", "2nd-place"). Forwarded
+   * to RevenueCat via the offering's `presentedOfferingContext`.
    */
   source?: string;
 };
 
-// v0.6.1: `paywall.features.categories` was removed — categories didn't
-// ship in v1. The key is still present in en.json/de.json so the key
-// coverage test passes; we just don't render it here.
 const FEATURE_KEYS: readonly string[] = [
   "paywall.features.unlimited",
   "paywall.features.history",
@@ -37,22 +32,11 @@ const FEATURE_KEYS: readonly string[] = [
 ] as const;
 
 /**
- * Paywall sheet — full-bleed (92%) height-bottom-sheet that pitches Time
- * Mapper Pro. Source: Screens.jsx Paywall lines 433-499.
- *
- * Composition:
- *   1. Hero — concentric Rings backdrop + 72×72 accent square with star
- *      icon, large headline, and subhead.
- *   2. Feature list — five bulleted lines with an accent check icon.
- *   3. PlanPicker — yearly (default) + monthly cards, prices read from
- *      the live RevenueCat offering when available, hardcoded €/$ fallback
- *      otherwise.
- *   4. Sticky footer (rendered via the shared Sheet's `footer` slot) —
- *      primary CTA whose label depends on the selected plan, plus a
- *      "Restore purchases" link and small Terms/Privacy caption.
- *
- * In Plan 4 the CTA invokes the real RevenueCat `purchase(pkg)` flow.
- * On user cancel / network error we surface a `Banner` tone="danger"
+ * Paywall sheet — full-bleed (92%) bottom sheet that pitches Time
+ * Mapper Pro. Composition: hero (Rings + star + headline), feature
+ * list, PlanPicker (yearly default + monthly), sticky footer (CTA +
+ * Restore link + Terms/Privacy caption). The CTA invokes RevenueCat's
+ * `purchase(pkg)`; on cancel/network error we surface a danger Banner
  * with a "Try again" action so the user isn't stranded.
  */
 export function PaywallScreen({ visible = true, onClose, source }: PaywallScreenProps) {

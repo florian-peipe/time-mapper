@@ -60,10 +60,6 @@ export class PlacesRepo {
       .all() as Place[];
   }
 
-  count(): number {
-    return this.list().length;
-  }
-
   update(id: string, patch: Partial<CreatePlaceInput>): Place {
     const now = this.clock.now();
     this.db

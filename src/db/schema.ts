@@ -24,8 +24,7 @@ export const entries = sqliteTable("entries", {
   startedAt: integer("started_at").notNull(),
   endedAt: integer("ended_at"),
   // Pause/break length in seconds, subtracted from gross duration for net time.
-  // Used by the Ledger view (column C) and EntryEditSheet. See design-system
-  // Screens.jsx → EntryEditSheet.
+  // Used by the Ledger view (column C) and EntryEditSheet.
   pauseS: integer("pause_s").notNull().default(0),
   source: text("source", { enum: ["auto", "manual"] }).notNull(),
   note: text("note"),

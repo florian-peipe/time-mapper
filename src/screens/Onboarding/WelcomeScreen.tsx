@@ -10,8 +10,8 @@ import { StepIndicator } from "./StepIndicator";
 /**
  * Onboarding 1 / 3 — big Rings hero, product name, one-line pitch, primary CTA.
  * The hero Rings sits absolute-positioned behind the copy so the eye is drawn
- * to the signature radius motif on first launch. Layout mirrors the
- * design-system hero template (centered column, display type, 48dp button).
+ * to the signature radius motif on first launch. Centered column, display
+ * type, 48dp button.
  */
 export function WelcomeScreen() {
   const t = useTheme();
@@ -37,8 +37,8 @@ export function WelcomeScreen() {
         Decorative Rings, centered behind the headline. Two-layer composition:
         - a very large (580pt) ring at 5% opacity, anchored above the fold
           so it dominates the top half without demanding attention; and
-        - the 320pt variant at 10% opacity on top, the familiar design-system
-          motif the user will recognize from AddPlaceSheet's map preview.
+        - the 320pt variant at 10% opacity on top, the familiar motif the
+          user will recognize from AddPlaceSheet's map preview.
         Both are pointerEvents="none" so the CTA stays fully tappable.
       */}
       <View

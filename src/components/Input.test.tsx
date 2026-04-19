@@ -21,7 +21,7 @@ describe("Input", () => {
     expect(onChangeText).toHaveBeenCalledWith("hello");
   });
 
-  it("renders at 48px tall with md radius per design-system inputStyle", () => {
+  it("renders at 48px tall with md radius", () => {
     render(wrap(<Input testID="field" />));
     const input = screen.getByTestId("field");
     const s = flat(input.props.style);
@@ -59,7 +59,7 @@ describe("Input", () => {
     render(wrap(<Input testID="field" leading="search" />));
     const input = screen.getByTestId("field");
     const s = flat(input.props.style);
-    // 42 matches Screens.jsx AddPlaceSheet search paddingLeft: 42
+    // 42 matches the search-icon paddingLeft.
     expect(s.paddingLeft).toBe(42);
   });
 

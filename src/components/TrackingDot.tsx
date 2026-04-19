@@ -16,8 +16,8 @@ type Props = {
  * extra Babel/Jest setup. If a future component needs reanimated for
  * gesture-driven motion, we can migrate this then.
  *
- * Reduce-Motion: per design-system README, motion is replaced with a static
- * dot when AccessibilityInfo reports reduce-motion enabled.
+ * Reduce-Motion: motion is replaced with a static dot when AccessibilityInfo
+ * reports reduce-motion enabled.
  */
 export function TrackingDot({ size = 8, testID }: Props) {
   const t = useTheme();

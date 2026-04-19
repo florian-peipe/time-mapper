@@ -11,20 +11,13 @@ type Props = {
 };
 
 /**
- * Dark "Time Mapper Pro" upsell banner shown at the top of the Settings screen
- * when the user is not Pro. Source: Screens.jsx SettingsScreen lines 293-305.
- *
- * Visual recipe:
- * - background `color.fg` (dark tile inverted from the surrounding `color.bg`)
- * - text `color.bg` (so it stays readable on the dark tile)
- * - `Rings size={220} opacity={0.1}` decoration absolutely positioned top-right,
- *   slightly off-canvas so only ~3/4 of the rings show (matches the design's
- *   `top: -50, right: -50` offset).
+ * Dark "Time Mapper Pro" upsell banner shown at the top of Settings when
+ * the user is not Pro. Visual recipe:
+ * - background `color.fg` (dark tile inverted from `color.bg`)
+ * - text `color.bg` so it reads on the dark tile
+ * - `Rings size={220} opacity={0.1}` absolutely positioned top-right,
+ *   slightly off-canvas so only ~3/4 of the rings show
  * - Accent uppercase eyebrow + headline + accent pill button.
- *
- * The radii / numeric offsets that don't map cleanly to a token are pinned
- * inline with a `// design-source:` comment, mirroring the convention in
- * other Settings primitives (Section, ListRow, RunningTimerCard, etc.).
  */
 export function ProUpsellCard({ onPress, testID }: Props) {
   const t = useTheme();
@@ -33,20 +26,16 @@ export function ProUpsellCard({ onPress, testID }: Props) {
     <View
       testID={testID}
       style={{
-        // 16px horizontal margin matches Section's `margin: '0 16px'` in the
-        // design source, keeping the dark card aligned with the section
-        // cards directly below it.
-        // design-source: margin '0 16px 20px'
+        // 16px horizontal margin aligns with the Section cards below.
         marginHorizontal: t.space[4],
         marginBottom: t.space[5],
-        padding: t.space[4] + 2, // design-source: padding 18
+        padding: t.space[4] + 2, // 18 — between space[4] (16) and space[5] (20)
         backgroundColor: t.color("color.fg"),
-        borderRadius: t.radius.md + 4, // design-source: borderRadius 16
+        borderRadius: t.radius.md + 4, // 16 — larger than md to signal premium tile
         position: "relative",
         overflow: "hidden",
-        // v0.3 polish: shadow-md equivalent (matches Card's `elevated` variant)
-        // so the dark tile lifts off the Settings background and reads as the
-        // premium CTA it is. Values are the same as shadowMd in Card.tsx.
+        // Shadow-md — same as Card's `elevated` variant so the dark tile
+        // lifts off the Settings background.
         shadowColor: t.color("color.shadow"),
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.08,
@@ -61,7 +50,6 @@ export function ProUpsellCard({ onPress, testID }: Props) {
         pointerEvents="none"
         style={{
           position: "absolute",
-          // design-source: top: -50, right: -50
           top: -50,
           right: -50,
         }}
@@ -72,7 +60,7 @@ export function ProUpsellCard({ onPress, testID }: Props) {
       <View style={{ position: "relative" }}>
         <Text
           style={{
-            fontSize: t.type.size.xs + 1, // design-source: fontSize 12
+            fontSize: t.type.size.xs + 1, // 12 — eyebrow, tighter than body
             fontWeight: t.type.weight.bold,
             color: t.color("color.accent"),
             fontFamily: t.type.family.sans,
@@ -83,7 +71,7 @@ export function ProUpsellCard({ onPress, testID }: Props) {
         </Text>
         <Text
           style={{
-            fontSize: t.type.size.m + 1, // design-source: fontSize 18
+            fontSize: t.type.size.m + 1, // 18 — headline above the CTA pill
             fontWeight: t.type.weight.semibold,
             color: t.color("color.bg"),
             fontFamily: t.type.family.sans,
@@ -98,7 +86,6 @@ export function ProUpsellCard({ onPress, testID }: Props) {
           accessibilityLabel={i18n.t("proUpsell.cta")}
           testID={testID ? `${testID}-cta` : undefined}
           style={({ pressed }) => ({
-            // design-source: padding '10px 18px', borderRadius 9999
             marginTop: t.space[3] + 2,
             paddingVertical: t.space[2] + 2,
             paddingHorizontal: t.space[4] + 2,
@@ -111,7 +98,7 @@ export function ProUpsellCard({ onPress, testID }: Props) {
           <Text
             style={{
               color: t.color("color.accent.contrast"),
-              fontSize: t.type.size.s + 1, // design-source: fontSize 14
+              fontSize: t.type.size.s + 1, // 14 — button label
               fontWeight: t.type.weight.semibold,
               fontFamily: t.type.family.sans,
             }}

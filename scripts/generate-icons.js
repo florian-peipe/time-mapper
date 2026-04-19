@@ -4,9 +4,9 @@
 //   - assets/splash-icon.png       (1024×1024, same composition)
 //   - assets/favicon.png           (48×48, web)
 //
-// Brand: solid accent #FF6A3D background + white concentric rings centered.
-// Rings geometry follows `docs/design-system/project/assets/patterns/rings.svg`
-// (three rings at 30/50/70% of the canvas radius, stroke ≈ 4% of canvas).
+// Brand: solid accent #FF6A3D background + white concentric rings
+// centered. Three rings at 30/50/70% of the canvas radius, stroke ≈ 4%
+// of canvas.
 //
 // Only depends on `pngjs` which is already a transitive dep. Run:
 //   node scripts/generate-icons.js

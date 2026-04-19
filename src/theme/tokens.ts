@@ -59,7 +59,8 @@ const darkColors = {
 
 export type ColorTokenKey = keyof typeof lightColors;
 
-// Place colors users can choose from (see design-system Components.jsx PLACE_COLORS).
+// Place colors users can choose from. 8 swatches, each WCAG AA vs both
+// surface colors (light + dark).
 export const PLACE_COLORS = [
   "#FF6A3D",
   "#2E9A5E",
@@ -75,7 +76,7 @@ export const tokens = {
   light: lightColors,
   dark: darkColors,
   type: {
-    // Scale per design-system README: 11/13/15/17/20/24/32. No 10px text ever.
+    // Type scale: 11/13/15/17/20/24/32. Never render text below 11px.
     size: { xs: 11, s: 13, body: 15, m: 17, l: 20, xl: 24, display: 32 },
     weight: { regular: "400", medium: "500", semibold: "600", bold: "700" },
     lineHeight: { tight: 1.15, snug: 1.3, body: 1.5 },

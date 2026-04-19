@@ -26,9 +26,9 @@ use the 6.7" set for other sizes and Apple will auto-scale.
 
 Choose 6 screens that tell the story of Time Mapper in order:
 
-1. **Timeline with entries** — shows automatic tracking working. Use
-   the 3-day seed in `docs/design-system/project/ui_kits/mobile/Screens.jsx`
-   ("Home", "Gym", "Office") to render a convincing day.
+1. **Timeline with entries** — shows automatic tracking working. Add
+   three places ("Home", "Gym", "Office") and tap
+   `Settings → Dev → Simulate visit` a few times to seed a convincing day.
 2. **Running timer card** — a place is currently being tracked, big
    Rings visualization, place name prominent. Use `Settings → Dev →
 Simulate visit` to produce an ongoing entry, then screenshot.

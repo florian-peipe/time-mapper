@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import Slider from "@react-native-community/slider";
 import { useTheme } from "@/theme/useTheme";
@@ -11,12 +11,7 @@ import { useSheetStore, type AddPlaceSource, type PendingPlaceForm } from "@/sta
 import { MAX_PLACES } from "@/features/tracking/geofenceService";
 import { useKvRepo } from "@/features/onboarding/useOnboardingGate";
 import { i18n } from "@/lib/i18n";
-import {
-  autocomplete,
-  geocodePlace,
-  createSessionToken,
-  type PlaceSuggestion,
-} from "@/lib/geocode";
+import { autocomplete, geocodePlace, type PlaceSuggestion } from "@/lib/geocode";
 import { readGlobalBuffers } from "@/screens/Settings/BuffersSheet";
 import { MapPreview } from "./MapPreview";
 
@@ -49,12 +44,7 @@ type Selection = {
   longitude: number;
 };
 
-/**
- * The 9 icons the design offers for place customisation. Source: Screens.jsx
- * AddPlaceSheet `icons` array. The array originally used shorthand names
- * like `bag` / `book` — here we use the canonical IconName keys instead of
- * inventing new icons.
- */
+/** The 9 icons users can assign to a place. */
 const ICON_CHOICES: readonly IconName[] = [
   "home",
   "briefcase",
@@ -82,7 +72,7 @@ const EXIT_BUFFER_MIN_MIN = 1;
 const EXIT_BUFFER_MAX_MIN = 10;
 
 /**
- * AddPlaceSheet — two-phase flow for creating (or, in v0.3, editing) a place.
+ * AddPlaceSheet — two-phase flow for creating or editing a place.
  *
  * Phase 1: Search input (leading icon) + list of suggestion rows.
  * Suggestions come from `@/lib/geocode.autocomplete`, which calls Photon
@@ -171,12 +161,6 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   const [entryBufferMin, setEntryBufferMin] = useState(initialEntryBufferMin);
   const [exitBufferMin, setExitBufferMin] = useState(initialExitBufferMin);
 
-  // Opaque session token — historically used for Google Places per-session
-  // billing. Photon doesn't need one, but the `geocode` module still
-  // accepts it for API stability, so we mint one per "open search →
-  // select" interaction and refresh it when a selection completes.
-  const sessionTokenRef = useRef<string>(createSessionToken());
-
   // When the sheet is reused for a different placeId (edit vs. new vs.
   // another edit), re-hydrate the local state so stale values from the
   // previous instance don't leak through. Also resets when the sheet is
@@ -227,7 +211,6 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setIconIdx(0);
       setSuggestions([]);
       setApiError(null);
-      sessionTokenRef.current = createSessionToken();
       setEntryBufferMin(initialEntryBufferMin);
       setExitBufferMin(initialExitBufferMin);
     }
@@ -256,7 +239,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setSearching(true);
       void (async () => {
         try {
-          const results = await autocomplete(query, sessionTokenRef.current, controller.signal);
+          const results = await autocomplete(query, controller.signal);
           if (!cancelled) {
             setSuggestions(results);
             setApiError(null);
@@ -289,15 +272,13 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
     // "Sport", …); the picked address is shown separately in the preview card.
     setResolvingPick(true);
     try {
-      const details = await geocodePlace(s.placeId, sessionTokenRef.current);
+      const details = await geocodePlace(s.placeId);
       setSelected({
         description: details.formattedAddress || s.description,
         placeId: s.placeId,
         latitude: details.lat,
         longitude: details.lng,
       });
-      // Mint a fresh token — this selection ended the billing session.
-      sessionTokenRef.current = createSessionToken();
       setApiError(null);
     } catch (err) {
       // If geocoding fails, still let the user proceed with description
@@ -638,9 +619,8 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
           {/*
             Map preview — only rendered when we have real coordinates.
             Demo-mode picks (offline fallback) + freshly-resolved Photon
-            picks both carry lat/lng; but a legacy edited place from pre-v0.6
-            might have lat=lng=0 and we'd rather hide the preview than draw a
-            pin in the middle of the Atlantic.
+            picks both carry lat/lng. Hide the preview when either is 0
+            rather than drawing a pin in the middle of the Atlantic.
           */}
           {selected.latitude !== 0 || selected.longitude !== 0 ? (
             <MapPreview
@@ -798,8 +778,8 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
 }
 
 /**
- * A 36×36 circular color chip. Selected state draws two nested rings to
- * mimic the design-system `0 0 0 3px bg, 0 0 0 5px fg` double-shadow trick.
+ * A 36×36 circular color chip. Selected state draws two nested rings
+ * (3px bg + 2px fg) to signal the current choice.
  */
 function ColorSwatch({
   color,

@@ -2,14 +2,13 @@
  * Tests for the production `usePro` hook.
  *
  * The hook delegates to two distinct backends:
- *   1. `useProMock` when the RevenueCat wrapper reports `isMockMode()` —
- *      same `{isPro, grant, revoke}` shape we shipped in Plan 2.
+ *   1. `useProMock` when the RevenueCat wrapper reports `isMockMode()`.
  *   2. The real RevenueCat wrapper otherwise: configures the SDK on mount,
  *      subscribes to customer-info updates, derives `isPro` from
  *      `entitlements.active.pro`, and exposes a `purchase(pkg)` method.
  *
  * We mock `./revenuecat` for both arms and use the existing `useProMock`
- * unmodified for the dev-fallback arm.
+ * unmodified for the mock-mode arm.
  */
 import React from "react";
 import { Text, View } from "react-native";

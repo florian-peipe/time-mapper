@@ -1,9 +1,9 @@
 import { create } from "zustand";
 
 /**
- * Mock Pro-entitlement store for Plan 2. Plan 4 replaces the implementation of
- * `useProMock` with a RevenueCat-backed version that exposes the same
- * `{ isPro, grant, revoke }` shape so call sites remain unchanged.
+ * In-memory Pro-entitlement store used when RevenueCat is in mock mode
+ * (no API keys). `usePro()` delegates to this so the rest of the app
+ * sees the same `{ isPro, grant, revoke }` shape regardless of mode.
  */
 type ProState = {
   isPro: boolean;

@@ -285,7 +285,7 @@ describe("SettingsScreen", () => {
     render(wrap(<SettingsScreen />));
     expect(screen.getByTestId("settings-section-dev")).toBeTruthy();
     expect(screen.getByText("Toggle Pro (mock)")).toBeTruthy();
-    // v0.3: auto-seed is gone, so the Re-seed and Clear rows were removed.
+    // Auto-seed is gone, so the Re-seed and Clear rows were removed.
     expect(screen.queryByText("Re-seed demo data")).toBeNull();
     expect(screen.queryByText("Clear all data")).toBeNull();
   });

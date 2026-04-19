@@ -128,7 +128,7 @@ The on-device navigation sequence matches iOS 1-6.
 any vector tool (Figma, Sketch) to compose:
 
 - Brand accent `#FF6A3D` background
-- Centered white concentric Rings (`docs/design-system/project/assets/patterns/rings.svg`)
+- Centered white concentric Rings (three rings at 30/50/70% canvas radius, stroke ≈ 4%)
 - Wordmark "Time Mapper" in Inter Bold, white, right-aligned
 
 Drop the PNG into `store/screenshots/`.

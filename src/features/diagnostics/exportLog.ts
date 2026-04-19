@@ -3,9 +3,7 @@
 // a JSON file, then invokes the platform share sheet.
 //
 // This is a bug-report aid and a production-visible feature (surfaced under
-// Settings → Data → Export diagnostic log). `expo-file-system` and
-// `expo-sharing` are managed-workflow standard — we import them directly
-// instead of the try/require dance we used pre-v0.6.1.
+// Settings → Data → Export diagnostic log).
 
 import { Platform } from "react-native";
 import Constants from "expo-constants";
