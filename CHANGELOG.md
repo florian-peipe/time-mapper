@@ -4,6 +4,120 @@ All notable changes to Time Mapper are documented here. Release tags are of
 the form `vMAJOR.MINOR-shortname` where the shortname traces back to the
 plan that shipped the work (`foundation`, `core-ui`, …).
 
+## v1.0.0
+
+Post-review release. Grew out of a 46-finding project-wide audit and an
+iteration pass that closed every actionable item. Ship-ready.
+
+### Data integrity + schema
+
+- **Migration `0001_cleanup`** — drops the dead `categories` table and
+  the orphan `places.category_id` column. Adds a partial unique index
+  on `entries (place_id) WHERE ended_at IS NULL AND deleted_at IS NULL`
+  so the state machine's one-open-entry-per-place invariant is enforced
+  at the DB layer. Perf indexes on `ongoing()`, `getLatestUnresolved()`,
+  and `listBetween()` hot paths.
+- **Migration `0002_cascade`** — recreates `entries` +
+  `pending_transitions` with `ON DELETE CASCADE` on the `place_id` FK.
+  Hard-delete of a place (retention sweep, erase-all-data) now cascades;
+  soft-delete (the undo-snackbar path) is unaffected because it's an
+  `UPDATE`, not a `DELETE`.
+- **`PRAGMA foreign_keys = ON`** in both production (`db/client.ts`)
+  and test (`db/testClient.ts`) — was off by default, so prior FK
+  declarations were decorative. Tests now run the full migration chain.
+- **`KvRepo.set()`** is a single `INSERT … ON CONFLICT DO UPDATE` —
+  atomic upsert replaces the get-then-write race.
+- **`applyEffects` runs inside `db.transaction()`** — the full
+  state-machine read+write sequence per bg-task wake is atomic. A
+  mid-batch crash rolls back cleanly; `loadState` on the next wake
+  sees a pre-batch snapshot. Notifications fire after commit.
+
+### Tracking + trust
+
+- **Foreground-reconcile watcher** — `startForegroundReconcileWatcher`
+  in `bootstrap.ts` hooks `AppState` → re-registers geofences and runs
+  opportunistic-resolve on every active transition. Catches permission
+  downgrades that happened while backgrounded.
+- **Tracking-health indicator** — `trackingHealth.ts` classifies status
+  from permission state + `KV_LAST_BG_FIRE` staleness. The bg task
+  writes a timestamp on every wake. `TrackingBanner` surfaces a
+  warning when granted-but-stale (battery-optimiser likely killed us).
+- **Daily-digest notification** — opt-in reminder at a user-chosen hour
+  via `expo-notifications` daily trigger. Toggle + hour stepper in
+  `NotificationsSheet`.
+
+### Forms + UX
+
+- **Geocode Save guard** — `AddPlaceSheet` refuses to save a new place
+  with unresolved `lat=0, lng=0` coordinates.
+- **Save-while-geocode guard** — primary CTA shows loading + disabled
+  while `geocodePlace` is in flight.
+- **Autocomplete spinner** — visible "Searching…" indicator while
+  debouncing/fetching suggestions; wired with `accessibilityLiveRegion`.
+- **Snackbar countdown bar** — thin accent-coloured progress bar that
+  depletes over the TTL; only on snacks that carry an action.
+- **Undo on place delete** — `PlacesRepo.restore()` + snackbar symmetric
+  with entry-delete.
+- **Overlap detection** — `EntriesRepo.findOverlapping` + Alert with
+  Replace / Keep both / Cancel on manual entry save.
+- **Paywall 2nd-place breadcrumb** — "Paused" banner when `source ===
+  "2nd-place"` so the user knows a form is preserved underneath.
+- **History paywall rate-limit** — repeated taps within 2.5 s no-op.
+
+### Data workflows
+
+- **Real CSV export** — `entriesToCsv` + `exportEntriesCsv` via
+  `expo-sharing`; RFC-4180 escaped note column; Pro-gated row in Settings.
+- **JSON backup** — `buildBackupPayload` + `exportBackupJson` with a
+  djb2 tamper hash (labelled `sha-256` for forward compat).
+- **Reset all data** — two-step destructive Alert → clears every domain
+  table, unregisters geofences, routes to onboarding.
+- **Show setup again** — re-enters `/(onboarding)/welcome` without
+  resetting state.
+- **GDPR crash-report toggle** — `settings.telemetry_enabled` KV + toggle
+  row; `initCrashReporting` reads the flag at boot. Default off.
+
+### Design + i18n + a11y
+
+- **Contrast test** — `src/theme/__tests__/contrast.test.ts` enforces
+  WCAG AA on every `fg × bg × surface` pair across light + dark. Fixed
+  three failing tokens: darkened both accents to hit AA-large on white
+  button labels; brightened dark-mode danger + warning to hit AA-body
+  on the dark surface.
+- **Android notification channel name localized** — was hardcoded
+  English "Tracking".
+- **`setNotificationCategoryAsync` iOS-only** — Android was throwing
+  `InvalidArgumentException` on boot for empty actions array.
+- **"now" label localized** — `entryRow.ongoing` key used by both
+  `EntryRow` and `Ledger`.
+- **Weekday names localized** — seven short + seven long keys for
+  `WeekBarChart` labels and a11y announcements.
+- **Ledger hardcoded strings localized** — title, scroll hint, Add row
+  label.
+- **WeekBarChart bar a11y** — each day column announces "{day}, {total}
+  tracked — {place}: {h}h {m}m, …" for screen readers.
+- **RunningTimerCard live region** — `accessibilityLiveRegion="polite"`
+  + composite label.
+- **EntryEditSheet input labels** — FieldRow Input receives
+  `accessibilityLabel` from the visible row label.
+- **MapPreview fallback tone** — info → warning, reads as "broken" not
+  "informational".
+- **Ledger Dynamic Type** — column widths + cell paddings + gutter scale
+  with `PixelRatio.getFontScale()`, clamped at 1.5×.
+- **Lifetime per-place totals** — Settings Places rows show
+  `${address} · ${Xh Ym}`.
+
+### Tooling
+
+- `app.json` + `package.json` version → `1.0.0` (stores reject SemVer
+  pre-release suffixes).
+- Android `compileSdkVersion` bumped to 35 (required by `androidx.core
+  1.16.0` pulled by `react-native-purchases`).
+- **615 → 629 passing tests** across 84 suites; typecheck clean;
+  zero lint errors.
+
+---
+
 ## v1.0.0-beta
 
 Final beta: everything in the MVP scope is built, tested, and wired.
