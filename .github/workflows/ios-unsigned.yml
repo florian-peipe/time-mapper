@@ -73,23 +73,6 @@ jobs:
         with:
           xcode-version: "16.1"
 
-      # Since Xcode 16, Apple ships the iOS platform SDK as a separately
-      # downloadable component (~3 GB). The GitHub Actions macOS runner
-      # images don't always preinstall it, so `xcodebuild -destination
-      # "generic/platform=iOS"` fails with "iOS 18.1 is not installed".
-      # This step is idempotent — it's a no-op when the platform is
-      # already present.
-      - name: Ensure iOS platform is installed
-        run: |
-          set -euo pipefail
-          echo "=== SDKs before download ==="
-          xcodebuild -showsdks || true
-          echo "=== Downloading iOS platform (idempotent) ==="
-          sudo xcodebuild -runFirstLaunch || true
-          xcodebuild -downloadPlatform iOS
-          echo "=== SDKs after download ==="
-          xcodebuild -showsdks
-
       - name: Install JS deps
         run: npm ci
 
@@ -129,22 +112,25 @@ jobs:
           echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
           echo "Resolved: workspace=$WORKSPACE scheme=$SCHEME"
 
-      - name: Build unsigned .app
+      # Archive (not build) because:
+      #   1. Archive infers the destination from -sdk, so we don't need a
+      #      `-destination generic/platform=iOS` flag — and that flag is
+      #      exactly what tripped up the first attempt (Xcode rejected
+      #      the destination even though the iOS 18.1 SDK is present).
+      #   2. Archive drops the .app at a predictable path inside the
+      #      .xcarchive bundle, ready to zip into a Payload/.
+      - name: Archive unsigned .app
         env:
           SCHEME: ${{ steps.ios.outputs.scheme }}
           WORKSPACE: ${{ steps.ios.outputs.workspace }}
         run: |
           set -euo pipefail
-          # GitHub Actions runs bash with pipefail on, so any non-zero exit
-          # from xcodebuild fails the step through the xcpretty pipe.
-          xcodebuild \
+          xcodebuild archive \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -configuration "$CONFIGURATION" \
             -sdk iphoneos \
-            -destination "generic/platform=iOS" \
-            -derivedDataPath build \
-            clean build \
+            -archivePath build/App.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
@@ -158,10 +144,10 @@ jobs:
           SCHEME: ${{ steps.ios.outputs.scheme }}
         run: |
           set -euo pipefail
-          APP_PATH="build/Build/Products/${CONFIGURATION}-iphoneos/${SCHEME}.app"
+          APP_PATH="build/App.xcarchive/Products/Applications/${SCHEME}.app"
           if [ ! -d "$APP_PATH" ]; then
             echo "::error::Expected .app not found at $APP_PATH"
-            ls -la "build/Build/Products/" || true
+            find build -maxdepth 5 -type d 2>/dev/null | head -40 || true
             exit 1
           fi
           mkdir -p Payload
