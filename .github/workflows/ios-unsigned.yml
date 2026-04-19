@@ -125,19 +125,42 @@ jobs:
           WORKSPACE: ${{ steps.ios.outputs.workspace }}
         run: |
           set -euo pipefail
+          mkdir -p build
+          # Tee the raw log so xcpretty can pretty-print the summary in the
+          # Actions UI while the full output (including any ibtool/actool
+          # crashes that xcpretty drops) is preserved for the artifact.
           xcodebuild archive \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -configuration "$CONFIGURATION" \
             -sdk iphoneos \
             -archivePath build/App.xcarchive \
+            -resultBundlePath build/xcresult \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             EXPANDED_CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
             ONLY_ACTIVE_ARCH=NO \
-            | xcpretty
+            2>&1 | tee build/xcodebuild.log | xcpretty
+
+      - name: Show xcodebuild log tail on failure
+        if: failure()
+        run: |
+          echo "::group::xcodebuild.log — last 400 lines"
+          tail -n 400 build/xcodebuild.log || true
+          echo "::endgroup::"
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-diagnostics
+          path: |
+            build/xcodebuild.log
+            build/xcresult
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Package .app into .ipa
         env:
