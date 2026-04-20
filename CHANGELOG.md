@@ -4,6 +4,132 @@ All notable changes to Time Mapper are documented here. Release tags are of
 the form `vMAJOR.MINOR-shortname` where the shortname traces back to the
 plan that shipped the work (`foundation`, `core-ui`, …).
 
+## v1.1.0
+
+Feedback-driven polish pass on top of v1.0.0. Closed ~20 small-to-
+medium items across navigation, notifications, Stats, Settings, and
+the developer experience.
+
+### Places — dedicated tab
+
+- New **Places** tab between Timeline and Stats. Default view is a
+  `react-native-maps` canvas with every saved place as a colored pin +
+  radius circle; toggle in the corner flips to a list view for bulk
+  edit. Tap any pin or row to open the AddPlaceSheet in edit mode.
+  Bottom-right FAB opens a new-place form.
+- Android without a Google Maps SDK key degrades to list-only mode
+  instead of showing a broken map shell. iOS uses Apple Maps natively.
+- Removed the "Places" section from Settings — the tab replaces it.
+  Unused helpers (`formatLifetimeTotal`, `KNOWN_PLACE_ICONS`,
+  `toIconName`) pruned.
+
+### Goals per place
+
+- New migration `0003_goals` adds `daily_goal_minutes` + `weekly_goal_
+  minutes` columns to `places` (both nullable; null = no goal).
+- AddPlaceSheet grows a "Goals" section below the buffer sliders with
+  toggle-guarded hour sliders (1–16h daily, 1–80h weekly). Defaults
+  pre-fill when enabled, persist as null when disabled.
+- Stats per-place bars now fill relative to the configured goal when
+  one is set. Bars shift to the success colour when you're over
+  target; a secondary readout shows `+1h 20m over` / `2h to go` /
+  `at goal`.
+- New `maybeNotifyGoalReached` in the notifier fires a "Daily goal
+  reached" or "Weekly goal reached" notification the first time a
+  period's total crosses the target. Dedup via
+  `notifier.goal.{day|week}.{placeId}.{YYYY-MM-DD}` KV keys so
+  stepping in and out doesn't spam.
+
+### Timeline + Stats — Day/Week/Month/Year cycler
+
+- `DayNavHeader` was previously day-only. Now it carries a mode state:
+  tap the headline to cycle Day → Week → Month → Year → Day, long-
+  press to reverse. Chevrons step `offset` within the current mode
+  (prev/next day, week, month, year).
+- Free-tier history gate translates the current mode's offset to
+  days (`offset * periodDays`) before comparing to `FREE_HISTORY_DAYS`,
+  so week -3 (21 days) and month -1 (30 days) both route to the Pro
+  paywall.
+- New `useEntriesRange(startS, endS)` hook + `rangeForMode(mode,
+  offset)` pure helper. Shared by Timeline and Stats so both surfaces
+  compute identical windows.
+- Stats page redesigned: dropped the Excel-letter Ledger (A/B/C
+  columns, `#` gutter, mono grid, cell borders). Replaced with a
+  summary card (big total + per-place horizontal bars) and a lean
+  EntryRow list matching the Timeline. "Add entry" pill at the top-
+  right of the Entries section.
+- Timeline "Inside {place}" / "~40m from {place}" banner surfaces
+  live positional awareness. When nearby, the quick-add FAB becomes
+  a wide "Start tracking at {place}" primary button; when far, it
+  stays as the small manual-entry icon fallback.
+
+### Notifications
+
+- **Root-cause fix**: `Notifications.setNotificationHandler` was never
+  registered. iOS 14+ silently drops foreground banners and suppresses
+  background ones without it. Added at module scope in
+  `app/_layout.tsx`.
+- Settings Notifications row now subscribes to the OS permission
+  state. When denied, the row shifts to warning colors and tapping it
+  routes to iOS Settings instead of the (useless) quiet-hours sheet.
+
+### Settings audit
+
+- Location + Default-buffers rows now reflect live state (OS
+  permission, persisted KV values). Previously both were hardcoded
+  strings that drifted from reality on user interaction.
+- "History retention" row dropped. It advertised a 14-day free cap
+  that nothing in the app enforced; re-add when real retention
+  trimming lands.
+
+### Data layer — shared refresh
+
+- New `src/state/dataVersionStore.ts` (Zustand) with `placesVersion`
+  + `entriesVersion` counters. `usePlaces`, `useEntries`,
+  `useOngoingEntry`, `useWeekStats`, `useEntriesRange` all subscribe
+  so a mutation on one screen propagates to every other screen
+  without a remount. Closes the "changes require app restart"
+  regression.
+- `bootstrapTracking` and `startForegroundReconcileWatcher` bump
+  both counters after reconcile, so entries written by the bg task
+  while backgrounded surface on foreground activation.
+
+### Defaults
+
+- Place radius 100m → **50m**, entry buffer 5min → **2min**, exit
+  buffer 3min → **1min**. Makes first-run testing feel responsive.
+
+### Privacy + legal
+
+- Privacy policy (en + de + on-device `documents.ts`) updated to
+  disclose goals + goal-reached notifications + user-initiated
+  exports (CSV / JSON backup / diagnostic log). All three stay
+  on-device; this is just forestalling reviewer questions.
+
+### CI + dev experience
+
+- `.github/workflows/ios-unsigned.yml` builds now land in **~8 min**
+  (down from ~12). Added `COMPILER_INDEX_STORE_ENABLE=NO`, switched
+  `pod install --repo-update` to the fast path with fallback, moved
+  diagnostic-upload to `if: failure()`, and cached Xcode DerivedData.
+- `scripts/patch-ipa-for-sideloader.sh` — bumps every Mach-O's
+  `__LINKEDIT` vmsize before Sideloader signs, working around its
+  known iOS 17+ signing bug. Lets a free-Apple-ID sideload run on
+  current iOS without the manual patch the README used to document.
+
+### Quality gates
+
+- **630 tests passing** across 83 suites (up from 615 at v1.0.0).
+  New coverage for `rangeForMode`, `useClosestPlace`,
+  `useEntriesRange`, `dispatchSyntheticEnter`,
+  `maybeNotifyGoalReached`, `PlacesScreen`. Shared `makePlace`
+  fixture deduplicates three test files.
+- Typecheck clean. Lint clean (0 warnings). No `as any` in
+  production source.
+- Consolidated time formatters into `src/lib/time.ts` (formatClock,
+  formatElapsed, padNumber). New `<Toggle>` component replaces three
+  inline toggle-pill copies.
+
 ## v1.0.0
 
 Post-review release. Grew out of a 46-finding project-wide audit and an

@@ -18,6 +18,11 @@ coverage/
 # locally and never commits their real address/phone/email.
 src/screens/Legal/contact.local.ts
 
+# Android submission credentials — the Play Console service account JSON
+# never belongs in git. Referenced from eas.json; each dev drops their
+# own copy at the repo root.
+play-service-account.json
+
 # EAS
 .easignore
 

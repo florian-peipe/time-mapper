@@ -7,47 +7,75 @@ data lives on-device; nothing leaves your phone.
 Built with Expo (Router) + React Native + SQLite (via Drizzle) +
 RevenueCat for billing.
 
-## What's in v1.0.0
+## What's in v1.1
 
-Everything the MVP scope asks for is shipped and tested:
+Everything the MVP scope asks for, plus the polish that landed after
+v1.0.0 was tagged.
 
 - First-run onboarding (welcome → permissions → add your first place).
-- Places — add/edit/delete with name, address, color, icon, radius, and
-  per-place entry + exit buffers.
+- Dedicated **Places tab** with a map showing every saved place as a
+  colored pin + radius circle. Toggle to a list view for bulk edit.
+  Add / edit with name, address, color, icon, radius, and per-place
+  entry + exit buffers.
+- Per-place **Goals**: optional daily and weekly time targets. Stats
+  fills each place bar relative to the goal; a "Goal reached"
+  notification fires the first time a period's total crosses the
+  target, with an over/under delta in the body.
 - Address autocomplete via Photon (Komoot's OSM-backed service, hosted
-  in Germany — no key, no sign-up, no US data transfer). Falls back to a
-  small hardcoded demo list if Photon is unreachable.
+  in Germany — no key, no sign-up, no US data transfer). Falls back to
+  a small hardcoded demo list if Photon is unreachable.
 - Auto-tracking via OS geofencing. A state machine sits behind a
   background task; the UI reconciles OS state on every cold boot so
-  crashes never leak into double-counting.
-- Timeline (today + history within retention). Entries show place,
-  start, end, duration, and source (auto / manual).
+  crashes never leak into double-counting. Adding a place at your
+  current location triggers a synthetic enter so the timer opens
+  without waiting for an OS boundary crossing.
+- Timeline (today by default) with a **Day / Week / Month / Year**
+  header: tap the period label to cycle, long-press to reverse.
+  Chevrons step within the current mode. "Inside {place}" /
+  "~40m from {place}" banner gives live positional feedback. Quick-
+  add FAB becomes "Start tracking at {place}" when you're inside or
+  near a saved region.
 - Manual entry + edit + delete (with a 5-second Undo snackbar that
   restores the row on tap).
-- Weekly summary — bar chart + total for the current / prior week,
-  with a Pro-gated multi-week navigator.
-- Local notifications on entry open / close (opt-in via OS settings).
+- Stats page with the same period cycler. Big total, per-place
+  horizontal bars, a week bar chart in Week mode, and a lean entry
+  list (no more Excel-style Ledger). Per-place bars colour-shift and
+  display an overtime delta when a goal is set.
+- Local notifications on entry open / close + "goal reached" for
+  target crossings. Permission-denied detection routes the user from
+  the Settings row directly into iOS notification settings.
 - Pro paywall with 4 trigger sources: 2nd-place, history depth,
   export, and the Settings upsell card.
-- Full Settings surface: OS permissions deep-link, default buffers,
-  notifications quiet-hours, theme, language, legal pages, support,
-  Pro management, backup + diagnostic export.
+- Settings surface: live-state Location + Notifications rows (show
+  the actual OS permission and route to Settings when denied),
+  default buffers, notifications quiet-hours + daily digest, theme,
+  language, legal pages, support, Pro management, CSV export, JSON
+  backup, diagnostic export, GDPR telemetry consent, reset-all-data.
+- Data layer: migrations 0001–0003, foreign keys enforced, atomic
+  state-machine writes, cross-screen refresh via a shared data-version
+  store so a place edit on one tab updates every other tab live (no
+  restart required).
 - Privacy: location data never leaves the device. Sentry is opt-in
-  and location-field-stripped when enabled.
-- i18n: every user-facing string in en + de.
-- Accessibility: semantic labels, 44pt touch targets, WCAG AA contrast.
+  and location-field-stripped when enabled. User-initiated exports
+  go through the OS share sheet; we receive nothing.
+- i18n: every user-facing string in en + de (630 tests + an
+  i18n-coverage test enforce parity).
+- Accessibility: semantic labels, 44pt touch targets, WCAG AA
+  contrast.
 
 ## What's done (release history)
 
-| Area                                                                | Status                |
-| ------------------------------------------------------------------- | --------------------- |
-| Foundation — tokens, primitives, theme, i18n, DB                    | Shipped (v0.1)        |
-| Core UI — Timeline, Stats, Settings, Add Place, Paywall, EntryEdit  | Shipped (v0.2)        |
-| UX pivot — onboarding polish, pending-transitions, map preview      | Shipped (v0.3)        |
-| Location engine — geofences, state machine, bootstrap, reconcile    | Shipped (v0.4)        |
-| Billing — RevenueCat + mock mode + paywall wired                    | Shipped (v0.5)        |
-| Release polish — a11y, DE audit, Sentry, legal, store metadata, EAS | Shipped (v0.6)        |
-| Pre-ship fixes — Impressum guard, KV persistence, sheets, snackbar  | Shipped (v1.0.0-beta) |
+| Area                                                                                 | Status                |
+| ------------------------------------------------------------------------------------ | --------------------- |
+| Foundation — tokens, primitives, theme, i18n, DB                                     | Shipped (v0.1)        |
+| Core UI — Timeline, Stats, Settings, Add Place, Paywall, EntryEdit                   | Shipped (v0.2)        |
+| UX pivot — onboarding polish, pending-transitions, map preview                       | Shipped (v0.3)        |
+| Location engine — geofences, state machine, bootstrap, reconcile                     | Shipped (v0.4)        |
+| Billing — RevenueCat + mock mode + paywall wired                                     | Shipped (v0.5)        |
+| Release polish — a11y, DE audit, Sentry, legal, store metadata, EAS                  | Shipped (v0.6)        |
+| Pre-ship fixes — Impressum guard, KV persistence, sheets, snackbar                   | Shipped (v1.0.0-beta) |
+| v1.0.0 — schema migrations, FK cascades, atomic state machine, real CSV, backup, reset | Shipped (v1.0.0)      |
+| v1.1 — Places tab, Goals, Day/Week/Month/Year nav, notification handler + permission recovery, shared-data refresh | Shipped (v1.1.0)      |
 
 ## What the user provides (before ship)
 
@@ -116,7 +144,7 @@ exact strings to paste into App Store Connect and Play Console.
 
 | Environment                         | Works?  | Notes                                                                 |
 | ----------------------------------- | ------- | --------------------------------------------------------------------- |
-| `npm test` (Jest)                   | Yes     | 615 tests — repos, screens, flows, a11y, snapshots                    |
+| `npm test` (Jest)                   | Yes     | 630 tests — repos, screens, hooks, flows, a11y, snapshots             |
 | `npm run typecheck`                 | Yes     | Strict TS — no `any` added                                            |
 | `npm run lint`                      | Yes     | Zero-warning baseline                                                 |
 | `npm run build:check`               | Yes     | `expo export --platform ios`                                          |
