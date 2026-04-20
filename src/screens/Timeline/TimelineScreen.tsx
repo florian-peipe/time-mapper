@@ -9,7 +9,7 @@ import { useOngoingEntry } from "@/features/entries/useOngoingEntry";
 import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClose";
 import { useClosestPlace } from "@/features/places/useClosestPlace";
 import { usePlaces } from "@/features/places/usePlaces";
-import { rangeForMode } from "@/screens/Stats/range";
+import { rangeForMode } from "@/lib/range";
 import { usePro } from "@/features/billing/usePro";
 import { useSheetStore } from "@/state/sheetStore";
 import type { Entry, Place } from "@/db/schema";

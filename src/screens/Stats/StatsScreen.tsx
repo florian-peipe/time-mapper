@@ -14,7 +14,7 @@ import type { Entry, Place } from "@/db/schema";
 import type { IconName, SourceKind } from "@/components";
 import { EntryRow } from "@/screens/Timeline/EntryRow";
 import { DayNavHeader, FREE_HISTORY_DAYS, type RangeMode } from "@/screens/Timeline/DayNavHeader";
-import { rangeForMode } from "./range";
+import { rangeForMode } from "@/lib/range";
 import { WeekBarChart } from "./WeekBarChart";
 
 export function StatsScreen() {

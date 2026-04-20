@@ -1,6 +1,7 @@
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import type { Entry, Place } from "@/db/schema";
+import { padNumber } from "@/lib/time";
 
 // expo-file-system v19 hides the classic functional API behind a non-typed
 // default — mirror the cast pattern already used in `exportLog.ts` so we can
@@ -49,15 +50,11 @@ export function entriesToCsv(entries: Entry[], placesById: Map<string, Place>): 
 }
 
 function ymd(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return `${d.getFullYear()}-${padNumber(d.getMonth() + 1)}-${padNumber(d.getDate())}`;
 }
 
 function hhmm(d: Date): string {
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function pad(n: number): string {
-  return n < 10 ? `0${n}` : String(n);
+  return `${padNumber(d.getHours())}:${padNumber(d.getMinutes())}`;
 }
 
 function csvEscape(value: string): string {

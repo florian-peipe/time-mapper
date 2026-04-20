@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
-import { Button, Sheet } from "@/components";
+import { Button, Sheet, Toggle } from "@/components";
 import { useKvRepo } from "@/features/onboarding/useOnboardingGate";
 import {
   getQuietHours,
@@ -137,26 +137,7 @@ export function NotificationsSheet({ visible, onClose }: NotificationsSheetProps
         >
           {i18n.t("settings.notifications.quietToggle")}
         </Text>
-        <View
-          style={{
-            width: 44,
-            height: 26,
-            borderRadius: t.radius.pill,
-            backgroundColor: enabled ? t.color("color.accent") : t.color("color.border.strong"),
-            justifyContent: "center",
-            paddingHorizontal: 3,
-          }}
-        >
-          <View
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: t.radius.pill,
-              backgroundColor: t.color("color.accent.contrast"),
-              alignSelf: enabled ? "flex-end" : "flex-start",
-            }}
-          />
-        </View>
+        <Toggle checked={enabled} />
       </Pressable>
 
       {/* Start + end hour steppers — disabled when quiet hours are off. */}
@@ -234,28 +215,7 @@ export function NotificationsSheet({ visible, onClose }: NotificationsSheetProps
         >
           {i18n.t("settings.notifications.digest.toggle")}
         </Text>
-        <View
-          style={{
-            width: 44,
-            height: 26,
-            borderRadius: t.radius.pill,
-            backgroundColor: digestEnabled
-              ? t.color("color.accent")
-              : t.color("color.border.strong"),
-            justifyContent: "center",
-            paddingHorizontal: 3,
-          }}
-        >
-          <View
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: t.radius.pill,
-              backgroundColor: t.color("color.accent.contrast"),
-              alignSelf: digestEnabled ? "flex-end" : "flex-start",
-            }}
-          />
-        </View>
+        <Toggle checked={digestEnabled} />
       </Pressable>
       <HourRow
         label={i18n.t("settings.notifications.digest.hour")}

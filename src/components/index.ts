@@ -15,4 +15,5 @@ export { Sheet } from "./Sheet";
 export { SnackbarHost } from "./Snackbar";
 export { SourceChip, type SourceKind } from "./SourceChip";
 export { TextArea } from "./TextArea";
+export { Toggle } from "./Toggle";
 export { TrackingDot } from "./TrackingDot";

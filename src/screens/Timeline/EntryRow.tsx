@@ -4,6 +4,7 @@ import { useTheme } from "@/theme/useTheme";
 import { Icon, PlaceBubble, SourceChip } from "@/components";
 import type { IconName, SourceKind } from "@/components";
 import { i18n } from "@/lib/i18n";
+import { formatClock } from "@/lib/time";
 
 type Props = {
   /** Entry id forwarded to onPress — callers usually open the edit sheet with it. */
@@ -122,15 +123,4 @@ export function EntryRow({
       <Icon name="chevron-right" size={18} color={t.color("color.fg3")} />
     </Pressable>
   );
-}
-
-function formatClock(unixSeconds: number): string {
-  const d = new Date(unixSeconds * 1000);
-  const h = d.getHours();
-  const m = d.getMinutes();
-  return `${pad(h)}:${pad(m)}`;
-}
-
-function pad(n: number): string {
-  return n < 10 ? `0${n}` : String(n);
 }

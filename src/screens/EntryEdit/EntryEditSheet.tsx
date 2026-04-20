@@ -14,6 +14,7 @@ import {
 import { usePlaces } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { i18n } from "@/lib/i18n";
+import { formatClock } from "@/lib/time";
 import { useSnackbarStore } from "@/state/snackbarStore";
 import type { Entry, Place } from "@/db/schema";
 
@@ -59,8 +60,8 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
       const e: Entry | null = entriesRepo.get(entryId);
       if (e) {
         setPlaceId(e.placeId);
-        setStart(secondsToHHMM(e.startedAt));
-        setEnd(e.endedAt != null ? secondsToHHMM(e.endedAt) : DEFAULT_END);
+        setStart(formatClock(e.startedAt));
+        setEnd(e.endedAt != null ? formatClock(e.endedAt) : DEFAULT_END);
         setPause(String(Math.round((e.pauseS ?? 0) / 60)));
         setNote(e.note ?? "");
         setEntrySource(e.source);
@@ -676,14 +677,4 @@ export function hhmmToUnixSecondsAt(hhmm: string, anchorUnixSeconds: number): nu
   const d = new Date(anchorUnixSeconds * 1000);
   d.setHours(Number.isNaN(h) ? 0 : h, Number.isNaN(m) ? 0 : m, 0, 0);
   return Math.floor(d.getTime() / 1000);
-}
-
-/** Local-time `HH:MM` from a unix-seconds timestamp. */
-function secondsToHHMM(unixSeconds: number): string {
-  const d = new Date(unixSeconds * 1000);
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function pad(n: number): string {
-  return n < 10 ? `0${n}` : String(n);
 }

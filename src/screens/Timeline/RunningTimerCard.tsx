@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Button, Card, TrackingDot } from "@/components";
 import { i18n } from "@/lib/i18n";
+import { formatElapsed } from "@/lib/time";
 
 type Props = {
   /** Place display name, shown inline after "Tracking". */
@@ -102,15 +103,4 @@ function useElapsed(startedAt: number): string {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startedAt]);
   return formatElapsed(seconds);
-}
-
-function formatElapsed(totalSeconds: number): string {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  return `${pad(h)}:${pad(m)}:${pad(s)}`;
-}
-
-function pad(n: number): string {
-  return n < 10 ? `0${n}` : String(n);
 }

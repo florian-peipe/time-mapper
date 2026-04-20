@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import Slider from "@react-native-community/slider";
 import { useTheme } from "@/theme/useTheme";
 import { PLACE_COLORS } from "@/theme/tokens";
-import { Banner, Button, Icon, Input, Sheet, type IconName } from "@/components";
+import { Banner, Button, Icon, Input, Sheet, Toggle, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { usePro } from "@/features/billing/usePro";
 import { useSnackbarStore } from "@/state/snackbarStore";
@@ -1056,26 +1056,7 @@ function GoalSliderRow({
             </Text>
           ) : null}
         </View>
-        <View
-          style={{
-            width: 44,
-            height: 26,
-            borderRadius: 13,
-            padding: 2,
-            backgroundColor: enabled ? t.color("color.accent") : t.color("color.border.strong"),
-            justifyContent: "center",
-          }}
-        >
-          <View
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 10,
-              backgroundColor: t.color("color.bg"),
-              transform: [{ translateX: enabled ? 18 : 0 }],
-            }}
-          />
-        </View>
+        <Toggle checked={enabled} />
       </Pressable>
       {enabled ? (
         <Slider

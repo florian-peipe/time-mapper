@@ -15,6 +15,33 @@ export function formatDuration(seconds: number): string {
   return `${h} h ${m.toString().padStart(2, "0")} min`;
 }
 
+/** Zero-pad `n` to `width` digits. Shared HH/MM/SS formatter helper. */
+export function padNumber(n: number, width = 2): string {
+  return n.toString().padStart(width, "0");
+}
+
+/**
+ * Format a unix-second timestamp as local `HH:MM`. Used by row renderers
+ * (Timeline, Stats, EntryEdit) that want a compact wall-clock label.
+ */
+export function formatClock(unixSeconds: number): string {
+  const d = new Date(unixSeconds * 1000);
+  return `${padNumber(d.getHours())}:${padNumber(d.getMinutes())}`;
+}
+
+/**
+ * Format a duration in **seconds** as `HH:MM:SS`. For clock-style elapsed
+ * timers (e.g. RunningTimerCard). Use `formatDuration` instead when you
+ * want the human-readable "1 h 23 min" variant.
+ */
+export function formatElapsed(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${padNumber(h)}:${padNumber(m)}:${padNumber(sec)}`;
+}
+
 /**
  * Pick the best BCP-47 locale for `Date#toLocale*` calls based on the active
  * i18n locale. We only ship `en-US` and `de-DE` — anything unrecognized

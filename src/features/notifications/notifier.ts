@@ -267,13 +267,11 @@ export async function setDailyDigestSchedule(
         sound: "default",
         categoryIdentifier: IOS_CATEGORY_ID,
       },
-      // expo-notifications changed DailyTriggerInput's `type` discriminator
-      // in SDK 54; cast so the call works across point releases.
       trigger: {
+        type: N.SchedulableTriggerInputTypes.DAILY,
         hour: clampedHour,
         minute: 0,
-        repeats: true,
-      } as any,
+      },
     });
     kv.set(KV_DIGEST_ID, id);
   } catch (err) {

@@ -901,14 +901,10 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                           "children": null,
                                           "props": {
                                             "style": {
-                                              "backgroundColor": "#FCFBF9",
-                                              "borderRadius": 10,
+                                              "alignSelf": "flex-start",
+                                              "backgroundColor": "#FFFFFF",
+                                              "borderRadius": 9999,
                                               "height": 20,
-                                              "transform": [
-                                                {
-                                                  "translateX": 0,
-                                                },
-                                              ],
                                               "width": 20,
                                             },
                                           },
@@ -918,10 +914,10 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                       "props": {
                                         "style": {
                                           "backgroundColor": "#D7CFC2",
-                                          "borderRadius": 13,
+                                          "borderRadius": 9999,
                                           "height": 26,
                                           "justifyContent": "center",
-                                          "padding": 2,
+                                          "paddingHorizontal": 3,
                                           "width": 44,
                                         },
                                       },
@@ -1005,14 +1001,10 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                           "children": null,
                                           "props": {
                                             "style": {
-                                              "backgroundColor": "#FCFBF9",
-                                              "borderRadius": 10,
+                                              "alignSelf": "flex-start",
+                                              "backgroundColor": "#FFFFFF",
+                                              "borderRadius": 9999,
                                               "height": 20,
-                                              "transform": [
-                                                {
-                                                  "translateX": 0,
-                                                },
-                                              ],
                                               "width": 20,
                                             },
                                           },
@@ -1022,10 +1014,10 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                       "props": {
                                         "style": {
                                           "backgroundColor": "#D7CFC2",
-                                          "borderRadius": 13,
+                                          "borderRadius": 9999,
                                           "height": 26,
                                           "justifyContent": "center",
-                                          "padding": 2,
+                                          "paddingHorizontal": 3,
                                           "width": 44,
                                         },
                                       },
