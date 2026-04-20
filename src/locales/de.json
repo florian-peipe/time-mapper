@@ -101,6 +101,7 @@
   "onboarding.welcome.title": "Time Mapper",
   "onboarding.welcome.body": "Automatisches Zeittracking für deine wichtigsten Orte — ohne Start- und Stopp-Knöpfe.",
   "onboarding.welcome.cta": "Loslegen",
+  "onboarding.back": "Zurück",
   "onboarding.howItWorks.title": "So funktioniert es",
   "onboarding.howItWorks.body": "Speichere einen Ort. Der Geofence deines Telefons startet den Timer bei Ankunft und stoppt ihn beim Gehen. Einträge lassen sich jederzeit manuell ergänzen oder bearbeiten.",
   "onboarding.howItWorks.cta": "Weiter",

@@ -13,7 +13,12 @@ const mockPush = jest.fn();
 const mockReplace = jest.fn();
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    back: jest.fn(),
+    canGoBack: () => false,
+  }),
 }));
 
 function setup() {

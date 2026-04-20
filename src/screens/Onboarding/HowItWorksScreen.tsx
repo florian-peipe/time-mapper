@@ -6,6 +6,7 @@ import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
 import { onboardingRoute } from "@/lib/routes";
 import { Button, Rings } from "@/components";
+import { BackButton } from "./BackButton";
 import { StepIndicator } from "./StepIndicator";
 
 /**
@@ -33,6 +34,7 @@ export function HowItWorksScreen() {
       }}
       testID="onboarding-howitworks-screen"
     >
+      <BackButton topInset={insets.top} testID="onboarding-howitworks-back" />
       <View
         pointerEvents="none"
         style={{

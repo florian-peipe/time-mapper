@@ -8,7 +8,12 @@ const mockPush = jest.fn();
 const mockReplace = jest.fn();
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    back: jest.fn(),
+    canGoBack: () => false,
+  }),
 }));
 
 type LocStatus = "granted" | "foreground-only" | "denied" | "undetermined";

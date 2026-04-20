@@ -32,7 +32,12 @@ import { AddPlaceSheet } from "@/screens/AddPlace/AddPlaceSheet";
 
 jest.mock("expo-router", () => ({
   __esModule: true,
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: jest.fn(),
+    canGoBack: () => false,
+  }),
   useSegments: () => [],
   Stack: () => null,
 }));

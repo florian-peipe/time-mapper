@@ -7,6 +7,7 @@ import { i18n } from "@/lib/i18n";
 import { Button, Rings } from "@/components";
 import { useSheetStore } from "@/state/sheetStore";
 import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
+import { BackButton } from "./BackButton";
 import { StepIndicator } from "./StepIndicator";
 
 /**
@@ -43,6 +44,7 @@ export function FirstPlaceScreen() {
       }}
       testID="onboarding-first-place-screen"
     >
+      <BackButton topInset={insets.top} testID="onboarding-first-place-back" />
       <View
         pointerEvents="none"
         style={{

@@ -18,7 +18,12 @@ import { Text } from "react-native";
 // Mock expo-router so screens that use `useRouter` don't crash.
 jest.mock("expo-router", () => ({
   __esModule: true,
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: jest.fn(),
+    canGoBack: () => false,
+  }),
   useSegments: () => [],
   Stack: () => null,
 }));

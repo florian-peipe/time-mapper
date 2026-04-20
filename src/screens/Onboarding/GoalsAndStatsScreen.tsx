@@ -6,6 +6,7 @@ import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
 import { onboardingRoute } from "@/lib/routes";
 import { Button, Icon } from "@/components";
+import { BackButton } from "./BackButton";
 import { StepIndicator } from "./StepIndicator";
 
 /**
@@ -33,6 +34,7 @@ export function GoalsAndStatsScreen() {
       }}
       testID="onboarding-goals-screen"
     >
+      <BackButton topInset={insets.top} testID="onboarding-goals-back" />
       <View
         style={{
           flex: 1,

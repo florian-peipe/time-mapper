@@ -10,6 +10,7 @@ import {
   requestBackgroundLocation,
   requestNotifications,
 } from "@/features/permissions";
+import { BackButton } from "./BackButton";
 import { StepIndicator } from "./StepIndicator";
 
 /**
@@ -62,6 +63,7 @@ export function PermissionsScreen() {
       }}
       testID="onboarding-permissions-screen"
     >
+      <BackButton topInset={insets.top} testID="onboarding-permissions-back" />
       <View
         style={{
           flex: 1,

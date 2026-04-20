@@ -101,6 +101,7 @@
   "onboarding.welcome.title": "Time Mapper",
   "onboarding.welcome.body": "Automatic time tracking for the places that matter — no start and stop buttons.",
   "onboarding.welcome.cta": "Get started",
+  "onboarding.back": "Back",
   "onboarding.howItWorks.title": "How it works",
   "onboarding.howItWorks.body": "Save a place. Your phone's geofence opens a timer when you arrive and stops it when you leave. Edit or add entries manually any time.",
   "onboarding.howItWorks.cta": "Continue",
