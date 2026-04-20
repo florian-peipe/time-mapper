@@ -126,7 +126,14 @@ jobs:
 
       - name: Install Pods
         working-directory: ios
-        run: pod install --repo-update
+        run: |
+          # Podfile.lock pins every spec deterministically and the macOS runner
+          # image ships the CocoaPods master repo. Try the fast path first; fall
+          # back to --repo-update only if a new spec needs fetching.
+          if ! pod install; then
+            echo "pod install failed; retrying with --repo-update"
+            pod install --repo-update
+          fi
 
       # Resolve the scheme + workspace names AFTER `pod install` runs — the
       # .xcworkspace is created by CocoaPods, not by `expo prebuild`. Using
@@ -176,6 +183,7 @@ jobs:
             EXPANDED_CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
             ONLY_ACTIVE_ARCH=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
             2>&1 | tee build/xcodebuild.log | xcpretty
 
       - name: Show xcodebuild log tail on failure
@@ -186,7 +194,7 @@ jobs:
           echo "::endgroup::"
 
       - name: Upload build diagnostics
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: ios-build-diagnostics
