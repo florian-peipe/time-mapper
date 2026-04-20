@@ -63,6 +63,7 @@
   "settings.tracking.location.detail": "Always",
   "settings.tracking.notifications": "Notifications",
   "settings.tracking.notifications.detail": "On",
+  "settings.tracking.notifications.detailDenied": "Off — tap to open iOS Settings",
   "settings.tracking.buffers": "Default buffers",
   "settings.tracking.buffers.detail": "2 / 1 min",
   "settings.section.appearance": "Appearance",

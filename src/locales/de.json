@@ -63,6 +63,7 @@
   "settings.tracking.location.detail": "Immer",
   "settings.tracking.notifications": "Benachrichtigungen",
   "settings.tracking.notifications.detail": "Ein",
+  "settings.tracking.notifications.detailDenied": "Aus — tippen für iOS-Einstellungen",
   "settings.tracking.buffers": "Standard-Puffer",
   "settings.tracking.buffers.detail": "2 / 1 Min.",
   "settings.section.appearance": "Darstellung",

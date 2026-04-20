@@ -7,6 +7,7 @@ import { useTheme } from "@/theme/useTheme";
 import { ListRow, Section } from "@/components";
 import { usePlaces, usePlacesRepo } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
+import { useNotificationPermission } from "@/features/permissions/hooks";
 import { usePro } from "@/features/billing/usePro";
 import { isMockMode } from "@/features/billing/revenuecat";
 import { useSheetStore } from "@/state/sheetStore";
@@ -257,9 +258,23 @@ export function SettingsScreen() {
     });
   }, []);
 
+  // Real-time OS notification permission — drives both the Notifications
+  // row detail ("On" / "Off") and whether tapping the row opens our
+  // quiet-hours / digest sheet vs. iOS's own notification-settings page.
+  // iOS hard-locks the permission prompt after a first denial; the only
+  // recovery is the user flipping the toggle in Settings themselves.
+  const notifPerm = useNotificationPermission();
+  const notificationsDenied = notifPerm.status === "denied";
+
   const handleOpenNotifications = useCallback(() => {
+    if (notificationsDenied) {
+      void Linking.openSettings().catch((err) => {
+        console.warn("Failed to open OS settings", err);
+      });
+      return;
+    }
     setNotificationsSheetVisible(true);
-  }, []);
+  }, [notificationsDenied]);
 
   const handleOpenBuffers = useCallback(() => {
     setBuffersSheetVisible(true);
@@ -393,10 +408,16 @@ export function SettingsScreen() {
           />
           <ListRow
             icon="bell"
-            iconBg={t.color("color.accent.soft")}
-            iconColor={t.color("color.accent")}
+            iconBg={
+              notificationsDenied ? t.color("color.warning.soft") : t.color("color.accent.soft")
+            }
+            iconColor={notificationsDenied ? t.color("color.warning") : t.color("color.accent")}
             title={i18n.t("settings.tracking.notifications")}
-            detail={i18n.t("settings.tracking.notifications.detail")}
+            detail={
+              notificationsDenied
+                ? i18n.t("settings.tracking.notifications.detailDenied")
+                : i18n.t("settings.tracking.notifications.detail")
+            }
             onPress={handleOpenNotifications}
             testID="settings-row-notifications"
           />
