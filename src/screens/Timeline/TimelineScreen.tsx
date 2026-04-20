@@ -7,6 +7,7 @@ import { i18n } from "@/lib/i18n";
 import { useEntries } from "@/features/entries/useEntries";
 import { useOngoingEntry } from "@/features/entries/useOngoingEntry";
 import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClose";
+import { useClosestPlace } from "@/features/places/useClosestPlace";
 import { usePlaces } from "@/features/places/usePlaces";
 import { usePro } from "@/features/billing/usePro";
 import { useSheetStore } from "@/state/sheetStore";
@@ -69,6 +70,17 @@ export function TimelineScreen() {
   const handleAddManual = useCallback(() => {
     openSheet("entryEdit", { entryId: null });
   }, [openSheet]);
+
+  // Quick-add pivot: if the user is inside (or within 2× radius of) a
+  // saved place and nothing is tracking right now, the primary action
+  // becomes "Start tracking at {place}" instead of manual-entry.
+  const closest = useClosestPlace();
+  const canQuickStart = !showRunning && closest != null && (closest.inside || closest.near);
+  const handleQuickStart = useCallback(() => {
+    if (!closest) return;
+    ongoingState.start({ placeId: closest.place.id, source: "manual" });
+    handleRefresh();
+  }, [closest, ongoingState, handleRefresh]);
 
   const handleAddPlace = useCallback(() => {
     openSheet("addPlace", { placeId: null });
@@ -157,12 +169,55 @@ export function TimelineScreen() {
       </ScrollView>
 
       {/*
-        Manual-entry FAB — place-first pivot means this is now de-emphasized:
-          - hidden entirely when there are no places (hero CTA takes over)
-          - small icon-only (40×40) elsewhere so the eye goes to the primary
-            auto-tracked content first. Accessibility label signals purpose.
+        Quick-add FAB — pivots based on proximity:
+          - inside / near a saved place (and nothing tracking) → wide
+            "Start tracking at {place}" primary button, one-tap opens an
+            entry. The usual "auto" path handles most tracking; this is
+            the escape hatch when the geofence hasn't fired yet.
+          - no nearby place → small manual-entry icon fallback.
+          - ongoing entry → hide (RunningTimerCard owns stop).
+          - no places at all → hide (hero CTA on the empty state).
       */}
-      {!noPlaces ? (
+      {!noPlaces && canQuickStart && closest ? (
+        <Pressable
+          onPress={handleQuickStart}
+          accessibilityRole="button"
+          accessibilityLabel={i18n.t("timeline.fab.startHere", { name: closest.place.name })}
+          accessibilityHint={i18n.t("timeline.fab.startHere.hint")}
+          hitSlop={t.space[3]}
+          testID="timeline-fab-start-here"
+          style={{
+            position: "absolute",
+            right: t.space[5],
+            left: t.space[5],
+            bottom: t.space[5] + insets.bottom,
+            height: t.space[10] + t.space[2], // 48pt — primary action touch target
+            borderRadius: t.radius.pill,
+            backgroundColor: t.color("color.accent"),
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: t.space[2],
+            shadowColor: t.color("color.fg"),
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 10,
+            elevation: 4,
+          }}
+        >
+          <Icon name="clock" size={18} color={t.color("color.accent.contrast")} />
+          <Text
+            style={{
+              fontSize: t.type.size.body,
+              fontWeight: t.type.weight.semibold,
+              color: t.color("color.accent.contrast"),
+              fontFamily: t.type.family.sans,
+            }}
+          >
+            {i18n.t("timeline.fab.startHere", { name: closest.place.name })}
+          </Text>
+        </Pressable>
+      ) : !noPlaces && !showRunning ? (
         <Pressable
           onPress={handleAddManual}
           accessibilityRole="button"

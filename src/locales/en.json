@@ -14,6 +14,8 @@
   "places.map.accessibilityLabel": "Map showing your saved places",
   "timeline.nearby.inside": "Inside {{name}}",
   "timeline.nearby.near": "~{{meters}}m from {{name}}",
+  "timeline.fab.startHere": "Start tracking at {{name}}",
+  "timeline.fab.startHere.hint": "Opens a new tracked entry for this place.",
   "common.save": "Save",
   "common.cancel": "Cancel",
   "common.delete": "Delete",

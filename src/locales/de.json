@@ -14,6 +14,8 @@
   "places.map.accessibilityLabel": "Karte mit deinen gespeicherten Orten",
   "timeline.nearby.inside": "Am Ort {{name}}",
   "timeline.nearby.near": "~{{meters}} m von {{name}}",
+  "timeline.fab.startHere": "Am Ort {{name}} starten",
+  "timeline.fab.startHere.hint": "Öffnet einen neuen erfassten Eintrag.",
   "common.save": "Speichern",
   "common.cancel": "Abbrechen",
   "common.delete": "Löschen",
