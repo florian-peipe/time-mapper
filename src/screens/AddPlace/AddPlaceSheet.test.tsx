@@ -11,6 +11,56 @@ import { useSheetStore } from "@/state/sheetStore";
 import { grantProMock, resetProMock } from "@/features/billing/useProMock";
 import { AddPlaceSheet } from "./AddPlaceSheet";
 
+// `autocomplete` hits Photon in production; under Jest we give it
+// deterministic, test-owned fixtures so the UI has rows to render
+// without any shipped mock data leaking through. `geocodePlace` is
+// stubbed to return the coordinates we encoded into the placeId.
+jest.mock("@/lib/geocode", () => {
+  const suggestions = [
+    {
+      placeId: "osm:test-1:50.9613:6.9585",
+      description: "Kinkelstr. 3, 50733 Köln, Germany",
+      mainText: "Kinkelstr. 3",
+      secondaryText: "50733 Köln, Germany",
+    },
+    {
+      placeId: "osm:test-2:50.9484:6.9445",
+      description: "Mediapark 8, 50670 Köln, Germany",
+      mainText: "Mediapark 8",
+      secondaryText: "50670 Köln, Germany",
+    },
+    {
+      placeId: "osm:test-3:51.2379:6.8011",
+      description: "Kinkel Straße 12, 40211 Düsseldorf, Germany",
+      mainText: "Kinkel Straße 12",
+      secondaryText: "40211 Düsseldorf, Germany",
+    },
+  ];
+  return {
+    autocomplete: jest.fn(async (query: string) => {
+      const q = query.trim().toLowerCase();
+      if (q.length < 2) return { suggestions: [], failed: false };
+      const filtered = suggestions.filter(
+        (s) =>
+          s.description.toLowerCase().includes(q) ||
+          s.mainText.toLowerCase().includes(q) ||
+          s.secondaryText.toLowerCase().includes(q),
+      );
+      return { suggestions: filtered, failed: false };
+    }),
+    geocodePlace: jest.fn(async (placeId: string) => {
+      const parts = placeId.split(":");
+      const lat = Number(parts[2]);
+      const lng = Number(parts[3]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        throw new Error(`geocodePlace: invalid ${placeId}`);
+      }
+      const match = suggestions.find((s) => s.placeId === placeId);
+      return { lat, lng, formattedAddress: match?.description ?? "" };
+    }),
+  };
+});
+
 type SeedPlace = {
   name: string;
   address?: string;
@@ -61,20 +111,22 @@ function setup(opts: {
 }
 
 /**
- * Autocomplete is debounced 300ms + awaits an async Places/demo call. Tests
- * that navigate past Phase 1 need to flush both the timer and the microtask
- * queue before the suggestion rows appear.
+ * Autocomplete is debounced 300ms + awaits an async fetch. Tests that
+ * navigate past Phase 1 first type a query to seed the fixture, then
+ * flush the timer + microtask queue before the rows appear.
  */
-async function flushAutocomplete() {
+async function flushAutocomplete(query = "kinkel", expectMatch: RegExp = /Kinkelstr\. 3/) {
+  fireEvent.changeText(screen.getByTestId("add-place-search"), query);
   await act(async () => {
     jest.advanceTimersByTime(400);
   });
-  await waitFor(() => screen.getByText(/Kinkelstr\. 3/));
+  await waitFor(() => screen.getByText(expectMatch));
 }
 
 /**
- * Go to phase 2 by tapping the first demo suggestion. `geocodePlace` resolves
- * asynchronously so we wait for the editor (radius label) to appear.
+ * Go to phase 2 by typing a seed query and tapping the first row.
+ * `geocodePlace` resolves asynchronously so we wait for the editor
+ * (radius label) to appear.
  */
 async function gotoPhase2() {
   await flushAutocomplete();
@@ -99,11 +151,19 @@ describe("AddPlaceSheet — Phase 1 (search)", () => {
     expect(screen.getByTestId("add-place-search")).toBeTruthy();
   });
 
-  it("renders all hardcoded demo suggestions before the user types", async () => {
+  it("renders no suggestions before the user types (no shipped mock data)", async () => {
+    setup({});
+    await act(async () => {
+      jest.advanceTimersByTime(400);
+    });
+    expect(screen.queryByText(/Kinkelstr/)).toBeNull();
+    expect(screen.queryByText(/Mediapark/)).toBeNull();
+  });
+
+  it("renders Photon rows after the user types a seed query", async () => {
     setup({});
     await flushAutocomplete();
     expect(screen.getByText(/Kinkelstr\. 3/)).toBeTruthy();
-    expect(screen.getByText(/Mediapark 8/)).toBeTruthy();
     expect(screen.getByText(/Kinkel Straße 12/)).toBeTruthy();
   });
 
@@ -213,7 +273,7 @@ describe("AddPlaceSheet — Save", () => {
   it("calls placesRepo.create with the edited fields and closes", async () => {
     const onClose = jest.fn();
     const { placesRepo } = setup({ onClose });
-    await flushAutocomplete();
+    await flushAutocomplete("medi", /Mediapark 8/);
     fireEvent.press(screen.getByText(/Mediapark 8/));
     await waitFor(() => screen.getByText("Geofence radius"));
     // Change the name.
@@ -247,7 +307,7 @@ describe("AddPlaceSheet — Save", () => {
 
   it("persists entry/exit buffer slider values in seconds on save", async () => {
     const { placesRepo } = setup({});
-    await flushAutocomplete();
+    await flushAutocomplete("medi", /Mediapark 8/);
     fireEvent.press(screen.getByText(/Mediapark 8/));
     await waitFor(() => screen.getByTestId("add-place-entry-buffer"));
     // Drag entry buffer to 10 minutes, exit buffer to 2 minutes.
@@ -266,7 +326,7 @@ describe("AddPlaceSheet — Save", () => {
     // Rerender isn't worth it — the defaults are picked up on next open.
     // This test verifies the read path wiring: set KV, open a fresh sheet,
     // confirm the slider reflects the global defaults.
-    await flushAutocomplete();
+    await flushAutocomplete("medi", /Mediapark 8/);
     fireEvent.press(screen.getByText(/Mediapark 8/));
     await waitFor(() => screen.getByTestId("add-place-entry-buffer"));
     // Save without changing sliders — values should match what was shown.

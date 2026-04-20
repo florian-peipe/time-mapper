@@ -428,46 +428,6 @@ describe("a11y — screens", () => {
     expect(row.props.accessibilityHint).toBeDefined();
   });
 
-  it("Settings Toggle Pro row marks checked state", () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { SettingsScreen } = require("@/screens/Settings/SettingsScreen");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PlacesRepo } = require("@/db/repository/places");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { KvRepo } = require("@/db/repository/kv");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { createTestDb } = require("@/db/testClient");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PlacesRepoProvider } = require("@/features/places/usePlaces");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { EntriesRepoProvider } = require("@/features/entries/useEntries");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { EntriesRepo } = require("@/db/repository/entries");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { KvRepoProvider } = require("@/features/onboarding/useOnboardingGate");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { grantProMock, resetProMock } = require("@/features/billing/useProMock");
-    resetProMock();
-    grantProMock();
-    const db = createTestDb();
-    const repo = new PlacesRepo(db);
-    const kv = new KvRepo(db);
-    const { getByTestId } = render(
-      wrap(
-        <KvRepoProvider value={kv}>
-          <PlacesRepoProvider value={repo}>
-            <EntriesRepoProvider value={new EntriesRepo(db)}>
-              <SettingsScreen />
-            </EntriesRepoProvider>
-          </PlacesRepoProvider>
-        </KvRepoProvider>,
-      ),
-    );
-    const row = getByTestId("settings-row-toggle-pro");
-    expect(row.props.accessibilityState).toEqual(expect.objectContaining({ checked: true }));
-    resetProMock();
-  });
-
   it("Paywall renders headers for plans and benefits sections", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PaywallScreen } = require("@/screens/Paywall/PaywallScreen");

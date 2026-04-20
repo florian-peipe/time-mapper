@@ -263,10 +263,11 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
     setPendingPlaceForm,
   ]);
 
-  // Autocomplete debounce. Every keystroke schedules a Places Autocomplete
-  // call 300ms later; if the user keeps typing we cancel the prior fetch
-  // via AbortController and reschedule. Empty query → show all demo rows
-  // (when no key) or clear suggestions.
+  // Autocomplete debounce. Every keystroke schedules a Photon call 300ms
+  // later; if the user keeps typing we cancel the prior fetch via
+  // AbortController and reschedule. Short queries (<2 chars) return
+  // nothing; on network failure the `failed` flag surfaces an offline
+  // banner in the UI.
   useEffect(() => {
     if (editing || selected) return;
     let cancelled = false;
@@ -275,10 +276,10 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setSearching(true);
       void (async () => {
         try {
-          const results = await autocomplete(query, controller.signal);
+          const { suggestions: results, failed } = await autocomplete(query, controller.signal);
           if (!cancelled) {
             setSuggestions(results);
-            setApiError(null);
+            setApiError(failed ? "offline" : null);
           }
         } catch (err) {
           if (cancelled) return;

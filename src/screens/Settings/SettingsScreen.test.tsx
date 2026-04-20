@@ -228,13 +228,11 @@ describe("SettingsScreen", () => {
     await waitFor(() => expect(within(row()).getByText("Restored")).toBeTruthy());
   });
 
-  it("renders the Developer section under __DEV__ with only the Pro toggle", () => {
+  it("no Developer section is rendered", () => {
     render(wrap(<SettingsScreen />));
-    expect(screen.getByTestId("settings-section-dev")).toBeTruthy();
-    expect(screen.getByText("Toggle Pro (mock)")).toBeTruthy();
-    // Auto-seed is gone, so the Re-seed and Clear rows were removed.
-    expect(screen.queryByText("Re-seed demo data")).toBeNull();
-    expect(screen.queryByText("Clear all data")).toBeNull();
+    expect(screen.queryByTestId("settings-section-dev")).toBeNull();
+    expect(screen.queryByText("Toggle Pro (mock)")).toBeNull();
+    expect(screen.queryByText("Simulate visit")).toBeNull();
   });
 
   it("Location row opens OS settings via Linking.openSettings", () => {
@@ -288,24 +286,5 @@ describe("SettingsScreen", () => {
     render(wrap(<SettingsScreen />));
     expect(screen.getByTestId("settings-row-diagnostics")).toBeTruthy();
     expect(screen.getByText("Export diagnostic log")).toBeTruthy();
-  });
-
-  it("Toggle Pro row reflects current state and flips it on tap (Off → On → Off)", () => {
-    render(wrap(<SettingsScreen />));
-    // The toggle row's detail starts as "Off". We scope queries to the row so
-    // we don't collide with the "On" detail used by the Notifications row.
-    const row = () => screen.getByTestId("settings-row-toggle-pro");
-    expect(within(row()).getByText("Off")).toBeTruthy();
-
-    fireEvent.press(row());
-    expect(within(row()).getByText("On")).toBeTruthy();
-    // Pro upsell card disappears once Pro is granted — observable side effect
-    // of the mock store flipping.
-    expect(screen.queryByTestId("settings-pro-upsell")).toBeNull();
-
-    fireEvent.press(row());
-    expect(within(row()).getByText("Off")).toBeTruthy();
-    // …and the Pro upsell card comes back when revoked.
-    expect(screen.queryByTestId("settings-pro-upsell")).toBeTruthy();
   });
 });

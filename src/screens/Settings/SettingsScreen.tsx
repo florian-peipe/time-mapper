@@ -5,19 +5,17 @@ import { useRouter } from "expo-router";
 import * as StoreReview from "expo-store-review";
 import { useTheme } from "@/theme/useTheme";
 import { ListRow, Section } from "@/components";
-import { usePlaces, usePlacesRepo } from "@/features/places/usePlaces";
+import { usePlacesRepo } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { useLocationPermission, useNotificationPermission } from "@/features/permissions/hooks";
 import { readGlobalBuffers, BuffersSheet } from "./BuffersSheet";
 import { usePro } from "@/features/billing/usePro";
-import { isMockMode } from "@/features/billing/revenuecat";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore, type ThemeOverride } from "@/state/uiStore";
 import { useSnackbarStore } from "@/state/snackbarStore";
 import { i18n, setLocale } from "@/lib/i18n";
 import { legalRoute } from "@/lib/routes";
 import { ProUpsellCard } from "./ProUpsellCard";
-import { simulatePassage } from "@/features/tracking/devSim";
 import { exportDiagnosticLog } from "@/features/diagnostics/exportLog";
 import { exportEntriesCsv } from "@/features/diagnostics/exportEntries";
 import { useKvRepo, useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
@@ -56,9 +54,8 @@ export function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const { isPro, grant, revoke, restore } = usePro();
+  const { isPro, restore } = usePro();
   const [restoreState, setRestoreState] = useState<"idle" | "busy" | "done" | "error">("idle");
-  const { places } = usePlaces();
   const placesRepo = usePlacesRepo();
   const entriesRepo = useEntriesRepo();
   const kv = useKvRepo();
@@ -294,11 +291,6 @@ export function SettingsScreen() {
     });
   }, []);
 
-  const handleToggleProMock = useCallback(() => {
-    if (isPro) revoke();
-    else grant();
-  }, [isPro, grant, revoke]);
-
   const handleManageSubscription = useCallback(() => {
     void Linking.openURL(SUBSCRIPTION_MANAGEMENT_URL);
   }, []);
@@ -313,31 +305,6 @@ export function SettingsScreen() {
       setRestoreState("error");
     }
   }, [restore]);
-
-  const handleSimulateVisit = useCallback(() => {
-    if (places.length === 0) {
-      Alert.alert(
-        i18n.t("settings.dev.simulate.empty.title"),
-        i18n.t("settings.dev.simulate.empty.body"),
-        [{ text: i18n.t("common.ok") }],
-      );
-      return;
-    }
-    // Show a picker via Alert buttons — good enough for dev-only UI. Each
-    // button triggers a 30-second passage through that place, so the
-    // Timeline updates twice (started + stopped) in quick succession.
-    const buttons = places.slice(0, 10).map((p) => ({
-      text: p.name,
-      onPress: () => {
-        void simulatePassage(p.id, 30);
-      },
-    }));
-    Alert.alert(
-      i18n.t("settings.dev.simulate.picker.title"),
-      i18n.t("settings.dev.simulate.picker.body"),
-      [...buttons, { text: i18n.t("common.cancel"), style: "cancel" as const }],
-    );
-  }, [places]);
 
   return (
     <>
@@ -548,29 +515,6 @@ export function SettingsScreen() {
             testID="settings-row-rate"
           />
         </Section>
-
-        {__DEV__ || isMockMode() ? (
-          <Section title={i18n.t("settings.section.dev")} testID="settings-section-dev">
-            <ListRow
-              icon="settings"
-              title={i18n.t("settings.dev.togglePro")}
-              detail={
-                isPro ? i18n.t("settings.dev.togglePro.on") : i18n.t("settings.dev.togglePro.off")
-              }
-              onPress={handleToggleProMock}
-              testID="settings-row-toggle-pro"
-              accessibilityState={{ checked: isPro }}
-            />
-            <ListRow
-              icon="repeat"
-              title={i18n.t("settings.dev.simulate")}
-              detail={i18n.t("settings.dev.simulate.detail")}
-              onPress={handleSimulateVisit}
-              last
-              testID="settings-row-simulate-visit"
-            />
-          </Section>
-        ) : null}
       </ScrollView>
 
       {/* Settings-local sheets — not routed through sheetStore. */}

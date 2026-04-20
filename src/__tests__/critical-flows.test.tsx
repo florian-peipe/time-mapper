@@ -249,17 +249,16 @@ describe("critical flows — Paywall + Pro gate", () => {
     expect(queryByTestId("settings-pro-upsell")).toBeNull();
   });
 
-  it("Dev toggle-Pro flips isPro state (mock purchase path)", async () => {
+  it("Pro-active row renders when grantProMock flips the mock store", async () => {
     const fixture = makeFixture();
-    const { getByTestId } = render(
+    const { getByTestId, queryByTestId } = render(
       <Wrap fixture={fixture}>
         <SettingsScreen />
       </Wrap>,
     );
     // Initially free — no "Time Mapper Pro Active" row.
-    expect(() => getByTestId("settings-row-pro-active")).toThrow();
-    fireEvent.press(getByTestId("settings-row-toggle-pro"));
-    // After toggling Pro, the active row renders.
+    expect(queryByTestId("settings-row-pro-active")).toBeNull();
+    grantProMock();
     await waitFor(() => getByTestId("settings-row-pro-active"));
   });
 
