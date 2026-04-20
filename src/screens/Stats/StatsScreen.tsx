@@ -15,7 +15,7 @@ import type { IconName, SourceKind } from "@/components";
 import { EntryRow } from "@/screens/Timeline/EntryRow";
 import { DayNavHeader, FREE_HISTORY_DAYS } from "@/screens/Timeline/DayNavHeader";
 import { rangeForMode, type RangeMode } from "@/lib/range";
-import { netMinutes } from "@/lib/entries";
+import { isDayInDailyGoal, netMinutes } from "@/lib/entries";
 import { WeekBarChart } from "./WeekBarChart";
 
 export function StatsScreen() {
@@ -81,7 +81,12 @@ export function StatsScreen() {
           paddingBottom: insets.bottom + t.space[8],
         }}
       >
-        <SummaryCard totalMin={totalMin} perPlace={perPlace} mode={mode} />
+        <SummaryCard
+          totalMin={totalMin}
+          perPlace={perPlace}
+          mode={mode}
+          viewedDate={new Date(startS * 1000)}
+        />
 
         {mode === "week" ? (
           <View style={{ paddingHorizontal: t.space[5], paddingVertical: t.space[2] }}>
@@ -193,10 +198,12 @@ function SummaryCard({
   totalMin,
   perPlace,
   mode,
+  viewedDate,
 }: {
   totalMin: number;
   perPlace: { place: Place; minutes: number }[];
   mode: RangeMode;
+  viewedDate: Date;
 }) {
   const t = useTheme();
   const max = Math.max(1, ...perPlace.map((p) => p.minutes));
@@ -235,7 +242,14 @@ function SummaryCard({
         {perPlace.length > 0 ? (
           <View style={{ marginTop: t.space[3], gap: t.space[2] }}>
             {perPlace.map(({ place, minutes: m }) => (
-              <PlaceBar key={place.id} place={place} minutes={m} max={max} mode={mode} />
+              <PlaceBar
+                key={place.id}
+                place={place}
+                minutes={m}
+                max={max}
+                mode={mode}
+                viewedDate={viewedDate}
+              />
             ))}
           </View>
         ) : (
@@ -260,11 +274,13 @@ function PlaceBar({
   minutes,
   max,
   mode,
+  viewedDate,
 }: {
   place: Place;
   minutes: number;
   max: number;
   mode: RangeMode;
+  viewedDate: Date;
 }) {
   const t = useTheme();
   const h = Math.floor(minutes / 60);
@@ -275,7 +291,7 @@ function PlaceBar({
   // Pick the relevant goal for the current aggregation. Day view → daily
   // goal. Week view → weekly goal. Month / year → weekly goal scaled up
   // (simplistic but useful: "month of 40h/week" = 4 × 40 = 160h target).
-  const goal = pickGoal(place, mode);
+  const goal = pickGoal(place, mode, viewedDate);
   const hasGoal = goal != null && goal > 0;
   const ratio = hasGoal ? minutes / goal : minutes / max;
   const pct = Math.max(4, Math.min(100, Math.round(ratio * 100)));
@@ -353,8 +369,14 @@ function PlaceBar({
   );
 }
 
-function pickGoal(place: Place, mode: RangeMode): number | null {
-  if (mode === "day") return place.dailyGoalMinutes ?? null;
+function pickGoal(place: Place, mode: RangeMode, viewedDate: Date): number | null {
+  if (mode === "day") {
+    if (place.dailyGoalMinutes == null) return null;
+    // Respect the per-day filter: if the viewed day isn't active for
+    // this goal, the bar renders without the goal overlay.
+    if (!isDayInDailyGoal(place.dailyGoalDays, viewedDate)) return null;
+    return place.dailyGoalMinutes;
+  }
   if (place.weeklyGoalMinutes == null) return null;
   if (mode === "week") return place.weeklyGoalMinutes;
   // Rough month/year scaling so the same weekly target still reads as

@@ -427,5 +427,32 @@ describe("notifications/notifier", () => {
       );
       expect(mN.scheduleNotificationAsync).toHaveBeenCalledTimes(1); // just the close
     });
+
+    test("daily-goal-days filter: goal set Mon-Fri, close on Saturday → no goal fire", async () => {
+      // 2026-04-18 is a Saturday (ISO 6). Goal applies only Mon-Fri.
+      const nowS = Math.floor(new Date(2026, 3, 18, 16, 0, 0).getTime() / 1000);
+      const { db, placesRepo, closing, place } = setupGoalScenario({
+        dailyGoalMinutes: 60,
+        priorTodayMin: 30,
+        closingEntryMin: 45,
+        nowS,
+      });
+      // Override the fresh place to carry a Mon-Fri day filter.
+      placesRepo.update(place.id, { dailyGoalDays: "1,2,3,4,5" });
+
+      await maybeNotifyForEffects(
+        [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
+        placesRepo,
+        db,
+        nowS,
+      );
+
+      // Regular "Stopped tracking" should still fire; the goal-reached
+      // notification must NOT because Saturday isn't an active day.
+      const titles = mN.scheduleNotificationAsync.mock.calls.map(
+        (call) => (call[0] as { content: { title: string } }).content.title,
+      );
+      expect(titles).not.toContain("Daily goal reached");
+    });
   });
 });

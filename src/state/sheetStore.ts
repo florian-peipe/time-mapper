@@ -40,6 +40,8 @@ export type PendingPlaceForm = {
   /** null / omitted = goal not enabled */
   dailyGoalMinutes: number | null;
   weeklyGoalMinutes: number | null;
+  /** Comma-separated ISO day numbers; null = every day. */
+  dailyGoalDays?: string | null;
 };
 
 type SheetState = {

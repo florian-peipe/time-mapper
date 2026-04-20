@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import Slider from "@react-native-community/slider";
 import { useTheme } from "@/theme/useTheme";
 import { PLACE_COLORS } from "@/theme/tokens";
-import { Banner, Button, Icon, Input, Sheet, Toggle, type IconName } from "@/components";
+import { Banner, Button, DayPicker, Icon, Input, Sheet, Toggle, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { usePro } from "@/features/billing/usePro";
 import { useSnackbarStore } from "@/state/snackbarStore";
@@ -43,6 +43,16 @@ type Selection = {
   latitude: number;
   longitude: number;
 };
+
+/** Parse `places.dailyGoalDays` into a sorted array of ISO day numbers. */
+function parseGoalDays(raw: string | null | undefined): number[] {
+  if (!raw || raw.trim().length === 0) return [];
+  return raw
+    .split(",")
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
+    .sort((a, b) => a - b);
+}
 
 /** The 9 icons users can assign to a place. */
 const ICON_CHOICES: readonly IconName[] = [
@@ -162,6 +172,9 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       ? Math.max(DAILY_GOAL_MIN_H, Math.round(initialDailyGoalMin / 60))
       : DAILY_GOAL_DEFAULT_H,
   );
+  const [dailyGoalDays, setDailyGoalDays] = useState<number[]>(
+    parseGoalDays(editingPlace?.dailyGoalDays ?? null),
+  );
   const [weeklyGoalEnabled, setWeeklyGoalEnabled] = useState(initialWeeklyGoalMin != null);
   const [weeklyGoalHours, setWeeklyGoalHours] = useState(
     initialWeeklyGoalMin != null
@@ -201,6 +214,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
           Math.max(DAILY_GOAL_MIN_H, Math.round(pendingPlaceForm.dailyGoalMinutes / 60)),
         );
       }
+      setDailyGoalDays(parseGoalDays(pendingPlaceForm.dailyGoalDays ?? null));
       setWeeklyGoalEnabled(pendingPlaceForm.weeklyGoalMinutes != null);
       if (pendingPlaceForm.weeklyGoalMinutes != null) {
         setWeeklyGoalHours(
@@ -228,6 +242,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
           Math.max(DAILY_GOAL_MIN_H, Math.round(editingPlace.dailyGoalMinutes / 60)),
         );
       }
+      setDailyGoalDays(parseGoalDays(editingPlace.dailyGoalDays));
       setWeeklyGoalEnabled(editingPlace.weeklyGoalMinutes != null);
       if (editingPlace.weeklyGoalMinutes != null) {
         setWeeklyGoalHours(
@@ -247,6 +262,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setExitBufferMin(initialExitBufferMin);
       setDailyGoalEnabled(false);
       setDailyGoalHours(DAILY_GOAL_DEFAULT_H);
+      setDailyGoalDays([]);
       setWeeklyGoalEnabled(false);
       setWeeklyGoalHours(WEEKLY_GOAL_DEFAULT_H);
     }
@@ -355,6 +371,13 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
           exitBufferMin,
           dailyGoalMinutes: dailyGoalEnabled ? dailyGoalHours * 60 : null,
           weeklyGoalMinutes: weeklyGoalEnabled ? weeklyGoalHours * 60 : null,
+          dailyGoalDays:
+            dailyGoalEnabled && dailyGoalDays.length > 0 && dailyGoalDays.length < 7
+              ? dailyGoalDays
+                  .slice()
+                  .sort((a, b) => a - b)
+                  .join(",")
+              : null,
         };
         setPendingPlaceForm(stash);
       }
@@ -393,6 +416,15 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
     const goals = {
       dailyGoalMinutes: dailyGoalEnabled ? dailyGoalHours * 60 : null,
       weeklyGoalMinutes: weeklyGoalEnabled ? weeklyGoalHours * 60 : null,
+      // Normalize "every day" (empty or all-7 selection) to null so the
+      // notifier/stats fall through the simple "no filter" path.
+      dailyGoalDays:
+        dailyGoalEnabled && dailyGoalDays.length > 0 && dailyGoalDays.length < 7
+          ? dailyGoalDays
+              .slice()
+              .sort((a, b) => a - b)
+              .join(",")
+          : null,
     };
     if (editing && placeId) {
       saved = update(placeId, {
@@ -773,6 +805,8 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
             maxValue={DAILY_GOAL_MAX_H}
             onToggle={setDailyGoalEnabled}
             onChangeHours={setDailyGoalHours}
+            daysValue={dailyGoalDays}
+            onDaysChange={setDailyGoalDays}
             testID="add-place-daily-goal"
           />
           <GoalSliderRow
@@ -1004,6 +1038,8 @@ function GoalSliderRow({
   maxValue,
   onToggle,
   onChangeHours,
+  daysValue,
+  onDaysChange,
   testID,
 }: {
   label: string;
@@ -1013,6 +1049,9 @@ function GoalSliderRow({
   maxValue: number;
   onToggle: (next: boolean) => void;
   onChangeHours: (v: number) => void;
+  /** Optional day-of-week filter (only supplied for the daily goal). */
+  daysValue?: number[];
+  onDaysChange?: (next: number[]) => void;
   testID?: string;
 }) {
   const t = useTheme();
@@ -1075,6 +1114,25 @@ function GoalSliderRow({
           accessibilityLabel={label}
           accessibilityValue={{ min: minValue, max: maxValue, now: hours, text: valueLabel }}
         />
+      ) : null}
+      {enabled && daysValue && onDaysChange ? (
+        <View style={{ marginTop: t.space[2], gap: t.space[2] }}>
+          <Text
+            style={{
+              fontSize: t.type.size.xs,
+              color: t.color("color.fg3"),
+              fontFamily: t.type.family.sans,
+            }}
+          >
+            {i18n.t("addPlace.goal.daily.days.title")}
+          </Text>
+          <DayPicker
+            value={daysValue.length === 0 ? [1, 2, 3, 4, 5, 6, 7] : daysValue}
+            onChange={onDaysChange}
+            testID={testID ? `${testID}-days` : undefined}
+            accessibilityLabel={i18n.t("addPlace.goal.daily.days.hint")}
+          />
+        </View>
       ) : null}
     </View>
   );

@@ -21,6 +21,12 @@ export type CreatePlaceInput = {
   dailyGoalMinutes?: number | null;
   /** Weekly target (minutes). Null / omitted = no goal. */
   weeklyGoalMinutes?: number | null;
+  /**
+   * Comma-separated ISO day numbers (1=Mon..7=Sun) for which the daily
+   * goal applies. Null = every day. Ignored when `dailyGoalMinutes` is
+   * null.
+   */
+  dailyGoalDays?: string | null;
 };
 
 export class PlacesRepo {
@@ -44,6 +50,7 @@ export class PlacesRepo {
       icon: input.icon ?? "map-pin",
       dailyGoalMinutes: input.dailyGoalMinutes ?? null,
       weeklyGoalMinutes: input.weeklyGoalMinutes ?? null,
+      dailyGoalDays: input.dailyGoalDays ?? null,
       createdAt: now,
       updatedAt: now,
       deletedAt: null,

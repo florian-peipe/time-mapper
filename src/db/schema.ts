@@ -14,6 +14,9 @@ export const places = sqliteTable("places", {
   // Per-place time targets (minutes). Null = no goal set.
   dailyGoalMinutes: integer("daily_goal_minutes"),
   weeklyGoalMinutes: integer("weekly_goal_minutes"),
+  // Comma-separated ISO day numbers (1=Mon..7=Sun) for which the
+  // daily goal applies. Null = every day.
+  dailyGoalDays: text("daily_goal_days"),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at").notNull(),
   deletedAt: integer("deleted_at"),

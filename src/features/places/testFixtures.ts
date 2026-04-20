@@ -22,6 +22,7 @@ export function makePlace(id: string, overrides: Partial<Place> = {}): Place {
     icon: "map-pin",
     dailyGoalMinutes: null,
     weeklyGoalMinutes: null,
+    dailyGoalDays: null,
     createdAt: 0,
     updatedAt: 0,
     deletedAt: null,

@@ -8,6 +8,7 @@ import type { PlacesRepo } from "@/db/repository/places";
 import type { Place } from "@/db/schema";
 import { i18n } from "@/lib/i18n";
 import { formatDurationCompact, padNumber } from "@/lib/time";
+import { isDayInDailyGoal } from "@/lib/entries";
 
 const KV_RECENT_TIMESTAMPS = "notifier.recent";
 const KV_QUIET_HOURS = "notifier.quiet_hours";
@@ -355,7 +356,10 @@ async function maybeNotifyGoalReached(
 
   const { dayStart, weekStart, dayEnd, weekEnd } = periodBounds(new Date(nowS * 1000));
 
-  if (place.dailyGoalMinutes != null) {
+  if (
+    place.dailyGoalMinutes != null &&
+    isDayInDailyGoal(place.dailyGoalDays, new Date(nowS * 1000))
+  ) {
     const totalMin = totalMinutesForPlace(entriesRepo, place.id, dayStart, dayEnd);
     if (totalMin >= place.dailyGoalMinutes) {
       const kvKey = goalKvKey("day", place.id, dayStart);

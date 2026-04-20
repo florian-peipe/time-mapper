@@ -2,6 +2,7 @@ export { Banner, type BannerTone } from "./Banner";
 export { Button, type ButtonVariant, type ButtonSize } from "./Button";
 export { Card } from "./Card";
 export { Chip, type ChipTone } from "./Chip";
+export { DayPicker, ISO_DAYS } from "./DayPicker";
 export { ErrorBoundary } from "./ErrorBoundary";
 export { Fab } from "./Fab";
 export { Icon, type IconName } from "./Icon";
