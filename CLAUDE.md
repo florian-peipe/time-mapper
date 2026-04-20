@@ -183,8 +183,8 @@ See the table in `README.md` § "What the user provides". Key ones:
 ## Further reading
 
 - `CHANGELOG.md` — release-by-release summary of what shipped and why.
-- `docs/STATUS.md` — once created, intended to track outstanding items
-  against the MVP spec. (Not currently maintained; see CHANGELOG
-  instead.)
+- `docs/STATUS.md` — v1.1 feature matrix + third-party setup checklist
+  + next-steps block for the invited TestFlight collaborator. Read
+  first if you're picking up the handoff.
 - Individual feature READMEs under `src/features/*/` — none written
   yet; source comments are the source of truth.
