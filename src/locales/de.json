@@ -12,6 +12,8 @@
   "places.toggle.map": "Karte",
   "places.toggle.list": "Liste",
   "places.map.accessibilityLabel": "Karte mit deinen gespeicherten Orten",
+  "timeline.nearby.inside": "Am Ort {{name}}",
+  "timeline.nearby.near": "~{{meters}} m von {{name}}",
   "common.save": "Speichern",
   "common.cancel": "Abbrechen",
   "common.delete": "Löschen",

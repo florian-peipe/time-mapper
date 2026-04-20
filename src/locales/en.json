@@ -12,6 +12,8 @@
   "places.toggle.map": "Map",
   "places.toggle.list": "List",
   "places.map.accessibilityLabel": "Map showing your saved places",
+  "timeline.nearby.inside": "Inside {{name}}",
+  "timeline.nearby.near": "~{{meters}}m from {{name}}",
   "common.save": "Save",
   "common.cancel": "Cancel",
   "common.delete": "Delete",

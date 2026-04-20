@@ -14,6 +14,7 @@ import type { Entry, Place } from "@/db/schema";
 import type { IconName, SourceKind } from "@/components";
 import { DayNavHeader } from "./DayNavHeader";
 import { EntryRow } from "./EntryRow";
+import { NearbyPlacesBanner } from "./NearbyPlacesBanner";
 import { RunningTimerCard } from "./RunningTimerCard";
 import { TrackingBanner } from "./TrackingBanner";
 
@@ -104,6 +105,13 @@ export function TimelineScreen() {
           paddingBottom: t.space[10] + t.space[5],
         }}
       >
+        {/* Positional readout — "Inside Home" / "~40m from Home" — renders
+            null when the user is far from every saved place. Lives above the
+            permission banner so permission issues take precedence. */}
+        <View style={{ marginBottom: t.space[2], alignItems: "flex-start" }}>
+          <NearbyPlacesBanner />
+        </View>
+
         {/* Permission status banner — renders null when auto-tracking is healthy. */}
         <View style={{ marginBottom: t.space[3] }}>
           <TrackingBanner />

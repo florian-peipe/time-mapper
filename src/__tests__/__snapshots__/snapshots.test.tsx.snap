@@ -14279,6 +14279,16 @@ exports[`snapshots — main screens Timeline with a single seeded place 1`] = `
                   "children": null,
                   "props": {
                     "style": {
+                      "alignItems": "flex-start",
+                      "marginBottom": 8,
+                    },
+                  },
+                  "type": "View",
+                },
+                {
+                  "children": null,
+                  "props": {
+                    "style": {
                       "marginBottom": 12,
                     },
                   },
