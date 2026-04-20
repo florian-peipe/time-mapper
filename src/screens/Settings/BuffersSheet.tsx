@@ -106,6 +106,7 @@ export function BuffersSheet({ visible, onClose }: BuffersSheetProps) {
         maxValue={ENTRY_MAX_MIN}
         onChange={setEntryMin}
         testID="buffers-entry"
+        visible={visible}
       />
       <View style={{ height: t.space[5] }} />
       <BufferRow
@@ -115,6 +116,7 @@ export function BuffersSheet({ visible, onClose }: BuffersSheetProps) {
         maxValue={EXIT_MAX_MIN}
         onChange={setExitMin}
         testID="buffers-exit"
+        visible={visible}
       />
     </Sheet>
   );
@@ -127,6 +129,7 @@ function BufferRow({
   maxValue,
   onChange,
   testID,
+  visible,
 }: {
   label: string;
   minutes: number;
@@ -134,6 +137,9 @@ function BufferRow({
   maxValue: number;
   onChange: (v: number) => void;
   testID?: string;
+  /** Remount the native Slider when the sheet opens so the UISlider
+   *  thumb position syncs with the current `value`. */
+  visible: boolean;
 }) {
   const t = useTheme();
   const minutesLabel = i18n.t("settings.buffers.minutesSuffix", { n: minutes });
@@ -170,6 +176,7 @@ function BufferRow({
         </Text>
       </View>
       <Slider
+        key={visible ? "open" : "closed"}
         testID={testID}
         minimumValue={minValue}
         maximumValue={maxValue}
@@ -179,7 +186,7 @@ function BufferRow({
         minimumTrackTintColor={t.color("color.accent")}
         maximumTrackTintColor={t.color("color.border")}
         thumbTintColor={t.color("color.accent")}
-        style={{ width: "100%", height: 40 }}
+        style={{ width: "100%", height: 28 }}
         accessibilityRole="adjustable"
         accessibilityLabel={label}
         accessibilityValue={{ min: minValue, max: maxValue, now: minutes, text: minutesLabel }}

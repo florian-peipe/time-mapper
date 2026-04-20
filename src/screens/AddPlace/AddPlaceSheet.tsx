@@ -735,6 +735,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
               </Text>
             </View>
             <Slider
+              key={visible ? "radius-open" : "radius-closed"}
               testID="add-place-radius"
               minimumValue={RADIUS_MIN}
               maximumValue={RADIUS_MAX}
@@ -744,7 +745,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
               minimumTrackTintColor={t.color("color.accent")}
               maximumTrackTintColor={t.color("color.border")}
               thumbTintColor={t.color("color.accent")}
-              style={{ width: "100%", height: 40 }}
+              style={{ width: "100%", height: 28 }}
               accessibilityRole="adjustable"
               accessibilityLabel={i18n.t("addPlace.field.radius")}
               accessibilityValue={{
@@ -765,6 +766,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
             maxValue={ENTRY_BUFFER_MAX_MIN}
             onChange={setEntryBufferMin}
             testID="add-place-entry-buffer"
+            visible={visible}
           />
           <BufferSliderRow
             label={i18n.t("addPlace.field.exitBuffer")}
@@ -773,6 +775,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
             maxValue={EXIT_BUFFER_MAX_MIN}
             onChange={setExitBufferMin}
             testID="add-place-exit-buffer"
+            visible={visible}
           />
 
           {/* Goals — optional daily + weekly time targets. */}
@@ -962,6 +965,7 @@ function BufferSliderRow({
   maxValue,
   onChange,
   testID,
+  visible,
 }: {
   label: string;
   minutes: number;
@@ -969,6 +973,10 @@ function BufferSliderRow({
   maxValue: number;
   onChange: (v: number) => void;
   testID?: string;
+  /** Sheet visibility — used to force a Slider remount on open so the
+   *  native iOS UISlider thumb syncs with the current `value` prop
+   *  (known bug where the initial thumb position is wrong). */
+  visible: boolean;
 }) {
   const t = useTheme();
   const valueLabel = i18n.t("addPlace.field.bufferValue", { n: minutes });
@@ -1005,6 +1013,7 @@ function BufferSliderRow({
         </Text>
       </View>
       <Slider
+        key={visible ? "open" : "closed"}
         testID={testID}
         minimumValue={minValue}
         maximumValue={maxValue}
@@ -1014,7 +1023,7 @@ function BufferSliderRow({
         minimumTrackTintColor={t.color("color.accent")}
         maximumTrackTintColor={t.color("color.border")}
         thumbTintColor={t.color("color.accent")}
-        style={{ width: "100%", height: 40 }}
+        style={{ width: "100%", height: 28 }}
         accessibilityRole="adjustable"
         accessibilityLabel={label}
         accessibilityValue={{ min: minValue, max: maxValue, now: minutes, text: valueLabel }}
@@ -1100,6 +1109,9 @@ function GoalSliderRow({
       </Pressable>
       {enabled ? (
         <Slider
+          // Remount on toggle-on so the UISlider's thumb syncs with
+          // the current `hours` value (native iOS bug workaround).
+          key={`${testID}-${enabled ? "on" : "off"}`}
           testID={testID}
           minimumValue={minValue}
           maximumValue={maxValue}
@@ -1109,7 +1121,7 @@ function GoalSliderRow({
           minimumTrackTintColor={t.color("color.accent")}
           maximumTrackTintColor={t.color("color.border")}
           thumbTintColor={t.color("color.accent")}
-          style={{ width: "100%", height: 40 }}
+          style={{ width: "100%", height: 28 }}
           accessibilityRole="adjustable"
           accessibilityLabel={label}
           accessibilityValue={{ min: minValue, max: maxValue, now: hours, text: valueLabel }}
