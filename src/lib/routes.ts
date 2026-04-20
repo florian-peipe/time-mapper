@@ -15,3 +15,21 @@ type RouterPushArg = Parameters<ReturnType<typeof useRouter>["push"]>[0];
 export function legalRoute(key: LegalRoute): RouterPushArg {
   return key as unknown as RouterPushArg;
 }
+
+/**
+ * Typed helper for onboarding routes. Same story as `legalRoute` — newly
+ * added `app/(onboarding)/*` route files aren't in the Expo-Router
+ * generator output until the next `expo start`, so we centralize the
+ * cast behind an allowlist.
+ */
+export type OnboardingRoute =
+  | "/(onboarding)/welcome"
+  | "/(onboarding)/how-it-works"
+  | "/(onboarding)/goals-and-stats"
+  | "/(onboarding)/privacy"
+  | "/(onboarding)/permissions"
+  | "/(onboarding)/first-place";
+
+export function onboardingRoute(key: OnboardingRoute): RouterPushArg {
+  return key as unknown as RouterPushArg;
+}

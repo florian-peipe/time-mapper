@@ -112,7 +112,7 @@ export function FirstPlaceScreen() {
             {i18n.t("onboarding.firstPlace.skip")}
           </Button>
         </View>
-        <StepIndicator current={3} total={3} testID="onboarding-steps" />
+        <StepIndicator current={6} total={6} testID="onboarding-steps" />
       </View>
     </View>
   );

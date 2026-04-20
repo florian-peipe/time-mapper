@@ -163,7 +163,7 @@ export function PermissionsScreen() {
             {i18n.t("onboarding.permissions.skip")}
           </Button>
         </View>
-        <StepIndicator current={2} total={3} testID="onboarding-steps" />
+        <StepIndicator current={5} total={6} testID="onboarding-steps" />
       </View>
     </View>
   );

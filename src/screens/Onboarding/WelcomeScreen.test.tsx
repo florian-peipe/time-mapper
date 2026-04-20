@@ -36,9 +36,9 @@ describe("WelcomeScreen", () => {
     expect(screen.getByText(/automatic time tracking/i)).toBeTruthy();
   });
 
-  it("primary CTA advances to the permissions primer", () => {
+  it("primary CTA advances to the how-it-works slide", () => {
     render(wrap(<WelcomeScreen />));
     fireEvent.press(screen.getByTestId("onboarding-welcome-continue"));
-    expect(mockPush).toHaveBeenCalledWith("/(onboarding)/permissions");
+    expect(mockPush).toHaveBeenCalledWith("/(onboarding)/how-it-works");
   });
 });
