@@ -12194,33 +12194,6 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
               "children": [
                 {
                   "children": [
-                    "This week",
-                  ],
-                  "props": {
-                    "accessibilityRole": "header",
-                    "style": {
-                      "color": "#1A1714",
-                      "fontFamily": "Inter",
-                      "fontSize": 24,
-                      "fontWeight": "700",
-                      "letterSpacing": -0.4,
-                    },
-                  },
-                  "type": "Text",
-                },
-              ],
-              "props": {
-                "style": {
-                  "paddingBottom": 8,
-                  "paddingHorizontal": 20,
-                },
-              },
-              "type": "View",
-            },
-            {
-              "children": [
-                {
-                  "children": [
                     {
                       "children": [
                         {
@@ -12270,13 +12243,13 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                       ],
                       "props": {
                         "align": "xMidYMid",
-                        "bbHeight": 18,
-                        "bbWidth": 18,
+                        "bbHeight": 20,
+                        "bbWidth": 20,
                         "className": undefined,
                         "data-testid": undefined,
                         "fill": "none",
                         "focusable": false,
-                        "height": 18,
+                        "height": 20,
                         "meetOrSlice": 0,
                         "minX": 0,
                         "minY": 0,
@@ -12291,20 +12264,20 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                           },
                           {
                             "flex": 0,
-                            "height": 18,
-                            "width": 18,
+                            "height": 20,
+                            "width": 20,
                           },
                         ],
                         "vbHeight": 24,
                         "vbWidth": 24,
-                        "width": 18,
+                        "width": 20,
                         "xmlns": "http://www.w3.org/2000/svg",
                       },
                       "type": "RNSVGSvgView",
                     },
                   ],
                   "props": {
-                    "accessibilityLabel": "Previous week",
+                    "accessibilityLabel": "Previous",
                     "accessibilityRole": "button",
                     "accessibilityState": {
                       "busy": undefined,
@@ -12341,29 +12314,81 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                       "minWidth": 44,
                       "width": 44,
                     },
-                    "testID": "stats-week-prev",
+                    "testID": "stats-nav-prev",
                   },
                   "type": "View",
                 },
                 {
                   "children": [
-                    "Apr 13 — Apr 19",
+                    {
+                      "children": [
+                        "This week",
+                      ],
+                      "props": {
+                        "style": {
+                          "color": "#1A1714",
+                          "fontFamily": "Inter",
+                          "fontSize": 20,
+                          "fontWeight": "700",
+                          "letterSpacing": -0.3,
+                        },
+                      },
+                      "type": "Text",
+                    },
+                    {
+                      "children": [
+                        "0h 0m tracked",
+                      ],
+                      "props": {
+                        "style": {
+                          "color": "#8A837A",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontVariant": [
+                            "tabular-nums",
+                          ],
+                          "marginTop": 2,
+                        },
+                      },
+                      "type": "Text",
+                    },
                   ],
                   "props": {
-                    "style": {
-                      "color": "#4C4741",
-                      "flex": 1,
-                      "fontFamily": "Inter",
-                      "fontSize": 13,
-                      "fontVariant": [
-                        "tabular-nums",
-                      ],
-                      "fontWeight": "500",
-                      "textAlign": "center",
+                    "accessibilityHint": "Long-press to cycle backward",
+                    "accessibilityLabel": "Viewing week — tap to switch to month",
+                    "accessibilityRole": "button",
+                    "accessibilityState": {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
                     },
-                    "testID": "stats-week-range",
+                    "accessibilityValue": {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    },
+                    "accessible": true,
+                    "collapsable": false,
+                    "focusable": true,
+                    "onBlur": [Function],
+                    "onClick": [Function],
+                    "onFocus": [Function],
+                    "onResponderGrant": [Function],
+                    "onResponderMove": [Function],
+                    "onResponderRelease": [Function],
+                    "onResponderTerminate": [Function],
+                    "onResponderTerminationRequest": [Function],
+                    "onStartShouldSetResponder": [Function],
+                    "style": {
+                      "alignItems": "center",
+                      "flex": 1,
+                    },
+                    "testID": "stats-nav-mode",
                   },
-                  "type": "Text",
+                  "type": "View",
                 },
                 {
                   "children": [
@@ -12416,13 +12441,13 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                       ],
                       "props": {
                         "align": "xMidYMid",
-                        "bbHeight": 18,
-                        "bbWidth": 18,
+                        "bbHeight": 20,
+                        "bbWidth": 20,
                         "className": undefined,
                         "data-testid": undefined,
                         "fill": "none",
                         "focusable": false,
-                        "height": 18,
+                        "height": 20,
                         "meetOrSlice": 0,
                         "minX": 0,
                         "minY": 0,
@@ -12437,20 +12462,20 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                           },
                           {
                             "flex": 0,
-                            "height": 18,
-                            "width": 18,
+                            "height": 20,
+                            "width": 20,
                           },
                         ],
                         "vbHeight": 24,
                         "vbWidth": 24,
-                        "width": 18,
+                        "width": 20,
                         "xmlns": "http://www.w3.org/2000/svg",
                       },
                       "type": "RNSVGSvgView",
                     },
                   ],
                   "props": {
-                    "accessibilityLabel": "Next week",
+                    "accessibilityLabel": "Next",
                     "accessibilityRole": "button",
                     "accessibilityState": {
                       "busy": undefined,
@@ -12478,17 +12503,21 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                     "onResponderTerminate": [Function],
                     "onResponderTerminationRequest": [Function],
                     "onStartShouldSetResponder": [Function],
-                    "style": {
-                      "alignItems": "center",
-                      "borderRadius": 9999,
-                      "height": 44,
-                      "justifyContent": "center",
-                      "minHeight": 44,
-                      "minWidth": 44,
-                      "opacity": 0.3,
-                      "width": 44,
-                    },
-                    "testID": "stats-week-next",
+                    "style": [
+                      {
+                        "alignItems": "center",
+                        "borderRadius": 9999,
+                        "height": 44,
+                        "justifyContent": "center",
+                        "minHeight": 44,
+                        "minWidth": 44,
+                        "width": 44,
+                      },
+                      {
+                        "opacity": 0.3,
+                      },
+                    ],
+                    "testID": "stats-nav-next",
                   },
                   "type": "View",
                 },
@@ -12500,11 +12529,22 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                   "gap": 8,
                   "paddingBottom": 12,
                   "paddingHorizontal": 20,
+                  "paddingTop": 8,
                 },
-                "testID": "stats-week-nav",
+                "testID": "stats-nav",
               },
               "type": "View",
             },
+          ],
+          "props": {
+            "style": {
+              "paddingTop": 47,
+            },
+          },
+          "type": "View",
+        },
+        {
+          "children": [
             {
               "children": [
                 {
@@ -12513,351 +12553,61 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                       "children": [
                         {
                           "children": [
-                            {
-                              "children": null,
-                              "props": {
-                                "style": {
-                                  "backgroundColor": "#F5F2EC",
-                                  "borderRadius": 6,
-                                  "flexDirection": "column-reverse",
-                                  "height": 160,
-                                  "overflow": "hidden",
-                                  "width": 18,
-                                },
-                              },
-                              "type": "View",
-                            },
-                            {
-                              "children": [
-                                "Mon",
-                              ],
-                              "props": {
-                                "style": {
-                                  "color": "#8A837A",
-                                  "fontFamily": "Inter",
-                                  "fontSize": 11,
-                                  "fontWeight": "600",
-                                },
-                              },
-                              "type": "Text",
-                            },
+                            "Total tracked",
                           ],
                           "props": {
-                            "accessibilityLabel": "Monday, no tracking",
-                            "accessibilityRole": "text",
-                            "accessible": true,
                             "style": {
-                              "alignItems": "center",
-                              "flex": 1,
-                              "gap": 8,
-                              "height": "100%",
+                              "color": "#8A837A",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "letterSpacing": 0.4,
+                              "marginBottom": 4,
+                              "textTransform": "uppercase",
                             },
-                            "testID": "week-bar-mon",
                           },
-                          "type": "View",
+                          "type": "Text",
                         },
                         {
                           "children": [
-                            {
-                              "children": null,
-                              "props": {
-                                "style": {
-                                  "backgroundColor": "#F5F2EC",
-                                  "borderRadius": 6,
-                                  "flexDirection": "column-reverse",
-                                  "height": 160,
-                                  "overflow": "hidden",
-                                  "width": 18,
-                                },
-                              },
-                              "type": "View",
-                            },
-                            {
-                              "children": [
-                                "Tue",
-                              ],
-                              "props": {
-                                "style": {
-                                  "color": "#8A837A",
-                                  "fontFamily": "Inter",
-                                  "fontSize": 11,
-                                  "fontWeight": "600",
-                                },
-                              },
-                              "type": "Text",
-                            },
+                            "0h 0m",
                           ],
                           "props": {
-                            "accessibilityLabel": "Tuesday, no tracking",
-                            "accessibilityRole": "text",
-                            "accessible": true,
                             "style": {
-                              "alignItems": "center",
-                              "flex": 1,
-                              "gap": 8,
-                              "height": "100%",
+                              "color": "#1A1714",
+                              "fontFamily": "Inter",
+                              "fontSize": 32,
+                              "fontVariant": [
+                                "tabular-nums",
+                              ],
+                              "fontWeight": "700",
+                              "letterSpacing": -0.6,
                             },
-                            "testID": "week-bar-tue",
+                            "testID": "stats-summary-total",
                           },
-                          "type": "View",
+                          "type": "Text",
                         },
                         {
                           "children": [
-                            {
-                              "children": null,
-                              "props": {
-                                "style": {
-                                  "backgroundColor": "#F5F2EC",
-                                  "borderRadius": 6,
-                                  "flexDirection": "column-reverse",
-                                  "height": 160,
-                                  "overflow": "hidden",
-                                  "width": 18,
-                                },
-                              },
-                              "type": "View",
-                            },
-                            {
-                              "children": [
-                                "Wed",
-                              ],
-                              "props": {
-                                "style": {
-                                  "color": "#8A837A",
-                                  "fontFamily": "Inter",
-                                  "fontSize": 11,
-                                  "fontWeight": "600",
-                                },
-                              },
-                              "type": "Text",
-                            },
-                          ],
-                          "props": {
-                            "accessibilityLabel": "Wednesday, no tracking",
-                            "accessibilityRole": "text",
-                            "accessible": true,
-                            "style": {
-                              "alignItems": "center",
-                              "flex": 1,
-                              "gap": 8,
-                              "height": "100%",
-                            },
-                            "testID": "week-bar-wed",
-                          },
-                          "type": "View",
-                        },
-                        {
-                          "children": [
-                            {
-                              "children": null,
-                              "props": {
-                                "style": {
-                                  "backgroundColor": "#F5F2EC",
-                                  "borderRadius": 6,
-                                  "flexDirection": "column-reverse",
-                                  "height": 160,
-                                  "overflow": "hidden",
-                                  "width": 18,
-                                },
-                              },
-                              "type": "View",
-                            },
-                            {
-                              "children": [
-                                "Thu",
-                              ],
-                              "props": {
-                                "style": {
-                                  "color": "#8A837A",
-                                  "fontFamily": "Inter",
-                                  "fontSize": 11,
-                                  "fontWeight": "600",
-                                },
-                              },
-                              "type": "Text",
-                            },
-                          ],
-                          "props": {
-                            "accessibilityLabel": "Thursday, no tracking",
-                            "accessibilityRole": "text",
-                            "accessible": true,
-                            "style": {
-                              "alignItems": "center",
-                              "flex": 1,
-                              "gap": 8,
-                              "height": "100%",
-                            },
-                            "testID": "week-bar-thu",
-                          },
-                          "type": "View",
-                        },
-                        {
-                          "children": [
-                            {
-                              "children": null,
-                              "props": {
-                                "style": {
-                                  "backgroundColor": "#F5F2EC",
-                                  "borderRadius": 6,
-                                  "flexDirection": "column-reverse",
-                                  "height": 160,
-                                  "overflow": "hidden",
-                                  "width": 18,
-                                },
-                              },
-                              "type": "View",
-                            },
-                            {
-                              "children": [
-                                "Fri",
-                              ],
-                              "props": {
-                                "style": {
-                                  "color": "#8A837A",
-                                  "fontFamily": "Inter",
-                                  "fontSize": 11,
-                                  "fontWeight": "600",
-                                },
-                              },
-                              "type": "Text",
-                            },
-                          ],
-                          "props": {
-                            "accessibilityLabel": "Friday, no tracking",
-                            "accessibilityRole": "text",
-                            "accessible": true,
-                            "style": {
-                              "alignItems": "center",
-                              "flex": 1,
-                              "gap": 8,
-                              "height": "100%",
-                            },
-                            "testID": "week-bar-fri",
-                          },
-                          "type": "View",
-                        },
-                        {
-                          "children": [
-                            {
-                              "children": null,
-                              "props": {
-                                "style": {
-                                  "backgroundColor": "#F5F2EC",
-                                  "borderRadius": 6,
-                                  "flexDirection": "column-reverse",
-                                  "height": 160,
-                                  "overflow": "hidden",
-                                  "width": 18,
-                                },
-                              },
-                              "type": "View",
-                            },
-                            {
-                              "children": [
-                                "Sat",
-                              ],
-                              "props": {
-                                "style": {
-                                  "color": "#8A837A",
-                                  "fontFamily": "Inter",
-                                  "fontSize": 11,
-                                  "fontWeight": "600",
-                                },
-                              },
-                              "type": "Text",
-                            },
-                          ],
-                          "props": {
-                            "accessibilityLabel": "Saturday, no tracking",
-                            "accessibilityRole": "text",
-                            "accessible": true,
-                            "style": {
-                              "alignItems": "center",
-                              "flex": 1,
-                              "gap": 8,
-                              "height": "100%",
-                            },
-                            "testID": "week-bar-sat",
-                          },
-                          "type": "View",
-                        },
-                        {
-                          "children": [
-                            {
-                              "children": null,
-                              "props": {
-                                "style": {
-                                  "backgroundColor": "#F5F2EC",
-                                  "borderRadius": 6,
-                                  "flexDirection": "column-reverse",
-                                  "height": 160,
-                                  "overflow": "hidden",
-                                  "width": 18,
-                                },
-                              },
-                              "type": "View",
-                            },
-                            {
-                              "children": [
-                                "Sun",
-                              ],
-                              "props": {
-                                "style": {
-                                  "color": "#8A837A",
-                                  "fontFamily": "Inter",
-                                  "fontSize": 11,
-                                  "fontWeight": "600",
-                                },
-                              },
-                              "type": "Text",
-                            },
-                          ],
-                          "props": {
-                            "accessibilityLabel": "Sunday, no tracking",
-                            "accessibilityRole": "text",
-                            "accessible": true,
-                            "style": {
-                              "alignItems": "center",
-                              "flex": 1,
-                              "gap": 8,
-                              "height": "100%",
-                            },
-                            "testID": "week-bar-sun",
-                          },
-                          "type": "View",
-                        },
-                      ],
-                      "props": {
-                        "style": {
-                          "alignItems": "flex-end",
-                          "flexDirection": "row",
-                          "gap": 12,
-                          "height": 180,
-                        },
-                      },
-                      "type": "View",
-                    },
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            "No tracked time yet this week",
+                            "No entries in this range yet.",
                           ],
                           "props": {
                             "style": {
                               "color": "#8A837A",
                               "fontFamily": "Inter",
                               "fontSize": 13,
+                              "marginTop": 8,
                             },
-                            "testID": "week-bar-chart-empty",
                           },
                           "type": "Text",
                         },
                       ],
                       "props": {
                         "style": {
-                          "alignItems": "center",
-                          "marginTop": 20,
+                          "backgroundColor": "#FFFFFF",
+                          "borderColor": "#E9E4DD",
+                          "borderRadius": 12,
+                          "borderWidth": 1,
+                          "padding": 16,
                         },
                       },
                       "type": "View",
@@ -12865,27 +12615,391 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                   ],
                   "props": {
                     "style": {
-                      "backgroundColor": "#FFFFFF",
-                      "borderColor": "#E9E4DD",
-                      "borderRadius": 12,
-                      "borderWidth": 1,
-                      "padding": 20,
+                      "paddingHorizontal": 20,
+                      "paddingTop": 8,
                     },
-                    "testID": "week-bar-chart",
                   },
                   "type": "View",
                 },
-              ],
-              "props": {
-                "style": {
-                  "paddingHorizontal": 20,
-                  "paddingVertical": 8,
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "style": {
+                                      "backgroundColor": "#F5F2EC",
+                                      "borderRadius": 6,
+                                      "flexDirection": "column-reverse",
+                                      "height": 160,
+                                      "overflow": "hidden",
+                                      "width": 18,
+                                    },
+                                  },
+                                  "type": "View",
+                                },
+                                {
+                                  "children": [
+                                    "Mon",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#8A837A",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600",
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                              ],
+                              "props": {
+                                "accessibilityLabel": "Monday, no tracking",
+                                "accessibilityRole": "text",
+                                "accessible": true,
+                                "style": {
+                                  "alignItems": "center",
+                                  "flex": 1,
+                                  "gap": 8,
+                                  "height": "100%",
+                                },
+                                "testID": "week-bar-mon",
+                              },
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "style": {
+                                      "backgroundColor": "#F5F2EC",
+                                      "borderRadius": 6,
+                                      "flexDirection": "column-reverse",
+                                      "height": 160,
+                                      "overflow": "hidden",
+                                      "width": 18,
+                                    },
+                                  },
+                                  "type": "View",
+                                },
+                                {
+                                  "children": [
+                                    "Tue",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#8A837A",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600",
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                              ],
+                              "props": {
+                                "accessibilityLabel": "Tuesday, no tracking",
+                                "accessibilityRole": "text",
+                                "accessible": true,
+                                "style": {
+                                  "alignItems": "center",
+                                  "flex": 1,
+                                  "gap": 8,
+                                  "height": "100%",
+                                },
+                                "testID": "week-bar-tue",
+                              },
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "style": {
+                                      "backgroundColor": "#F5F2EC",
+                                      "borderRadius": 6,
+                                      "flexDirection": "column-reverse",
+                                      "height": 160,
+                                      "overflow": "hidden",
+                                      "width": 18,
+                                    },
+                                  },
+                                  "type": "View",
+                                },
+                                {
+                                  "children": [
+                                    "Wed",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#8A837A",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600",
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                              ],
+                              "props": {
+                                "accessibilityLabel": "Wednesday, no tracking",
+                                "accessibilityRole": "text",
+                                "accessible": true,
+                                "style": {
+                                  "alignItems": "center",
+                                  "flex": 1,
+                                  "gap": 8,
+                                  "height": "100%",
+                                },
+                                "testID": "week-bar-wed",
+                              },
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "style": {
+                                      "backgroundColor": "#F5F2EC",
+                                      "borderRadius": 6,
+                                      "flexDirection": "column-reverse",
+                                      "height": 160,
+                                      "overflow": "hidden",
+                                      "width": 18,
+                                    },
+                                  },
+                                  "type": "View",
+                                },
+                                {
+                                  "children": [
+                                    "Thu",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#8A837A",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600",
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                              ],
+                              "props": {
+                                "accessibilityLabel": "Thursday, no tracking",
+                                "accessibilityRole": "text",
+                                "accessible": true,
+                                "style": {
+                                  "alignItems": "center",
+                                  "flex": 1,
+                                  "gap": 8,
+                                  "height": "100%",
+                                },
+                                "testID": "week-bar-thu",
+                              },
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "style": {
+                                      "backgroundColor": "#F5F2EC",
+                                      "borderRadius": 6,
+                                      "flexDirection": "column-reverse",
+                                      "height": 160,
+                                      "overflow": "hidden",
+                                      "width": 18,
+                                    },
+                                  },
+                                  "type": "View",
+                                },
+                                {
+                                  "children": [
+                                    "Fri",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#8A837A",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600",
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                              ],
+                              "props": {
+                                "accessibilityLabel": "Friday, no tracking",
+                                "accessibilityRole": "text",
+                                "accessible": true,
+                                "style": {
+                                  "alignItems": "center",
+                                  "flex": 1,
+                                  "gap": 8,
+                                  "height": "100%",
+                                },
+                                "testID": "week-bar-fri",
+                              },
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "style": {
+                                      "backgroundColor": "#F5F2EC",
+                                      "borderRadius": 6,
+                                      "flexDirection": "column-reverse",
+                                      "height": 160,
+                                      "overflow": "hidden",
+                                      "width": 18,
+                                    },
+                                  },
+                                  "type": "View",
+                                },
+                                {
+                                  "children": [
+                                    "Sat",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#8A837A",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600",
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                              ],
+                              "props": {
+                                "accessibilityLabel": "Saturday, no tracking",
+                                "accessibilityRole": "text",
+                                "accessible": true,
+                                "style": {
+                                  "alignItems": "center",
+                                  "flex": 1,
+                                  "gap": 8,
+                                  "height": "100%",
+                                },
+                                "testID": "week-bar-sat",
+                              },
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": null,
+                                  "props": {
+                                    "style": {
+                                      "backgroundColor": "#F5F2EC",
+                                      "borderRadius": 6,
+                                      "flexDirection": "column-reverse",
+                                      "height": 160,
+                                      "overflow": "hidden",
+                                      "width": 18,
+                                    },
+                                  },
+                                  "type": "View",
+                                },
+                                {
+                                  "children": [
+                                    "Sun",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#8A837A",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "fontWeight": "600",
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                              ],
+                              "props": {
+                                "accessibilityLabel": "Sunday, no tracking",
+                                "accessibilityRole": "text",
+                                "accessible": true,
+                                "style": {
+                                  "alignItems": "center",
+                                  "flex": 1,
+                                  "gap": 8,
+                                  "height": "100%",
+                                },
+                                "testID": "week-bar-sun",
+                              },
+                              "type": "View",
+                            },
+                          ],
+                          "props": {
+                            "style": {
+                              "alignItems": "flex-end",
+                              "flexDirection": "row",
+                              "gap": 12,
+                              "height": 180,
+                            },
+                          },
+                          "type": "View",
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                "No tracked time yet this week",
+                              ],
+                              "props": {
+                                "style": {
+                                  "color": "#8A837A",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                },
+                                "testID": "week-bar-chart-empty",
+                              },
+                              "type": "Text",
+                            },
+                          ],
+                          "props": {
+                            "style": {
+                              "alignItems": "center",
+                              "marginTop": 20,
+                            },
+                          },
+                          "type": "View",
+                        },
+                      ],
+                      "props": {
+                        "style": {
+                          "backgroundColor": "#FFFFFF",
+                          "borderColor": "#E9E4DD",
+                          "borderRadius": 12,
+                          "borderWidth": 1,
+                          "padding": 20,
+                        },
+                        "testID": "week-bar-chart",
+                      },
+                      "type": "View",
+                    },
+                  ],
+                  "props": {
+                    "style": {
+                      "paddingHorizontal": 20,
+                      "paddingVertical": 8,
+                    },
+                  },
+                  "type": "View",
                 },
-              },
-              "type": "View",
-            },
-            {
-              "children": [
                 {
                   "children": [
                     {
@@ -12897,10 +13011,59 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                 {
                                   "children": [
                                     {
-                                      "children": null,
+                                      "children": [
+                                        {
+                                          "children": null,
+                                          "props": {
+                                            "fill": null,
+                                            "height": "11",
+                                            "propList": [
+                                              "fill",
+                                              "stroke",
+                                              "strokeWidth",
+                                              "strokeLinecap",
+                                              "strokeLinejoin",
+                                            ],
+                                            "rx": "2",
+                                            "ry": "2",
+                                            "stroke": {
+                                              "payload": 4293416230,
+                                              "type": 0,
+                                            },
+                                            "strokeLinecap": 1,
+                                            "strokeLinejoin": 1,
+                                            "strokeWidth": 1.75,
+                                            "width": "18",
+                                            "x": "3",
+                                            "y": "11",
+                                          },
+                                          "type": "RNSVGRect",
+                                        },
+                                        {
+                                          "children": null,
+                                          "props": {
+                                            "d": "M7 11V7a5 5 0 0 1 10 0v4",
+                                            "fill": null,
+                                            "propList": [
+                                              "fill",
+                                              "stroke",
+                                              "strokeWidth",
+                                              "strokeLinecap",
+                                              "strokeLinejoin",
+                                            ],
+                                            "stroke": {
+                                              "payload": 4293416230,
+                                              "type": 0,
+                                            },
+                                            "strokeLinecap": 1,
+                                            "strokeLinejoin": 1,
+                                            "strokeWidth": 1.75,
+                                          },
+                                          "type": "RNSVGPath",
+                                        },
+                                      ],
                                       "props": {
                                         "fill": null,
-                                        "height": "11",
                                         "propList": [
                                           "fill",
                                           "stroke",
@@ -12908,8 +13071,6 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                           "strokeLinecap",
                                           "strokeLinejoin",
                                         ],
-                                        "rx": "2",
-                                        "ry": "2",
                                         "stroke": {
                                           "payload": 4293416230,
                                           "type": 0,
@@ -12917,16 +13078,103 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                         "strokeLinecap": 1,
                                         "strokeLinejoin": 1,
                                         "strokeWidth": 1.75,
-                                        "width": "18",
-                                        "x": "3",
-                                        "y": "11",
                                       },
-                                      "type": "RNSVGRect",
+                                      "type": "RNSVGGroup",
                                     },
+                                  ],
+                                  "props": {
+                                    "align": "xMidYMid",
+                                    "bbHeight": 21,
+                                    "bbWidth": 21,
+                                    "className": undefined,
+                                    "data-testid": undefined,
+                                    "fill": "none",
+                                    "focusable": false,
+                                    "height": 21,
+                                    "meetOrSlice": 0,
+                                    "minX": 0,
+                                    "minY": 0,
+                                    "stroke": "#E85526",
+                                    "strokeLinecap": "round",
+                                    "strokeLinejoin": "round",
+                                    "strokeWidth": 1.75,
+                                    "style": [
+                                      {
+                                        "backgroundColor": "transparent",
+                                        "borderWidth": 0,
+                                      },
+                                      {
+                                        "flex": 0,
+                                        "height": 21,
+                                        "width": 21,
+                                      },
+                                    ],
+                                    "vbHeight": 24,
+                                    "vbWidth": 24,
+                                    "width": 21,
+                                    "xmlns": "http://www.w3.org/2000/svg",
+                                  },
+                                  "type": "RNSVGSvgView",
+                                },
+                              ],
+                              "props": {
+                                "style": {
+                                  "alignItems": "center",
+                                  "backgroundColor": "#FFE7DD",
+                                  "borderRadius": 6,
+                                  "height": 40,
+                                  "justifyContent": "center",
+                                  "width": 40,
+                                },
+                              },
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    "Past weeks with Pro",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#1A1714",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "600",
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                                {
+                                  "children": [
+                                    "Browse full history and export CSV.",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#4C4741",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                      "marginTop": 2,
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                              ],
+                              "props": {
+                                "style": {
+                                  "flex": 1,
+                                },
+                              },
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
                                     {
                                       "children": null,
                                       "props": {
-                                        "d": "M7 11V7a5 5 0 0 1 10 0v4",
+                                        "d": "m9 18 6-6-6-6",
                                         "fill": null,
                                         "propList": [
                                           "fill",
@@ -12936,7 +13184,7 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                           "strokeLinejoin",
                                         ],
                                         "stroke": {
-                                          "payload": 4293416230,
+                                          "payload": 4287267706,
                                           "type": 0,
                                         },
                                         "strokeLinecap": 1,
@@ -12956,7 +13204,7 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                       "strokeLinejoin",
                                     ],
                                     "stroke": {
-                                      "payload": 4293416230,
+                                      "payload": 4287267706,
                                       "type": 0,
                                     },
                                     "strokeLinecap": 1,
@@ -12968,17 +13216,17 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                               ],
                               "props": {
                                 "align": "xMidYMid",
-                                "bbHeight": 21,
-                                "bbWidth": 21,
+                                "bbHeight": 18,
+                                "bbWidth": 18,
                                 "className": undefined,
                                 "data-testid": undefined,
                                 "fill": "none",
                                 "focusable": false,
-                                "height": 21,
+                                "height": 18,
                                 "meetOrSlice": 0,
                                 "minX": 0,
                                 "minY": 0,
-                                "stroke": "#E85526",
+                                "stroke": "#8A837A",
                                 "strokeLinecap": "round",
                                 "strokeLinejoin": "round",
                                 "strokeWidth": 1.75,
@@ -12989,13 +13237,13 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                   },
                                   {
                                     "flex": 0,
-                                    "height": 21,
-                                    "width": 21,
+                                    "height": 18,
+                                    "width": 18,
                                   },
                                 ],
                                 "vbHeight": 24,
                                 "vbWidth": 24,
-                                "width": 21,
+                                "width": 18,
                                 "xmlns": "http://www.w3.org/2000/svg",
                               },
                               "type": "RNSVGSvgView",
@@ -13004,353 +13252,14 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                           "props": {
                             "style": {
                               "alignItems": "center",
-                              "backgroundColor": "#FFE7DD",
-                              "borderRadius": 6,
-                              "height": 40,
-                              "justifyContent": "center",
-                              "width": 40,
+                              "flexDirection": "row",
+                              "gap": 12,
                             },
                           },
                           "type": "View",
                         },
-                        {
-                          "children": [
-                            {
-                              "children": [
-                                "Past weeks with Pro",
-                              ],
-                              "props": {
-                                "style": {
-                                  "color": "#1A1714",
-                                  "fontFamily": "Inter",
-                                  "fontSize": 13,
-                                  "fontWeight": "600",
-                                },
-                              },
-                              "type": "Text",
-                            },
-                            {
-                              "children": [
-                                "Browse full history and export CSV.",
-                              ],
-                              "props": {
-                                "style": {
-                                  "color": "#4C4741",
-                                  "fontFamily": "Inter",
-                                  "fontSize": 11,
-                                  "marginTop": 2,
-                                },
-                              },
-                              "type": "Text",
-                            },
-                          ],
-                          "props": {
-                            "style": {
-                              "flex": 1,
-                            },
-                          },
-                          "type": "View",
-                        },
-                        {
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "children": null,
-                                  "props": {
-                                    "d": "m9 18 6-6-6-6",
-                                    "fill": null,
-                                    "propList": [
-                                      "fill",
-                                      "stroke",
-                                      "strokeWidth",
-                                      "strokeLinecap",
-                                      "strokeLinejoin",
-                                    ],
-                                    "stroke": {
-                                      "payload": 4287267706,
-                                      "type": 0,
-                                    },
-                                    "strokeLinecap": 1,
-                                    "strokeLinejoin": 1,
-                                    "strokeWidth": 1.75,
-                                  },
-                                  "type": "RNSVGPath",
-                                },
-                              ],
-                              "props": {
-                                "fill": null,
-                                "propList": [
-                                  "fill",
-                                  "stroke",
-                                  "strokeWidth",
-                                  "strokeLinecap",
-                                  "strokeLinejoin",
-                                ],
-                                "stroke": {
-                                  "payload": 4287267706,
-                                  "type": 0,
-                                },
-                                "strokeLinecap": 1,
-                                "strokeLinejoin": 1,
-                                "strokeWidth": 1.75,
-                              },
-                              "type": "RNSVGGroup",
-                            },
-                          ],
-                          "props": {
-                            "align": "xMidYMid",
-                            "bbHeight": 18,
-                            "bbWidth": 18,
-                            "className": undefined,
-                            "data-testid": undefined,
-                            "fill": "none",
-                            "focusable": false,
-                            "height": 18,
-                            "meetOrSlice": 0,
-                            "minX": 0,
-                            "minY": 0,
-                            "stroke": "#8A837A",
-                            "strokeLinecap": "round",
-                            "strokeLinejoin": "round",
-                            "strokeWidth": 1.75,
-                            "style": [
-                              {
-                                "backgroundColor": "transparent",
-                                "borderWidth": 0,
-                              },
-                              {
-                                "flex": 0,
-                                "height": 18,
-                                "width": 18,
-                              },
-                            ],
-                            "vbHeight": 24,
-                            "vbWidth": 24,
-                            "width": 18,
-                            "xmlns": "http://www.w3.org/2000/svg",
-                          },
-                          "type": "RNSVGSvgView",
-                        },
                       ],
                       "props": {
-                        "style": {
-                          "alignItems": "center",
-                          "flexDirection": "row",
-                          "gap": 12,
-                        },
-                      },
-                      "type": "View",
-                    },
-                  ],
-                  "props": {
-                    "accessibilityRole": "button",
-                    "accessibilityState": {
-                      "busy": undefined,
-                      "checked": undefined,
-                      "disabled": undefined,
-                      "expanded": undefined,
-                      "selected": undefined,
-                    },
-                    "accessibilityValue": {
-                      "max": undefined,
-                      "min": undefined,
-                      "now": undefined,
-                      "text": undefined,
-                    },
-                    "accessible": true,
-                    "collapsable": false,
-                    "focusable": true,
-                    "onBlur": [Function],
-                    "onClick": [Function],
-                    "onFocus": [Function],
-                    "onResponderGrant": [Function],
-                    "onResponderMove": [Function],
-                    "onResponderRelease": [Function],
-                    "onResponderTerminate": [Function],
-                    "onResponderTerminationRequest": [Function],
-                    "onStartShouldSetResponder": [Function],
-                    "style": {
-                      "backgroundColor": "#FFFFFF",
-                      "borderColor": "#E9E4DD",
-                      "borderRadius": 12,
-                      "borderWidth": 1,
-                      "padding": 16,
-                    },
-                    "testID": "stats-pro-upsell",
-                  },
-                  "type": "View",
-                },
-              ],
-              "props": {
-                "style": {
-                  "paddingBottom": 8,
-                  "paddingHorizontal": 20,
-                },
-              },
-              "type": "View",
-            },
-            {
-              "children": [
-                {
-                  "children": [
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            "Ledger",
-                          ],
-                          "props": {
-                            "style": {
-                              "color": "#1A1714",
-                              "fontFamily": "Inter",
-                              "fontSize": 17,
-                              "fontWeight": "700",
-                              "letterSpacing": -0.3,
-                            },
-                          },
-                          "type": "Text",
-                        },
-                        {
-                          "children": [
-                            "Tap any row to edit · swipe table to scroll",
-                          ],
-                          "props": {
-                            "style": {
-                              "color": "#8A837A",
-                              "fontFamily": "Inter",
-                              "fontSize": 11,
-                              "marginTop": 2,
-                            },
-                          },
-                          "type": "Text",
-                        },
-                      ],
-                      "props": {},
-                      "type": "View",
-                    },
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "children": null,
-                                  "props": {
-                                    "d": "M5 12h14",
-                                    "fill": null,
-                                    "propList": [
-                                      "fill",
-                                      "stroke",
-                                      "strokeWidth",
-                                      "strokeLinecap",
-                                      "strokeLinejoin",
-                                    ],
-                                    "stroke": {
-                                      "payload": 4294769657,
-                                      "type": 0,
-                                    },
-                                    "strokeLinecap": 1,
-                                    "strokeLinejoin": 1,
-                                    "strokeWidth": 1.75,
-                                  },
-                                  "type": "RNSVGPath",
-                                },
-                                {
-                                  "children": null,
-                                  "props": {
-                                    "d": "M12 5v14",
-                                    "fill": null,
-                                    "propList": [
-                                      "fill",
-                                      "stroke",
-                                      "strokeWidth",
-                                      "strokeLinecap",
-                                      "strokeLinejoin",
-                                    ],
-                                    "stroke": {
-                                      "payload": 4294769657,
-                                      "type": 0,
-                                    },
-                                    "strokeLinecap": 1,
-                                    "strokeLinejoin": 1,
-                                    "strokeWidth": 1.75,
-                                  },
-                                  "type": "RNSVGPath",
-                                },
-                              ],
-                              "props": {
-                                "fill": null,
-                                "propList": [
-                                  "fill",
-                                  "stroke",
-                                  "strokeWidth",
-                                  "strokeLinecap",
-                                  "strokeLinejoin",
-                                ],
-                                "stroke": {
-                                  "payload": 4294769657,
-                                  "type": 0,
-                                },
-                                "strokeLinecap": 1,
-                                "strokeLinejoin": 1,
-                                "strokeWidth": 1.75,
-                              },
-                              "type": "RNSVGGroup",
-                            },
-                          ],
-                          "props": {
-                            "align": "xMidYMid",
-                            "bbHeight": 14,
-                            "bbWidth": 14,
-                            "className": undefined,
-                            "data-testid": undefined,
-                            "fill": "none",
-                            "focusable": false,
-                            "height": 14,
-                            "meetOrSlice": 0,
-                            "minX": 0,
-                            "minY": 0,
-                            "stroke": "#FCFBF9",
-                            "strokeLinecap": "round",
-                            "strokeLinejoin": "round",
-                            "strokeWidth": 1.75,
-                            "style": [
-                              {
-                                "backgroundColor": "transparent",
-                                "borderWidth": 0,
-                              },
-                              {
-                                "flex": 0,
-                                "height": 14,
-                                "width": 14,
-                              },
-                            ],
-                            "vbHeight": 24,
-                            "vbWidth": 24,
-                            "width": 14,
-                            "xmlns": "http://www.w3.org/2000/svg",
-                          },
-                          "type": "RNSVGSvgView",
-                        },
-                        {
-                          "children": [
-                            "Add row",
-                          ],
-                          "props": {
-                            "style": {
-                              "color": "#FCFBF9",
-                              "fontFamily": "Inter",
-                              "fontSize": 11,
-                              "fontWeight": "600",
-                            },
-                          },
-                          "type": "Text",
-                        },
-                      ],
-                      "props": {
-                        "accessibilityLabel": "Add row",
                         "accessibilityRole": "button",
                         "accessibilityState": {
                           "busy": undefined,
@@ -13378,25 +13287,21 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                         "onResponderTerminationRequest": [Function],
                         "onStartShouldSetResponder": [Function],
                         "style": {
-                          "alignItems": "center",
-                          "backgroundColor": "#1A1714",
-                          "borderRadius": 9999,
-                          "flexDirection": "row",
-                          "gap": 4,
-                          "paddingHorizontal": 12,
-                          "paddingVertical": 8,
+                          "backgroundColor": "#FFFFFF",
+                          "borderColor": "#E9E4DD",
+                          "borderRadius": 12,
+                          "borderWidth": 1,
+                          "padding": 16,
                         },
-                        "testID": "ledger-add-row",
+                        "testID": "stats-pro-upsell",
                       },
                       "type": "View",
                     },
                   ],
                   "props": {
                     "style": {
-                      "alignItems": "flex-end",
-                      "flexDirection": "row",
-                      "justifyContent": "space-between",
-                      "paddingBottom": 8,
+                      "paddingHorizontal": 20,
+                      "paddingVertical": 8,
                     },
                   },
                   "type": "View",
@@ -13407,524 +13312,240 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                       "children": [
                         {
                           "children": [
+                            "Entries",
+                          ],
+                          "props": {
+                            "style": {
+                              "color": "#8A837A",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "letterSpacing": 0.4,
+                              "textTransform": "uppercase",
+                            },
+                          },
+                          "type": "Text",
+                        },
+                        {
+                          "children": [
                             {
                               "children": [
                                 {
                                   "children": [
                                     {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "#",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#8A837A",
-                                              "fontFamily": "JetBrainsMono",
-                                              "fontSize": 11,
-                                              "fontWeight": "600",
-                                              "textAlign": "center",
-                                            },
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
+                                      "children": null,
                                       "props": {
-                                        "style": {
-                                          "alignItems": "center",
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "justifyContent": "center",
-                                          "paddingVertical": 9,
-                                          "width": 57,
+                                        "d": "M5 12h14",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4294769657,
+                                          "type": 0,
                                         },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
                                       },
-                                      "type": "View",
+                                      "type": "RNSVGPath",
                                     },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "A",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#8A837A",
-                                              "fontFamily": "JetBrainsMono",
-                                              "fontSize": 11,
-                                              "fontWeight": "600",
-                                              "textAlign": "left",
-                                            },
-                                            "testID": "ledger-col-letter-A",
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 9,
-                                          "width": 162,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "B",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#8A837A",
-                                              "fontFamily": "JetBrainsMono",
-                                              "fontSize": 11,
-                                              "fontWeight": "600",
-                                              "textAlign": "right",
-                                            },
-                                            "testID": "ledger-col-letter-B",
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 9,
-                                          "width": 96,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "C",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#8A837A",
-                                              "fontFamily": "JetBrainsMono",
-                                              "fontSize": 11,
-                                              "fontWeight": "600",
-                                              "textAlign": "right",
-                                            },
-                                            "testID": "ledger-col-letter-C",
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 9,
-                                          "width": 78,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "D",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#8A837A",
-                                              "fontFamily": "JetBrainsMono",
-                                              "fontSize": 11,
-                                              "fontWeight": "600",
-                                              "textAlign": "right",
-                                            },
-                                            "testID": "ledger-col-letter-D",
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 9,
-                                          "width": 96,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "E",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#8A837A",
-                                              "fontFamily": "JetBrainsMono",
-                                              "fontSize": 11,
-                                              "fontWeight": "600",
-                                              "textAlign": "right",
-                                            },
-                                            "testID": "ledger-col-letter-E",
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 9,
-                                          "width": 108,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "F",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#8A837A",
-                                              "fontFamily": "JetBrainsMono",
-                                              "fontSize": 11,
-                                              "fontWeight": "600",
-                                              "textAlign": "left",
-                                            },
-                                            "testID": "ledger-col-letter-F",
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 0,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 9,
-                                          "width": 270,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                  ],
-                                  "props": {
-                                    "style": {
-                                      "backgroundColor": "#F5F2EC",
-                                      "borderBottomColor": "#E9E4DD",
-                                      "borderBottomWidth": 1,
-                                      "flexDirection": "row",
-                                    },
-                                  },
-                                  "type": "View",
-                                },
-                                {
-                                  "children": [
                                     {
                                       "children": null,
                                       "props": {
-                                        "style": {
-                                          "alignItems": "center",
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "justifyContent": "center",
-                                          "paddingVertical": 6,
-                                          "width": 57,
+                                        "d": "M12 5v14",
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4294769657,
+                                          "type": 0,
                                         },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
                                       },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "PLACE",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#4C4741",
-                                              "fontFamily": "Inter",
-                                              "fontSize": 11,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4,
-                                              "textAlign": "left",
-                                            },
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 8,
-                                          "width": 162,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "START",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#4C4741",
-                                              "fontFamily": "Inter",
-                                              "fontSize": 11,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4,
-                                              "textAlign": "right",
-                                            },
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 8,
-                                          "width": 96,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "PAUSE",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#4C4741",
-                                              "fontFamily": "Inter",
-                                              "fontSize": 11,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4,
-                                              "textAlign": "right",
-                                            },
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 8,
-                                          "width": 78,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "END",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#4C4741",
-                                              "fontFamily": "Inter",
-                                              "fontSize": 11,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4,
-                                              "textAlign": "right",
-                                            },
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 8,
-                                          "width": 96,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "DURATION",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#4C4741",
-                                              "fontFamily": "Inter",
-                                              "fontSize": 11,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4,
-                                              "textAlign": "right",
-                                            },
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 1,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 8,
-                                          "width": 108,
-                                        },
-                                      },
-                                      "type": "View",
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            "NOTE",
-                                          ],
-                                          "props": {
-                                            "style": {
-                                              "color": "#4C4741",
-                                              "fontFamily": "Inter",
-                                              "fontSize": 11,
-                                              "fontWeight": "700",
-                                              "letterSpacing": 0.4,
-                                              "textAlign": "left",
-                                            },
-                                          },
-                                          "type": "Text",
-                                        },
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "borderRightColor": "#E9E4DD",
-                                          "borderRightWidth": 0,
-                                          "paddingHorizontal": 15,
-                                          "paddingVertical": 8,
-                                          "width": 270,
-                                        },
-                                      },
-                                      "type": "View",
+                                      "type": "RNSVGPath",
                                     },
                                   ],
                                   "props": {
-                                    "style": {
-                                      "backgroundColor": "#FCFBF9",
-                                      "borderBottomColor": "#E9E4DD",
-                                      "borderBottomWidth": 1,
-                                      "flexDirection": "row",
+                                    "fill": null,
+                                    "propList": [
+                                      "fill",
+                                      "stroke",
+                                      "strokeWidth",
+                                      "strokeLinecap",
+                                      "strokeLinejoin",
+                                    ],
+                                    "stroke": {
+                                      "payload": 4294769657,
+                                      "type": 0,
                                     },
+                                    "strokeLinecap": 1,
+                                    "strokeLinejoin": 1,
+                                    "strokeWidth": 1.75,
                                   },
-                                  "type": "View",
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "children": [
-                                        "No entries yet",
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "color": "#8A837A",
-                                          "fontFamily": "Inter",
-                                          "fontSize": 13,
-                                        },
-                                      },
-                                      "type": "Text",
-                                    },
-                                  ],
-                                  "props": {
-                                    "style": {
-                                      "alignItems": "center",
-                                      "borderTopColor": "#E9E4DD",
-                                      "borderTopWidth": 1,
-                                      "paddingVertical": 24,
-                                      "width": 867,
-                                    },
-                                    "testID": "ledger-empty",
-                                  },
-                                  "type": "View",
+                                  "type": "RNSVGGroup",
                                 },
                               ],
                               "props": {
+                                "align": "xMidYMid",
+                                "bbHeight": 13,
+                                "bbWidth": 13,
+                                "className": undefined,
+                                "data-testid": undefined,
+                                "fill": "none",
+                                "focusable": false,
+                                "height": 13,
+                                "meetOrSlice": 0,
+                                "minX": 0,
+                                "minY": 0,
+                                "stroke": "#FCFBF9",
+                                "strokeLinecap": "round",
+                                "strokeLinejoin": "round",
+                                "strokeWidth": 1.75,
+                                "style": [
+                                  {
+                                    "backgroundColor": "transparent",
+                                    "borderWidth": 0,
+                                  },
+                                  {
+                                    "flex": 0,
+                                    "height": 13,
+                                    "width": 13,
+                                  },
+                                ],
+                                "vbHeight": 24,
+                                "vbWidth": 24,
+                                "width": 13,
+                                "xmlns": "http://www.w3.org/2000/svg",
+                              },
+                              "type": "RNSVGSvgView",
+                            },
+                            {
+                              "children": [
+                                "Add entry",
+                              ],
+                              "props": {
                                 "style": {
-                                  "minWidth": 867,
+                                  "color": "#FCFBF9",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "600",
                                 },
                               },
-                              "type": "View",
+                              "type": "Text",
                             },
                           ],
-                          "props": {},
+                          "props": {
+                            "accessibilityLabel": "Add entry",
+                            "accessibilityRole": "button",
+                            "accessibilityState": {
+                              "busy": undefined,
+                              "checked": undefined,
+                              "disabled": undefined,
+                              "expanded": undefined,
+                              "selected": undefined,
+                            },
+                            "accessibilityValue": {
+                              "max": undefined,
+                              "min": undefined,
+                              "now": undefined,
+                              "text": undefined,
+                            },
+                            "accessible": true,
+                            "collapsable": false,
+                            "focusable": true,
+                            "hitSlop": 8,
+                            "onBlur": [Function],
+                            "onClick": [Function],
+                            "onFocus": [Function],
+                            "onResponderGrant": [Function],
+                            "onResponderMove": [Function],
+                            "onResponderRelease": [Function],
+                            "onResponderTerminate": [Function],
+                            "onResponderTerminationRequest": [Function],
+                            "onStartShouldSetResponder": [Function],
+                            "style": {
+                              "alignItems": "center",
+                              "backgroundColor": "#1A1714",
+                              "borderRadius": 9999,
+                              "flexDirection": "row",
+                              "gap": 4,
+                              "paddingHorizontal": 9,
+                              "paddingVertical": 6,
+                            },
+                            "testID": "stats-add-entry",
+                          },
                           "type": "View",
                         },
                       ],
                       "props": {
-                        "horizontal": true,
-                        "showsHorizontalScrollIndicator": false,
+                        "style": {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "justifyContent": "space-between",
+                          "paddingBottom": 8,
+                        },
                       },
-                      "type": "RCTScrollView",
+                      "type": "View",
+                    },
+                    {
+                      "children": [
+                        "No entries in this range.",
+                      ],
+                      "props": {
+                        "style": {
+                          "color": "#8A837A",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "paddingVertical": 24,
+                          "textAlign": "center",
+                        },
+                        "testID": "stats-entries-empty",
+                      },
+                      "type": "Text",
                     },
                   ],
                   "props": {
                     "style": {
-                      "backgroundColor": "#FFFFFF",
-                      "borderColor": "#E9E4DD",
-                      "borderRadius": 12,
-                      "borderWidth": 1,
-                      "overflow": "hidden",
+                      "paddingHorizontal": 20,
+                      "paddingTop": 12,
                     },
                   },
                   "type": "View",
                 },
               ],
-              "props": {
-                "style": {
-                  "marginBottom": 20,
-                  "marginHorizontal": 20,
-                  "marginTop": 12,
-                },
-                "testID": "ledger",
-              },
+              "props": {},
               "type": "View",
             },
           ],
-          "props": {},
-          "type": "View",
+          "props": {
+            "contentContainerStyle": {
+              "paddingBottom": 66,
+            },
+            "style": {
+              "flex": 1,
+            },
+          },
+          "type": "RCTScrollView",
         },
       ],
       "props": {
-        "contentContainerStyle": {
-          "paddingBottom": 66,
-          "paddingTop": 59,
-        },
         "style": {
           "backgroundColor": "#FCFBF9",
           "flex": 1,
         },
       },
-      "type": "RCTScrollView",
+      "type": "View",
     },
   ],
   "props": {

@@ -13,7 +13,6 @@ import { StatsScreen } from "./StatsScreen";
 
 type SeedEntry = {
   placeIndex?: number;
-  /** Seconds offset from `nowSeconds`. Typically negative (earlier). */
   startedAtOffset: number;
   endedAtOffset: number;
   pauseS?: number;
@@ -86,19 +85,28 @@ afterEach(() => {
 });
 
 describe("StatsScreen", () => {
-  it("renders the 'This week' heading and the week date range", () => {
-    // Wed 2026-04-15 12:00 local → week Mon Apr 13 → Sun Apr 19
+  it("opens in Week mode with the DayNavHeader label", () => {
     const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
     setup({ nowMs });
+    expect(screen.getByTestId("stats-nav")).toBeTruthy();
     expect(screen.getByText("This week")).toBeTruthy();
-    expect(screen.getByText(/Apr 13 — Apr 19/)).toBeTruthy();
   });
 
-  it("renders the WeekBarChart and Ledger", () => {
+  it("renders the week bar chart in week mode", () => {
     const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
     setup({ nowMs });
     expect(screen.getByTestId("week-bar-chart")).toBeTruthy();
-    expect(screen.getByTestId("ledger")).toBeTruthy();
+  });
+
+  it("cycling to Day mode hides the week bar chart", () => {
+    const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
+    setup({ nowMs });
+    // Initial mode = week; tap mode label to cycle → month → year → day.
+    fireEvent.press(screen.getByTestId("stats-nav-mode"));
+    fireEvent.press(screen.getByTestId("stats-nav-mode"));
+    fireEvent.press(screen.getByTestId("stats-nav-mode"));
+    // Now on day mode — chart is hidden.
+    expect(screen.queryByTestId("week-bar-chart")).toBeNull();
   });
 
   it("renders the Pro upsell card when the user is not Pro", () => {
@@ -122,67 +130,56 @@ describe("StatsScreen", () => {
     expect(useSheetStore.getState().active).toBe("paywall");
   });
 
-  it("tapping 'Add row' opens entryEdit with a null entryId", () => {
+  it("tapping the Add entry button opens entryEdit with a null entryId", () => {
     const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
     setup({ nowMs });
-    fireEvent.press(screen.getByTestId("ledger-add-row"));
+    fireEvent.press(screen.getByTestId("stats-add-entry"));
     expect(useSheetStore.getState().active).toBe("entryEdit");
     expect(useSheetStore.getState().payload).toEqual({ entryId: null });
   });
 
-  it("renders Ledger rows for the current week's entries", () => {
+  it("shows a per-place bar for each place with entries in the range", () => {
     const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
-    // Two entries earlier the same week — both should show up.
-    setup({
+    const { places } = setup({
       nowMs,
       places: [
         { name: "Home", color: "#FF6A3D", icon: "home" },
         { name: "Office", color: "#1D7FD1", icon: "briefcase" },
       ],
       entries: [
-        // Monday morning Home
         { placeIndex: 0, startedAtOffset: -2 * 86_400, endedAtOffset: -2 * 86_400 + 3600 },
-        // Wed morning Office
         { placeIndex: 1, startedAtOffset: -3 * 3600, endedAtOffset: -2 * 3600 },
       ],
     });
-    expect(screen.getByTestId("ledger-row-0")).toBeTruthy();
-    expect(screen.getByTestId("ledger-row-1")).toBeTruthy();
+    expect(screen.getByTestId(`stats-place-bar-${places[0]!.id}`)).toBeTruthy();
+    expect(screen.getByTestId(`stats-place-bar-${places[1]!.id}`)).toBeTruthy();
   });
 
-  it("week navigator shows a prev + next chevron and the range label", () => {
+  it("renders an EntryRow for each entry in the range", () => {
     const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
-    setup({ nowMs });
-    expect(screen.getByTestId("stats-week-nav")).toBeTruthy();
-    expect(screen.getByTestId("stats-week-prev")).toBeTruthy();
-    expect(screen.getByTestId("stats-week-next")).toBeTruthy();
-    expect(screen.getByTestId("stats-week-range").props.children).toMatch(/Apr 13/);
+    setup({
+      nowMs,
+      places: [{ name: "Home", color: "#FF6A3D", icon: "home" }],
+      entries: [
+        { startedAtOffset: -2 * 86_400, endedAtOffset: -2 * 86_400 + 3600 },
+        { startedAtOffset: -3 * 3600, endedAtOffset: -2 * 3600 },
+      ],
+    });
+    // EntryRow uses `stats-entry-row-<id>` testIDs in Stats mode.
+    expect(screen.getAllByTestId(/^stats-entry-row-/).length).toBe(2);
   });
 
-  it("next-week chevron is disabled on the current week (offset 0)", () => {
+  it("tapping prev while on week mode and NOT Pro opens the paywall", () => {
     const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
     setup({ nowMs });
-    const btn = screen.getByTestId("stats-week-next");
-    expect(btn.props.accessibilityState?.disabled).toBe(true);
-  });
-
-  it("tapping prev-week while NOT Pro opens the paywall (source=history)", () => {
-    const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
-    setup({ nowMs });
-    fireEvent.press(screen.getByTestId("stats-week-prev"));
+    // Week mode offset 0; one step back is 7 days → 7 > FREE_HISTORY_DAYS/7
+    // … actually the gate is at 14 cumulative days. Three weeks back (-3)
+    // is 21 days, which IS past the gate. One week back is within it.
+    // Tap prev three times to cross the gate.
+    fireEvent.press(screen.getByTestId("stats-nav-prev"));
+    fireEvent.press(screen.getByTestId("stats-nav-prev"));
+    fireEvent.press(screen.getByTestId("stats-nav-prev"));
     expect(useSheetStore.getState().active).toBe("paywall");
     expect(useSheetStore.getState().payload).toEqual({ source: "history" });
-  });
-
-  it("tapping prev-week while Pro navigates the range and enables the next chevron", () => {
-    grantProMock();
-    const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
-    setup({ nowMs });
-    fireEvent.press(screen.getByTestId("stats-week-prev"));
-    // Offset is now -1 → range shows the prior Monday–Sunday.
-    expect(screen.getByTestId("stats-week-range").props.children).toMatch(/Apr 6/);
-    // Next is now enabled (can move back toward today).
-    const next = screen.getByTestId("stats-week-next");
-    expect(next.props.accessibilityState?.disabled).toBe(false);
   });
 });

@@ -9,6 +9,7 @@ import { useOngoingEntry } from "@/features/entries/useOngoingEntry";
 import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClose";
 import { useClosestPlace } from "@/features/places/useClosestPlace";
 import { usePlaces } from "@/features/places/usePlaces";
+import { rangeForMode } from "@/screens/Stats/range";
 import { usePro } from "@/features/billing/usePro";
 import { useSheetStore } from "@/state/sheetStore";
 import type { Entry, Place } from "@/db/schema";
@@ -407,56 +408,4 @@ function indexPlaces(places: Place[]): Map<string, Place> {
   const map = new Map<string, Place>();
   for (const p of places) map.set(p.id, p);
   return map;
-}
-
-/**
- * Translate `(mode, offset)` into a `[startS, endS]` unix-second window.
- * - Day: local midnight of the target day → 24h window.
- * - Week: local Monday of the target week → 7 days.
- * - Month: first-of-month of the target month → last day of the month.
- * - Year: Jan 1 → Dec 31 of the target year.
- *
- * All windows include a 1s padding at the end (`-1`) so an entry with
- * `startedAt` at `endOfPeriod + 0` is excluded — consistent with how
- * `useEntries(dayOffset)` builds its day window.
- */
-function rangeForMode(mode: RangeMode, offset: number): { startS: number; endS: number } {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-
-  switch (mode) {
-    case "day": {
-      start.setDate(start.getDate() + offset);
-      end.setDate(start.getDate() + 1);
-      break;
-    }
-    case "week": {
-      const day = start.getDay();
-      const mondayOffset = day === 0 ? 6 : day - 1;
-      start.setDate(start.getDate() - mondayOffset + offset * 7);
-      end.setTime(start.getTime());
-      end.setDate(end.getDate() + 7);
-      break;
-    }
-    case "month": {
-      start.setDate(1);
-      start.setMonth(start.getMonth() + offset);
-      end.setTime(start.getTime());
-      end.setMonth(end.getMonth() + 1);
-      break;
-    }
-    case "year": {
-      start.setMonth(0, 1);
-      start.setFullYear(start.getFullYear() + offset);
-      end.setTime(start.getTime());
-      end.setFullYear(end.getFullYear() + 1);
-      break;
-    }
-  }
-
-  return {
-    startS: Math.floor(start.getTime() / 1000),
-    endS: Math.floor(end.getTime() / 1000) - 1,
-  };
 }
