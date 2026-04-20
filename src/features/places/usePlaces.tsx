@@ -3,6 +3,7 @@ import type * as DbClientModule from "@/db/client";
 import { PlacesRepo, type CreatePlaceInput } from "@/db/repository/places";
 import type { Place } from "@/db/schema";
 import { reconcileAfterPlaceChange } from "@/features/tracking/bootstrap";
+import { useDataVersionStore } from "@/state/dataVersionStore";
 
 /**
  * Context for injecting a `PlacesRepo` instance. Tests wrap `renderHook` with
@@ -58,6 +59,8 @@ export type UsePlacesResult = {
 
 export function usePlaces(): UsePlacesResult {
   const repo = usePlacesRepo();
+  const version = useDataVersionStore((s) => s.placesVersion);
+  const bumpPlaces = useDataVersionStore((s) => s.bumpPlaces);
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,27 +68,29 @@ export function usePlaces(): UsePlacesResult {
     setPlaces(repo.list());
   }, [repo]);
 
+  // Re-read whenever the global places version bumps — lets a mutation on
+  // one screen propagate to every other `usePlaces()` consumer.
   useEffect(() => {
     refresh();
     setLoading(false);
-  }, [refresh]);
+  }, [refresh, version]);
 
   const create = useCallback(
     (input: CreatePlaceInput) => {
       const p = repo.create(input);
-      refresh();
+      bumpPlaces();
       // Fire-and-forget: geofence registration is eventual, the UI shouldn't
       // block on a native bridge hop. Errors are swallowed inside.
       void reconcileAfterPlaceChange();
       return p;
     },
-    [repo, refresh],
+    [repo, bumpPlaces],
   );
 
   const update = useCallback(
     (id: string, patch: Partial<CreatePlaceInput>) => {
       const p = repo.update(id, patch);
-      refresh();
+      bumpPlaces();
       // Only re-register when a geofence-relevant field changed. Radius /
       // lat / lng all matter; name / color / icon don't. Checking narrowly
       // avoids pointless native calls on a "rename" tap.
@@ -98,25 +103,25 @@ export function usePlaces(): UsePlacesResult {
       }
       return p;
     },
-    [repo, refresh],
+    [repo, bumpPlaces],
   );
 
   const remove = useCallback(
     (id: string) => {
       repo.softDelete(id);
-      refresh();
+      bumpPlaces();
       void reconcileAfterPlaceChange();
     },
-    [repo, refresh],
+    [repo, bumpPlaces],
   );
 
   const restore = useCallback(
     (id: string) => {
       repo.restore(id);
-      refresh();
+      bumpPlaces();
       void reconcileAfterPlaceChange();
     },
-    [repo, refresh],
+    [repo, bumpPlaces],
   );
 
   return { places, loading, refresh, create, update, remove, restore, count: places.length };

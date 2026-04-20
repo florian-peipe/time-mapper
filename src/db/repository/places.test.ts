@@ -16,9 +16,9 @@ describe("PlacesRepo", () => {
       longitude: 6.918,
     });
     expect(p.id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(p.radiusM).toBe(100);
-    expect(p.entryBufferS).toBe(300);
-    expect(p.exitBufferS).toBe(180);
+    expect(p.radiusM).toBe(50);
+    expect(p.entryBufferS).toBe(120);
+    expect(p.exitBufferS).toBe(60);
     expect(p.createdAt).toBe(1_700_000_000);
   });
 

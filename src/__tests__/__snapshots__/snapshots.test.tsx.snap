@@ -522,7 +522,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "accessibilityState": undefined,
                                         "accessibilityValue": {
                                           "max": 300,
-                                          "min": 50,
+                                          "min": 25,
                                           "now": 120,
                                           "text": "120 m",
                                         },
@@ -532,7 +532,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "maximumTrackTintColor": "#E9E4DD",
                                         "maximumValue": 300,
                                         "minimumTrackTintColor": "#E85526",
-                                        "minimumValue": 50,
+                                        "minimumValue": 25,
                                         "onChange": [Function],
                                         "onRNCSliderAccessibilityAction": null,
                                         "onRNCSliderSlidingComplete": null,
@@ -608,7 +608,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                     },
                                     {
                                       "children": [
-                                        "5 min",
+                                        "2 min",
                                       ],
                                       "props": {
                                         "style": {
@@ -644,8 +644,8 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "accessibilityValue": {
                                           "max": 15,
                                           "min": 1,
-                                          "now": 5,
-                                          "text": "5 min",
+                                          "now": 2,
+                                          "text": "2 min",
                                         },
                                         "disabled": false,
                                         "inverted": false,
@@ -680,7 +680,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "thumbImage": undefined,
                                         "thumbTintColor": "#E85526",
                                         "upperLimit": 9007199254740991,
-                                        "value": 5,
+                                        "value": 2,
                                       },
                                       "type": "RNCSlider",
                                     },
@@ -729,7 +729,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                     },
                                     {
                                       "children": [
-                                        "3 min",
+                                        "1 min",
                                       ],
                                       "props": {
                                         "style": {
@@ -765,8 +765,8 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "accessibilityValue": {
                                           "max": 10,
                                           "min": 1,
-                                          "now": 3,
-                                          "text": "3 min",
+                                          "now": 1,
+                                          "text": "1 min",
                                         },
                                         "disabled": false,
                                         "inverted": false,
@@ -801,7 +801,7 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                                         "thumbImage": undefined,
                                         "thumbTintColor": "#E85526",
                                         "upperLimit": 9007199254740991,
-                                        "value": 3,
+                                        "value": 1,
                                       },
                                       "type": "RNCSlider",
                                     },

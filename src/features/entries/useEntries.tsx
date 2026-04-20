@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import type * as DbClientModule from "@/db/client";
 import { EntriesRepo } from "@/db/repository/entries";
 import type { Entry } from "@/db/schema";
+import { useDataVersionStore } from "@/state/dataVersionStore";
 
 /**
  * Shared context for injecting an `EntriesRepo`. Used by `useEntries`,
@@ -70,6 +71,8 @@ export type UseEntriesResult = {
  */
 export function useEntries(dayOffset: number): UseEntriesResult {
   const repo = useEntriesRepo();
+  const version = useDataVersionStore((s) => s.entriesVersion);
+  const bumpEntries = useDataVersionStore((s) => s.bumpEntries);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -82,7 +85,7 @@ export function useEntries(dayOffset: number): UseEntriesResult {
   useEffect(() => {
     refresh();
     setLoading(false);
-  }, [refresh]);
+  }, [refresh, version]);
 
   const createManual = useCallback(
     (input: {
@@ -93,26 +96,26 @@ export function useEntries(dayOffset: number): UseEntriesResult {
       pauseS?: number;
     }) => {
       const e = repo.createManual(input);
-      refresh();
+      bumpEntries();
       return e;
     },
-    [repo, refresh],
+    [repo, bumpEntries],
   );
 
   const softDelete = useCallback(
     (id: string) => {
       repo.softDelete(id);
-      refresh();
+      bumpEntries();
     },
-    [repo, refresh],
+    [repo, bumpEntries],
   );
 
   const restore = useCallback(
     (id: string) => {
       repo.restore(id);
-      refresh();
+      bumpEntries();
     },
-    [repo, refresh],
+    [repo, bumpEntries],
   );
 
   return { entries, loading, refresh, createManual, softDelete, restore };

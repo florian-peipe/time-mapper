@@ -20,8 +20,8 @@ export const KV_GLOBAL_ENTRY_BUFFER = "global.buffers.entry_s";
 export const KV_GLOBAL_EXIT_BUFFER = "global.buffers.exit_s";
 
 /** Defaults (seconds) when the user hasn't picked custom values yet. */
-export const DEFAULT_ENTRY_BUFFER_S = 300;
-export const DEFAULT_EXIT_BUFFER_S = 180;
+export const DEFAULT_ENTRY_BUFFER_S = 120;
+export const DEFAULT_EXIT_BUFFER_S = 60;
 
 /** Slider bounds (minutes). */
 const ENTRY_MIN_MIN = 1;

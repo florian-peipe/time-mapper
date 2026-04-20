@@ -17,6 +17,8 @@ jest.mock("expo-location", () => ({
   stopGeofencingAsync: jest.fn(async () => undefined),
   hasStartedGeofencingAsync: jest.fn(async () => false),
   getLastKnownPositionAsync: jest.fn(async () => null),
+  getCurrentPositionAsync: jest.fn(async () => null),
+  Accuracy: { Balanced: 3 },
 }));
 
 const mLoc = Location as jest.Mocked<typeof Location>;
@@ -132,7 +134,7 @@ describe("tracking/geofenceService", () => {
   });
 
   test("getCurrentPlaceId returns the matching place id when user is inside", async () => {
-    mLoc.getLastKnownPositionAsync.mockResolvedValue({
+    mLoc.getCurrentPositionAsync.mockResolvedValue({
       coords: {
         latitude: 52.52,
         longitude: 13.405,
@@ -149,6 +151,7 @@ describe("tracking/geofenceService", () => {
   });
 
   test("getCurrentPlaceId swallows errors and returns null (cannot crash background task)", async () => {
+    mLoc.getCurrentPositionAsync.mockRejectedValue(new Error("gps off"));
     mLoc.getLastKnownPositionAsync.mockRejectedValue(new Error("gps off"));
     const result = await getCurrentPlaceId([makePlace("a")]);
     expect(result).toBeNull();

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Entry, Place } from "@/db/schema";
 import { usePlacesRepo } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "./useEntries";
+import { useDataVersionStore } from "@/state/dataVersionStore";
 
 export type PlaceWeekTotal = { name: string; color: string; totalMin: number };
 export type DayBuckets = Record<string, number>;
@@ -74,6 +75,9 @@ export function useWeekStats(weekOffset = 0): UseWeekStatsResult {
   const weekStartSeconds = useMemo(() => Math.floor(weekStart.getTime() / 1000), [weekStart]);
   const weekEndSeconds = weekStartSeconds + 7 * 86_400 - 1;
 
+  const entriesVersion = useDataVersionStore((s) => s.entriesVersion);
+  const placesVersion = useDataVersionStore((s) => s.placesVersion);
+
   const [byDay, setByDay] = useState<DayBuckets[]>(() => emptyWeek());
   const [byPlace, setByPlace] = useState<PlaceWeekTotal[]>([]);
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -120,7 +124,7 @@ export function useWeekStats(weekOffset = 0): UseWeekStatsResult {
   useEffect(() => {
     refresh();
     setLoading(false);
-  }, [refresh]);
+  }, [refresh, entriesVersion, placesVersion]);
 
   return { byDay, byPlace, entries, weekStart, loading, refresh };
 }

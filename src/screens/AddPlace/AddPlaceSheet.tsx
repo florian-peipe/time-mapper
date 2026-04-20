@@ -57,9 +57,9 @@ const ICON_CHOICES: readonly IconName[] = [
   "star",
 ] as const;
 
-const RADIUS_MIN = 50;
+const RADIUS_MIN = 25;
 const RADIUS_MAX = 300;
-const RADIUS_DEFAULT = 100;
+const RADIUS_DEFAULT = 50;
 const AUTOCOMPLETE_DEBOUNCE_MS = 300;
 
 // Per-place buffer slider bounds (minutes). Entry bias tends to be longer

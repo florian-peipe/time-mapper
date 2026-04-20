@@ -139,11 +139,11 @@ describe("AddPlaceSheet — Phase 2 (editor)", () => {
     expect(screen.getByText(/Kinkelstr\. 3, 50733 Köln, Germany/)).toBeTruthy();
   });
 
-  it("renders radius label and initial value 100 m", async () => {
+  it("renders radius label and the default initial value", async () => {
     setup({});
     await gotoPhase2();
     expect(screen.getByText("Geofence radius")).toBeTruthy();
-    expect(screen.getByText("100 m")).toBeTruthy();
+    expect(screen.getByText("50 m")).toBeTruthy();
   });
 
   it("updates the radius label when the slider value changes", async () => {

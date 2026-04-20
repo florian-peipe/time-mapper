@@ -6,6 +6,7 @@ import { getCurrentPlaceId, reconcileGeofences } from "./geofenceService";
 import { getLocationStatus } from "@/features/permissions";
 import { configureNotificationChannels } from "@/features/notifications/notifier";
 import { dispatchSyntheticEnter, runOpportunisticResolve } from "@/background/tasks";
+import { useDataVersionStore } from "@/state/dataVersionStore";
 
 /**
  * Initialize the tracking engine. Called once from `app/_layout.tsx` after
@@ -43,6 +44,10 @@ export async function bootstrapTracking(): Promise<void> {
     // Always run opportunistic resolve — it's cheap and catches up any
     // pending transition left behind from a previous session.
     await runOpportunisticResolve();
+    // Any entries the background task wrote (or that the synthetic-enter
+    // path just opened) need to surface on the UI. A single bump pokes
+    // all `useEntries` / `useOngoingEntry` consumers to re-query.
+    useDataVersionStore.getState().bumpAll();
   } catch (err) {
     console.warn("[bootstrapTracking] failed:", err);
   }
@@ -63,7 +68,12 @@ export async function reconcileAfterPlaceChange(): Promise<void> {
     const list = places.list();
     await reconcileGeofences(list);
     const currentPlaceId = await getCurrentPlaceId(list);
-    if (currentPlaceId) await dispatchSyntheticEnter(currentPlaceId);
+    if (currentPlaceId) {
+      await dispatchSyntheticEnter(currentPlaceId);
+      // A synthetic enter may have opened an ongoing entry — bump so the
+      // Timeline's RunningTimerCard picks it up immediately.
+      useDataVersionStore.getState().bumpEntries();
+    }
   } catch (err) {
     console.warn("[reconcileAfterPlaceChange] failed:", err);
   }
@@ -85,9 +95,13 @@ export function startForegroundReconcileWatcher() {
     const becameActive = last !== "active" && next === "active";
     last = next;
     if (!becameActive) return;
-    void reconcileAfterPlaceChange();
-    // Opportunistic resolve also catches pending transitions that might
-    // have elapsed while the JS runtime was suspended.
-    void runOpportunisticResolve();
+    void (async () => {
+      await reconcileAfterPlaceChange();
+      // Opportunistic resolve also catches pending transitions that might
+      // have elapsed while the JS runtime was suspended.
+      await runOpportunisticResolve();
+      // Surface any entries that landed while backgrounded.
+      useDataVersionStore.getState().bumpAll();
+    })();
   });
 }

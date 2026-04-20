@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Entry } from "@/db/schema";
 import { useEntriesRepo } from "./useEntries";
+import { useDataVersionStore } from "@/state/dataVersionStore";
 
 export type UseOngoingEntryResult = {
   entry: Entry | null;
@@ -20,6 +21,8 @@ export type UseOngoingEntryResult = {
  */
 export function useOngoingEntry(): UseOngoingEntryResult {
   const repo = useEntriesRepo();
+  const version = useDataVersionStore((s) => s.entriesVersion);
+  const bumpEntries = useDataVersionStore((s) => s.bumpEntries);
   const [entry, setEntry] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,23 +33,23 @@ export function useOngoingEntry(): UseOngoingEntryResult {
   useEffect(() => {
     refresh();
     setLoading(false);
-  }, [refresh]);
+  }, [refresh, version]);
 
   const start = useCallback(
     (input: { placeId: string; source: "auto" | "manual"; pauseS?: number }) => {
       const e = repo.open(input);
-      refresh();
+      bumpEntries();
       return e;
     },
-    [repo, refresh],
+    [repo, bumpEntries],
   );
 
   const stop = useCallback(() => {
     const current = repo.ongoing();
     if (!current) return;
     repo.close(current.id);
-    refresh();
-  }, [repo, refresh]);
+    bumpEntries();
+  }, [repo, bumpEntries]);
 
   return { entry, loading, refresh, start, stop };
 }

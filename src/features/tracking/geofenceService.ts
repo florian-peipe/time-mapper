@@ -91,12 +91,21 @@ export function placeContaining(
  * user is inside. Returns null if location is unavailable, permissions
  * denied, or the user isn't inside any place. Never throws — background
  * code cannot afford to crash the task.
+ *
+ * Tries for a fresh fix first (5s cap, `Balanced` accuracy) so the typical
+ * "user just added a place at their home address" path works even when
+ * the last-known cache is empty (common immediately after first install).
+ * Falls back to last-known if the fresh fix doesn't land in time.
  */
 export async function getCurrentPlaceId(places: Place[]): Promise<string | null> {
   try {
-    const loc = await Location.getLastKnownPositionAsync({ maxAge: 60_000 });
-    if (!loc) return null;
-    return placeContaining(loc, places)?.id ?? null;
+    const loc = await Promise.race([
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 5_000)),
+    ]);
+    const fix = loc ?? (await Location.getLastKnownPositionAsync({ maxAge: 5 * 60_000 }));
+    if (!fix) return null;
+    return placeContaining(fix, places)?.id ?? null;
   } catch {
     return null;
   }

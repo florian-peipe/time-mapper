@@ -526,7 +526,7 @@ describe("a11y — adjustable control (slider in AddPlaceSheet)", () => {
       const slider = getByTestId("add-place-radius");
       expect(slider.props.accessibilityRole).toBe("adjustable");
       expect(slider.props.accessibilityValue).toEqual(
-        expect.objectContaining({ min: 50, max: 300, now: 120 }),
+        expect.objectContaining({ min: 25, max: 300, now: 120 }),
       );
     } finally {
       jest.useRealTimers();
