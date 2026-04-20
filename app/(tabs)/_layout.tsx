@@ -19,8 +19,11 @@ export default function TabsLayout() {
         },
         tabBarLabelStyle: {
           fontFamily: t.type.family.sans,
-          fontSize: t.type.size.xs,
-          fontWeight: t.type.weight.semibold,
+          // Four tabs on a 375pt iPhone 13 mini only leaves ~94pt per tab —
+          // the German "Einstellungen" (13 chars) ellipsises at xs/semibold.
+          // Drop a touch and use medium weight so every label fits cleanly.
+          fontSize: 10,
+          fontWeight: t.type.weight.medium,
         },
         headerShown: false,
       }}

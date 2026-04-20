@@ -34,7 +34,22 @@ import { SheetHost } from "@/screens/SheetHost";
 // is a hard requirement of expo-task-manager (OS cold-wakes run only JS
 // module init, not React render). Must come before bootstrapTracking().
 import "@/background/tasks";
+import * as Notifications from "expo-notifications";
 import { bootstrapTracking, startForegroundReconcileWatcher } from "@/features/tracking/bootstrap";
+
+// iOS 14+ requires a global notification handler, even for local
+// notifications — without one, every `scheduleNotificationAsync` call
+// silently drops in the foreground AND suppresses the banner in the
+// background. Must run at module-eval, not inside a hook. We always show
+// the banner + play sound; no badging because we don't use badges.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 function pickInitialLocale(override: string | null): string {
   if (override) return override;
