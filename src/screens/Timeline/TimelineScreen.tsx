@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Icon, Rings } from "@/components";
 import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
-import { useEntries } from "@/features/entries/useEntries";
+import { useEntriesRange } from "@/features/entries/useEntriesRange";
 import { useOngoingEntry } from "@/features/entries/useOngoingEntry";
 import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClose";
 import { useClosestPlace } from "@/features/places/useClosestPlace";
@@ -13,7 +13,7 @@ import { usePro } from "@/features/billing/usePro";
 import { useSheetStore } from "@/state/sheetStore";
 import type { Entry, Place } from "@/db/schema";
 import type { IconName, SourceKind } from "@/components";
-import { DayNavHeader } from "./DayNavHeader";
+import { DayNavHeader, type RangeMode } from "./DayNavHeader";
 import { EntryRow } from "./EntryRow";
 import { NearbyPlacesBanner } from "./NearbyPlacesBanner";
 import { RunningTimerCard } from "./RunningTimerCard";
@@ -36,9 +36,11 @@ import { TrackingBanner } from "./TrackingBanner";
 export function TimelineScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
-  const [dayOffset, setDayOffset] = useState(0);
+  const [mode, setMode] = useState<RangeMode>("day");
+  const [offset, setOffset] = useState(0);
 
-  const entriesState = useEntries(dayOffset);
+  const { startS, endS } = useMemo(() => rangeForMode(mode, offset), [mode, offset]);
+  const entriesState = useEntriesRange(startS, endS);
   const ongoingState = useOngoingEntry();
   const placesState = usePlaces();
   const openSheet = useSheetStore((s) => s.openSheet);
@@ -58,7 +60,11 @@ export function TimelineScreen() {
   );
 
   const ongoingPlace = ongoingState.entry ? placesById.get(ongoingState.entry.placeId) : null;
-  const showRunning = dayOffset === 0 && ongoingState.entry != null && ongoingPlace != null;
+  // Only surface the running-timer card in Day view at offset 0 — "today".
+  // Broader views aggregate; showing a live timer above a weekly/monthly
+  // list would be visually confusing.
+  const isToday = mode === "day" && offset === 0;
+  const showRunning = isToday && ongoingState.entry != null && ongoingPlace != null;
 
   const handleOpenEntry = useCallback(
     (entryId: string) => {
@@ -99,10 +105,12 @@ export function TimelineScreen() {
       {/* Header sits under the safe-area top — we let it own the inset. */}
       <View style={{ paddingTop: insets.top }}>
         <DayNavHeader
-          dayOffset={dayOffset}
+          mode={mode}
+          offset={offset}
           totalMin={totalMin}
           isPro={isPro}
-          onChangeDay={setDayOffset}
+          onChangeMode={setMode}
+          onChangeOffset={setOffset}
           testID="day-nav-header"
         />
       </View>
@@ -399,4 +407,56 @@ function indexPlaces(places: Place[]): Map<string, Place> {
   const map = new Map<string, Place>();
   for (const p of places) map.set(p.id, p);
   return map;
+}
+
+/**
+ * Translate `(mode, offset)` into a `[startS, endS]` unix-second window.
+ * - Day: local midnight of the target day → 24h window.
+ * - Week: local Monday of the target week → 7 days.
+ * - Month: first-of-month of the target month → last day of the month.
+ * - Year: Jan 1 → Dec 31 of the target year.
+ *
+ * All windows include a 1s padding at the end (`-1`) so an entry with
+ * `startedAt` at `endOfPeriod + 0` is excluded — consistent with how
+ * `useEntries(dayOffset)` builds its day window.
+ */
+function rangeForMode(mode: RangeMode, offset: number): { startS: number; endS: number } {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+
+  switch (mode) {
+    case "day": {
+      start.setDate(start.getDate() + offset);
+      end.setDate(start.getDate() + 1);
+      break;
+    }
+    case "week": {
+      const day = start.getDay();
+      const mondayOffset = day === 0 ? 6 : day - 1;
+      start.setDate(start.getDate() - mondayOffset + offset * 7);
+      end.setTime(start.getTime());
+      end.setDate(end.getDate() + 7);
+      break;
+    }
+    case "month": {
+      start.setDate(1);
+      start.setMonth(start.getMonth() + offset);
+      end.setTime(start.getTime());
+      end.setMonth(end.getMonth() + 1);
+      break;
+    }
+    case "year": {
+      start.setMonth(0, 1);
+      start.setFullYear(start.getFullYear() + offset);
+      end.setTime(start.getTime());
+      end.setFullYear(end.getFullYear() + 1);
+      break;
+    }
+  }
+
+  return {
+    startS: Math.floor(start.getTime() / 1000),
+    endS: Math.floor(end.getTime() / 1000) - 1,
+  };
 }

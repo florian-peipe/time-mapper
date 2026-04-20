@@ -224,7 +224,7 @@ describe("TimelineScreen", () => {
     });
     expect(screen.getByTestId("running-timer-card")).toBeTruthy();
     // Tap previous-day chevron.
-    const prev = screen.getByLabelText("Previous day");
+    const prev = screen.getByLabelText("Previous");
     fireEvent.press(prev);
     expect(screen.queryByTestId("running-timer-card")).toBeNull();
   });
@@ -259,7 +259,7 @@ describe("TimelineScreen", () => {
   it("right chevron is disabled on today (dayOffset === 0)", () => {
     const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
     setup({ nowMs });
-    const next = screen.getByLabelText("Next day");
+    const next = screen.getByLabelText("Next");
     expect(next.props.accessibilityState?.disabled).toBe(true);
   });
 
@@ -280,7 +280,7 @@ describe("TimelineScreen", () => {
     });
     // Sanity: today renders empty (but "You're set up." state now, not zero-places).
     expect(screen.getByText(/0h 0m tracked/)).toBeTruthy();
-    fireEvent.press(screen.getByLabelText("Previous day"));
+    fireEvent.press(screen.getByLabelText("Previous"));
     expect(screen.getByText(/2h 0m tracked/)).toBeTruthy();
     expect(nowSeconds).toBeGreaterThan(0);
   });

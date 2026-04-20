@@ -6,64 +6,96 @@ import { i18n } from "@/lib/i18n";
 import { localeForDateApis } from "@/lib/time";
 import { openSheet as openPaywallIfGated } from "@/screens/Timeline/dayNavGuard";
 
+export type RangeMode = "day" | "week" | "month" | "year";
+
+/** Forward cycle used on tap; long-press iterates backward. */
+const MODES: readonly RangeMode[] = ["day", "week", "month", "year"] as const;
+
+/** Approximate days-per-period for the free-tier history gate. */
+const PERIOD_DAYS: Record<RangeMode, number> = {
+  day: 1,
+  week: 7,
+  month: 30,
+  year: 365,
+};
+
 type Props = {
-  /** 0 = today, -1 = yesterday, +1 is forbidden (future); caller clamps. */
-  dayOffset: number;
-  /** Total tracked minutes for the current day. */
+  mode: RangeMode;
+  /** 0 = current period; -1 = one period back; +1 is forbidden (caller clamps). */
+  offset: number;
+  /** Total tracked minutes inside the current period. */
   totalMin: number;
-  /** True when the user has a Pro entitlement — gates history past 14 days. */
+  /** True when the user has a Pro entitlement — gates history beyond the free cap. */
   isPro?: boolean;
-  onChangeDay: (next: number) => void;
+  onChangeMode: (next: RangeMode) => void;
+  onChangeOffset: (next: number) => void;
   testID?: string;
 };
 
 /**
- * Hard cap on free-tier history depth. The Pro upsell mirrors the same
- * number; keeping the constant here (not in `sheetStore` or `useWeekStats`)
- * makes it trivial to bump when product decides to change the gate.
+ * Hard cap on free-tier history depth, counted in days. Same number the
+ * Pro upsell advertises; all modes translate their offset into days via
+ * `PERIOD_DAYS` and compare.
  */
 export const FREE_HISTORY_DAYS = 14;
 
 /**
- * Header bar shown at the top of Timeline: `< [day label + total] >`.
+ * Header bar shown at the top of Timeline: `< [period label + total] >`.
  *
- * `onChangeDay` receives the new offset; we clamp the forward direction to 0
- * here so callers don't have to. The right chevron is visually disabled on
- * today (reduced opacity + `accessibilityState.disabled`).
+ * Tapping the label cycles the aggregation mode forward
+ * (Day → Week → Month → Year → Day). Long-pressing cycles backward for
+ * quick long-range jumps. Chevrons step `offset` within the current mode.
  *
- * When the user is on the free plan and attempts to navigate further back
- * than `FREE_HISTORY_DAYS`, we intercept and open the paywall sheet instead
- * of fulfilling the navigation.
+ * Free users hitting a back-nav that would land beyond `FREE_HISTORY_DAYS`
+ * get the paywall instead of the nav.
  */
-export function DayNavHeader({ dayOffset, totalMin, isPro, onChangeDay, testID }: Props) {
+export function DayNavHeader({
+  mode,
+  offset,
+  totalMin,
+  isPro,
+  onChangeMode,
+  onChangeOffset,
+  testID,
+}: Props) {
   const t = useTheme();
 
-  const forwardDisabled = dayOffset >= 0;
-
-  const dayLabel = formatDayLabel(dayOffset);
+  const forwardDisabled = offset >= 0;
+  const label = formatPeriodLabel(mode, offset);
   const hours = Math.floor(totalMin / 60);
   const minutes = totalMin % 60;
 
   const goBack = useCallback(() => {
-    const nextOffset = dayOffset - 1;
-    // Free users can step back up to `FREE_HISTORY_DAYS` days; further back
-    // opens the paywall instead of the navigation.
-    if (!isPro && Math.abs(nextOffset) > FREE_HISTORY_DAYS) {
+    const next = offset - 1;
+    if (!isPro && Math.abs(next) * PERIOD_DAYS[mode] > FREE_HISTORY_DAYS) {
       openPaywallIfGated();
       return;
     }
-    onChangeDay(nextOffset);
-  }, [onChangeDay, dayOffset, isPro]);
+    onChangeOffset(next);
+  }, [onChangeOffset, offset, isPro, mode]);
 
   const goForward = useCallback(() => {
     if (forwardDisabled) return;
-    onChangeDay(Math.min(0, dayOffset + 1));
-  }, [onChangeDay, dayOffset, forwardDisabled]);
+    onChangeOffset(Math.min(0, offset + 1));
+  }, [onChangeOffset, offset, forwardDisabled]);
 
-  // 44px touch target with optional smaller visual — meets WCAG SC 2.5.5 AAA.
-  // Previously this was a 36px circle which ships below the 44pt tap-target
-  // threshold; keeping the visual compact while widening the hit area is the
-  // pragmatic compromise.
+  const cycleModeForward = useCallback(() => {
+    const idx = MODES.indexOf(mode);
+    const next = MODES[(idx + 1) % MODES.length]!;
+    onChangeMode(next);
+    // Reset offset when the mode changes — offsets are period-scoped, so
+    // staying on "-3 days" after flipping to Week would jump to "-3 weeks"
+    // which is rarely what the user intended.
+    onChangeOffset(0);
+  }, [mode, onChangeMode, onChangeOffset]);
+
+  const cycleModeBackward = useCallback(() => {
+    const idx = MODES.indexOf(mode);
+    const next = MODES[(idx - 1 + MODES.length) % MODES.length]!;
+    onChangeMode(next);
+    onChangeOffset(0);
+  }, [mode, onChangeMode, onChangeOffset]);
+
   const iconBtn = {
     minWidth: t.minTouchTarget,
     minHeight: t.minTouchTarget,
@@ -97,7 +129,15 @@ export function DayNavHeader({ dayOffset, totalMin, isPro, onChangeDay, testID }
         <Icon name="chevron-left" size={20} color={t.color("color.fg2")} />
       </Pressable>
 
-      <View style={{ flex: 1, alignItems: "center" }}>
+      <Pressable
+        onPress={cycleModeForward}
+        onLongPress={cycleModeBackward}
+        accessibilityRole="button"
+        accessibilityLabel={modeA11yLabel(mode)}
+        accessibilityHint={i18n.t("daynav.mode.hint")}
+        testID={testID ? `${testID}-mode` : undefined}
+        style={{ flex: 1, alignItems: "center" }}
+      >
         <Text
           style={{
             fontSize: t.type.size.l,
@@ -107,7 +147,7 @@ export function DayNavHeader({ dayOffset, totalMin, isPro, onChangeDay, testID }
             letterSpacing: -0.3,
           }}
         >
-          {dayLabel}
+          {label}
         </Text>
         <Text
           style={{
@@ -120,7 +160,7 @@ export function DayNavHeader({ dayOffset, totalMin, isPro, onChangeDay, testID }
         >
           {i18n.t("daynav.label.tracked", { hours, minutes })}
         </Text>
-      </View>
+      </Pressable>
 
       <Pressable
         onPress={goForward}
@@ -138,17 +178,76 @@ export function DayNavHeader({ dayOffset, totalMin, isPro, onChangeDay, testID }
   );
 }
 
-/**
- * Today / Yesterday / weekday + date for older days. Uses the active i18n
- * locale for Date.toLocaleDateString so German users see "Mo., 14. Apr." etc.
- */
-function formatDayLabel(dayOffset: number): string {
-  if (dayOffset === 0) return i18n.t("daynav.label.today");
-  if (dayOffset === -1) return i18n.t("daynav.label.yesterday");
-  const date = new Date(Date.now() + dayOffset * 86_400_000);
+function modeA11yLabel(mode: RangeMode): string {
+  switch (mode) {
+    case "day":
+      return i18n.t("daynav.mode.day");
+    case "week":
+      return i18n.t("daynav.mode.week");
+    case "month":
+      return i18n.t("daynav.mode.month");
+    case "year":
+      return i18n.t("daynav.mode.year");
+  }
+}
+
+function formatPeriodLabel(mode: RangeMode, offset: number): string {
+  switch (mode) {
+    case "day":
+      return formatDayLabel(offset);
+    case "week":
+      return formatWeekLabel(offset);
+    case "month":
+      return formatMonthLabel(offset);
+    case "year":
+      return formatYearLabel(offset);
+  }
+}
+
+function formatDayLabel(offset: number): string {
+  if (offset === 0) return i18n.t("daynav.label.today");
+  if (offset === -1) return i18n.t("daynav.label.yesterday");
+  const date = new Date(Date.now() + offset * 86_400_000);
   return date.toLocaleDateString(localeForDateApis(), {
     weekday: "long",
     month: "short",
     day: "numeric",
   });
+}
+
+function formatWeekLabel(offset: number): string {
+  if (offset === 0) return i18n.t("daynav.label.thisWeek");
+  if (offset === -1) return i18n.t("daynav.label.lastWeek");
+  const { start, end } = computeWeekBounds(offset);
+  const locale = localeForDateApis();
+  const fmt: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  return i18n.t("daynav.label.weekOf", {
+    range: `${start.toLocaleDateString(locale, fmt)}–${end.toLocaleDateString(locale, fmt)}`,
+  });
+}
+
+function formatMonthLabel(offset: number): string {
+  if (offset === 0) return i18n.t("daynav.label.thisMonth");
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + offset);
+  return d.toLocaleDateString(localeForDateApis(), { month: "long", year: "numeric" });
+}
+
+function formatYearLabel(offset: number): string {
+  if (offset === 0) return i18n.t("daynav.label.thisYear");
+  const year = new Date().getFullYear() + offset;
+  return String(year);
+}
+
+function computeWeekBounds(offset: number): { start: Date; end: Date } {
+  // Anchor on local Monday — matches the German convention used in Stats.
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const day = start.getDay();
+  const mondayOffset = day === 0 ? 6 : day - 1;
+  start.setDate(start.getDate() - mondayOffset + offset * 7);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  return { start, end };
 }
