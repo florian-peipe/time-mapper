@@ -71,6 +71,15 @@ const ENTRY_BUFFER_MAX_MIN = 15;
 const EXIT_BUFFER_MIN_MIN = 1;
 const EXIT_BUFFER_MAX_MIN = 10;
 
+// Per-place time-goal sliders. Hours (not minutes) — larger granularity,
+// matches how a user thinks about a weekly / daily target. 0 = disabled.
+const DAILY_GOAL_MIN_H = 1;
+const DAILY_GOAL_MAX_H = 16;
+const DAILY_GOAL_DEFAULT_H = 8;
+const WEEKLY_GOAL_MIN_H = 1;
+const WEEKLY_GOAL_MAX_H = 80;
+const WEEKLY_GOAL_DEFAULT_H = 40;
+
 /**
  * AddPlaceSheet — two-phase flow for creating or editing a place.
  *
@@ -161,6 +170,26 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   const [entryBufferMin, setEntryBufferMin] = useState(initialEntryBufferMin);
   const [exitBufferMin, setExitBufferMin] = useState(initialExitBufferMin);
 
+  // Goals — store the hour value locally for each slider + a separate
+  // `enabled` flag. When disabled, the slider is greyed out and Save
+  // persists `null` for the column. The hour defaults (8 daily / 40 weekly)
+  // are just starting positions — only applied when the user flips the
+  // toggle on, then tweaks the slider.
+  const initialDailyGoalMin = editingPlace?.dailyGoalMinutes ?? null;
+  const initialWeeklyGoalMin = editingPlace?.weeklyGoalMinutes ?? null;
+  const [dailyGoalEnabled, setDailyGoalEnabled] = useState(initialDailyGoalMin != null);
+  const [dailyGoalHours, setDailyGoalHours] = useState(
+    initialDailyGoalMin != null
+      ? Math.max(DAILY_GOAL_MIN_H, Math.round(initialDailyGoalMin / 60))
+      : DAILY_GOAL_DEFAULT_H,
+  );
+  const [weeklyGoalEnabled, setWeeklyGoalEnabled] = useState(initialWeeklyGoalMin != null);
+  const [weeklyGoalHours, setWeeklyGoalHours] = useState(
+    initialWeeklyGoalMin != null
+      ? Math.max(WEEKLY_GOAL_MIN_H, Math.round(initialWeeklyGoalMin / 60))
+      : WEEKLY_GOAL_DEFAULT_H,
+  );
+
   // When the sheet is reused for a different placeId (edit vs. new vs.
   // another edit), re-hydrate the local state so stale values from the
   // previous instance don't leak through. Also resets when the sheet is
@@ -187,6 +216,18 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setIconIdx(pendingPlaceForm.iconIdx);
       setEntryBufferMin(pendingPlaceForm.entryBufferMin);
       setExitBufferMin(pendingPlaceForm.exitBufferMin);
+      setDailyGoalEnabled(pendingPlaceForm.dailyGoalMinutes != null);
+      if (pendingPlaceForm.dailyGoalMinutes != null) {
+        setDailyGoalHours(
+          Math.max(DAILY_GOAL_MIN_H, Math.round(pendingPlaceForm.dailyGoalMinutes / 60)),
+        );
+      }
+      setWeeklyGoalEnabled(pendingPlaceForm.weeklyGoalMinutes != null);
+      if (pendingPlaceForm.weeklyGoalMinutes != null) {
+        setWeeklyGoalHours(
+          Math.max(WEEKLY_GOAL_MIN_H, Math.round(pendingPlaceForm.weeklyGoalMinutes / 60)),
+        );
+      }
       setPendingPlaceForm(null);
       return;
     }
@@ -202,6 +243,18 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setIconIdx(initialIconIdx);
       setEntryBufferMin(initialEntryBufferMin);
       setExitBufferMin(initialExitBufferMin);
+      setDailyGoalEnabled(editingPlace.dailyGoalMinutes != null);
+      if (editingPlace.dailyGoalMinutes != null) {
+        setDailyGoalHours(
+          Math.max(DAILY_GOAL_MIN_H, Math.round(editingPlace.dailyGoalMinutes / 60)),
+        );
+      }
+      setWeeklyGoalEnabled(editingPlace.weeklyGoalMinutes != null);
+      if (editingPlace.weeklyGoalMinutes != null) {
+        setWeeklyGoalHours(
+          Math.max(WEEKLY_GOAL_MIN_H, Math.round(editingPlace.weeklyGoalMinutes / 60)),
+        );
+      }
     } else if (!visible) {
       setQuery("");
       setSelected(null);
@@ -213,6 +266,10 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       setApiError(null);
       setEntryBufferMin(initialEntryBufferMin);
       setExitBufferMin(initialExitBufferMin);
+      setDailyGoalEnabled(false);
+      setDailyGoalHours(DAILY_GOAL_DEFAULT_H);
+      setWeeklyGoalEnabled(false);
+      setWeeklyGoalHours(WEEKLY_GOAL_DEFAULT_H);
     }
   }, [
     editingPlace,
@@ -316,6 +373,8 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
           iconIdx,
           entryBufferMin,
           exitBufferMin,
+          dailyGoalMinutes: dailyGoalEnabled ? dailyGoalHours * 60 : null,
+          weeklyGoalMinutes: weeklyGoalEnabled ? weeklyGoalHours * 60 : null,
         };
         setPendingPlaceForm(stash);
       }
@@ -351,6 +410,10 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       entryBufferS: entryBufferMin * 60,
       exitBufferS: exitBufferMin * 60,
     };
+    const goals = {
+      dailyGoalMinutes: dailyGoalEnabled ? dailyGoalHours * 60 : null,
+      weeklyGoalMinutes: weeklyGoalEnabled ? weeklyGoalHours * 60 : null,
+    };
     if (editing && placeId) {
       saved = update(placeId, {
         name: name.trim() || selected.description,
@@ -361,6 +424,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
         color: chosenColor,
         icon: chosenIcon,
         ...buffers,
+        ...goals,
       });
     } else {
       saved = create({
@@ -372,6 +436,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
         color: chosenColor,
         icon: chosenIcon,
         ...buffers,
+        ...goals,
       });
     }
     onSaved?.(saved.id);
@@ -704,6 +769,49 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
             testID="add-place-exit-buffer"
           />
 
+          {/* Goals — optional daily + weekly time targets. */}
+          <View style={{ gap: t.space[2] }}>
+            <Text
+              style={{
+                fontSize: t.type.size.s,
+                color: t.color("color.fg2"),
+                fontFamily: t.type.family.sans,
+                fontWeight: t.type.weight.medium,
+              }}
+            >
+              {i18n.t("addPlace.goals.title")}
+            </Text>
+            <Text
+              style={{
+                fontSize: t.type.size.xs,
+                color: t.color("color.fg3"),
+                fontFamily: t.type.family.sans,
+              }}
+            >
+              {i18n.t("addPlace.goals.body")}
+            </Text>
+          </View>
+          <GoalSliderRow
+            label={i18n.t("addPlace.goals.daily")}
+            enabled={dailyGoalEnabled}
+            hours={dailyGoalHours}
+            minValue={DAILY_GOAL_MIN_H}
+            maxValue={DAILY_GOAL_MAX_H}
+            onToggle={setDailyGoalEnabled}
+            onChangeHours={setDailyGoalHours}
+            testID="add-place-daily-goal"
+          />
+          <GoalSliderRow
+            label={i18n.t("addPlace.goals.weekly")}
+            enabled={weeklyGoalEnabled}
+            hours={weeklyGoalHours}
+            minValue={WEEKLY_GOAL_MIN_H}
+            maxValue={WEEKLY_GOAL_MAX_H}
+            onToggle={setWeeklyGoalEnabled}
+            onChangeHours={setWeeklyGoalHours}
+            testID="add-place-weekly-goal"
+          />
+
           {/* Color picker. */}
           <View>
             <Text
@@ -903,6 +1011,116 @@ function BufferSliderRow({
         accessibilityLabel={label}
         accessibilityValue={{ min: minValue, max: maxValue, now: minutes, text: valueLabel }}
       />
+    </View>
+  );
+}
+
+/**
+ * Toggle-guarded hour slider for the per-place daily / weekly goals.
+ * When `enabled` is false the toggle sits alone and the slider is hidden;
+ * flipping it on reveals the slider with the current `hours` value. The
+ * toggle itself matches the geometry of the quiet-hours + digest toggles
+ * in `NotificationsSheet`.
+ */
+function GoalSliderRow({
+  label,
+  enabled,
+  hours,
+  minValue,
+  maxValue,
+  onToggle,
+  onChangeHours,
+  testID,
+}: {
+  label: string;
+  enabled: boolean;
+  hours: number;
+  minValue: number;
+  maxValue: number;
+  onToggle: (next: boolean) => void;
+  onChangeHours: (v: number) => void;
+  testID?: string;
+}) {
+  const t = useTheme();
+  const valueLabel = i18n.t("addPlace.goals.hours", { n: hours });
+  return (
+    <View>
+      <Pressable
+        onPress={() => onToggle(!enabled)}
+        accessibilityRole="switch"
+        accessibilityLabel={label}
+        accessibilityState={{ checked: enabled }}
+        testID={testID ? `${testID}-toggle` : undefined}
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingVertical: t.space[2],
+        }}
+      >
+        <View style={{ flex: 1, paddingRight: t.space[3] }}>
+          <Text
+            style={{
+              fontSize: t.type.size.s,
+              color: t.color("color.fg"),
+              fontFamily: t.type.family.sans,
+              fontWeight: t.type.weight.medium,
+            }}
+          >
+            {label}
+          </Text>
+          {enabled ? (
+            <Text
+              style={{
+                marginTop: 2,
+                fontSize: t.type.size.xs,
+                color: t.color("color.fg3"),
+                fontFamily: t.type.family.sans,
+                fontVariant: ["tabular-nums"],
+              }}
+            >
+              {valueLabel}
+            </Text>
+          ) : null}
+        </View>
+        <View
+          style={{
+            width: 44,
+            height: 26,
+            borderRadius: 13,
+            padding: 2,
+            backgroundColor: enabled ? t.color("color.accent") : t.color("color.border.strong"),
+            justifyContent: "center",
+          }}
+        >
+          <View
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: t.color("color.bg"),
+              transform: [{ translateX: enabled ? 18 : 0 }],
+            }}
+          />
+        </View>
+      </Pressable>
+      {enabled ? (
+        <Slider
+          testID={testID}
+          minimumValue={minValue}
+          maximumValue={maxValue}
+          step={1}
+          value={hours}
+          onValueChange={(v: number) => onChangeHours(Math.round(v))}
+          minimumTrackTintColor={t.color("color.accent")}
+          maximumTrackTintColor={t.color("color.border")}
+          thumbTintColor={t.color("color.accent")}
+          style={{ width: "100%", height: 40 }}
+          accessibilityRole="adjustable"
+          accessibilityLabel={label}
+          accessibilityValue={{ min: minValue, max: maxValue, now: hours, text: valueLabel }}
+        />
+      ) : null}
     </View>
   );
 }

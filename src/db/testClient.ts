@@ -16,7 +16,7 @@ function loadSql(file: string): string {
  * migrations table — tests always start from a clean in-memory db.
  */
 function applyAllMigrations(sqlite: Database.Database): void {
-  const migrations = ["0000_init.sql", "0001_cleanup.sql", "0002_cascade.sql"];
+  const migrations = ["0000_init.sql", "0001_cleanup.sql", "0002_cascade.sql", "0003_goals.sql"];
   for (const m of migrations) {
     sqlite.exec(loadSql(m).replace(/--> statement-breakpoint/g, ";"));
   }

@@ -833,6 +833,251 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                               "children": [
                                 {
                                   "children": [
+                                    "Goals",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#4C4741",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "500",
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                                {
+                                  "children": [
+                                    "Optional time targets. When reached, Time Mapper sends a notification and the Stats page shows your overtime.",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#8A837A",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 11,
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                              ],
+                              "props": {
+                                "style": {
+                                  "gap": 8,
+                                },
+                              },
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "children": [
+                                            "Daily target",
+                                          ],
+                                          "props": {
+                                            "style": {
+                                              "color": "#1A1714",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500",
+                                            },
+                                          },
+                                          "type": "Text",
+                                        },
+                                      ],
+                                      "props": {
+                                        "style": {
+                                          "flex": 1,
+                                          "paddingRight": 12,
+                                        },
+                                      },
+                                      "type": "View",
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "children": null,
+                                          "props": {
+                                            "style": {
+                                              "backgroundColor": "#FCFBF9",
+                                              "borderRadius": 10,
+                                              "height": 20,
+                                              "transform": [
+                                                {
+                                                  "translateX": 0,
+                                                },
+                                              ],
+                                              "width": 20,
+                                            },
+                                          },
+                                          "type": "View",
+                                        },
+                                      ],
+                                      "props": {
+                                        "style": {
+                                          "backgroundColor": "#D7CFC2",
+                                          "borderRadius": 13,
+                                          "height": 26,
+                                          "justifyContent": "center",
+                                          "padding": 2,
+                                          "width": 44,
+                                        },
+                                      },
+                                      "type": "View",
+                                    },
+                                  ],
+                                  "props": {
+                                    "accessibilityLabel": "Daily target",
+                                    "accessibilityRole": "switch",
+                                    "accessibilityState": {
+                                      "busy": undefined,
+                                      "checked": false,
+                                      "disabled": undefined,
+                                      "expanded": undefined,
+                                      "selected": undefined,
+                                    },
+                                    "accessibilityValue": {
+                                      "max": undefined,
+                                      "min": undefined,
+                                      "now": undefined,
+                                      "text": undefined,
+                                    },
+                                    "accessible": true,
+                                    "collapsable": false,
+                                    "focusable": true,
+                                    "onBlur": [Function],
+                                    "onClick": [Function],
+                                    "onFocus": [Function],
+                                    "onResponderGrant": [Function],
+                                    "onResponderMove": [Function],
+                                    "onResponderRelease": [Function],
+                                    "onResponderTerminate": [Function],
+                                    "onResponderTerminationRequest": [Function],
+                                    "onStartShouldSetResponder": [Function],
+                                    "style": {
+                                      "alignItems": "center",
+                                      "flexDirection": "row",
+                                      "justifyContent": "space-between",
+                                      "paddingVertical": 8,
+                                    },
+                                    "testID": "add-place-daily-goal-toggle",
+                                  },
+                                  "type": "View",
+                                },
+                              ],
+                              "props": {},
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "children": [
+                                            "Weekly target",
+                                          ],
+                                          "props": {
+                                            "style": {
+                                              "color": "#1A1714",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500",
+                                            },
+                                          },
+                                          "type": "Text",
+                                        },
+                                      ],
+                                      "props": {
+                                        "style": {
+                                          "flex": 1,
+                                          "paddingRight": 12,
+                                        },
+                                      },
+                                      "type": "View",
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "children": null,
+                                          "props": {
+                                            "style": {
+                                              "backgroundColor": "#FCFBF9",
+                                              "borderRadius": 10,
+                                              "height": 20,
+                                              "transform": [
+                                                {
+                                                  "translateX": 0,
+                                                },
+                                              ],
+                                              "width": 20,
+                                            },
+                                          },
+                                          "type": "View",
+                                        },
+                                      ],
+                                      "props": {
+                                        "style": {
+                                          "backgroundColor": "#D7CFC2",
+                                          "borderRadius": 13,
+                                          "height": 26,
+                                          "justifyContent": "center",
+                                          "padding": 2,
+                                          "width": 44,
+                                        },
+                                      },
+                                      "type": "View",
+                                    },
+                                  ],
+                                  "props": {
+                                    "accessibilityLabel": "Weekly target",
+                                    "accessibilityRole": "switch",
+                                    "accessibilityState": {
+                                      "busy": undefined,
+                                      "checked": false,
+                                      "disabled": undefined,
+                                      "expanded": undefined,
+                                      "selected": undefined,
+                                    },
+                                    "accessibilityValue": {
+                                      "max": undefined,
+                                      "min": undefined,
+                                      "now": undefined,
+                                      "text": undefined,
+                                    },
+                                    "accessible": true,
+                                    "collapsable": false,
+                                    "focusable": true,
+                                    "onBlur": [Function],
+                                    "onClick": [Function],
+                                    "onFocus": [Function],
+                                    "onResponderGrant": [Function],
+                                    "onResponderMove": [Function],
+                                    "onResponderRelease": [Function],
+                                    "onResponderTerminate": [Function],
+                                    "onResponderTerminationRequest": [Function],
+                                    "onStartShouldSetResponder": [Function],
+                                    "style": {
+                                      "alignItems": "center",
+                                      "flexDirection": "row",
+                                      "justifyContent": "space-between",
+                                      "paddingVertical": 8,
+                                    },
+                                    "testID": "add-place-weekly-goal-toggle",
+                                  },
+                                  "type": "View",
+                                },
+                              ],
+                              "props": {},
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
                                     "Color",
                                   ],
                                   "props": {

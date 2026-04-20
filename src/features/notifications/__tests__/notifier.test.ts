@@ -38,6 +38,8 @@ function makePlace(id: string, name = "Home"): Place {
     exitBufferS: 180,
     color: "#FF7A1A",
     icon: "pin",
+    dailyGoalMinutes: null,
+    weeklyGoalMinutes: null,
     createdAt: 0,
     updatedAt: 0,
     deletedAt: null,

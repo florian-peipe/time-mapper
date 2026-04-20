@@ -339,10 +339,127 @@ export async function maybeNotifyForEffects(
         await fireNotification(decision.title, decision.body);
       }
       recent = decision.recent;
+
+      // After a successful close, check whether this entry pushed the
+      // place's running day/week totals past its configured target. If
+      // yes, and we haven't already fired the corresponding "goal reached"
+      // notification for this period, fire it now.
+      await maybeNotifyGoalReached(place, placesRepo, kv, nowS);
     }
   }
 
   writeRecent(kv, recent);
+}
+
+/**
+ * Fire a "goal reached" notification the first time this place crosses
+ * its daily or weekly target in the current period. Deduplicated via KV
+ * keys so a user stepping in and out of a place doesn't get spammed.
+ */
+async function maybeNotifyGoalReached(
+  place: Place,
+  placesRepo: PlacesRepo,
+  kv: KvRepo,
+  nowS: number,
+): Promise<void> {
+  if (place.dailyGoalMinutes == null && place.weeklyGoalMinutes == null) return;
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { EntriesRepo } = require("@/db/repository/entries") as typeof EntriesModule;
+  const db = (placesRepo as unknown as { db: ConstructorParameters<typeof EntriesRepo>[0] }).db;
+  const entriesRepo = new EntriesRepo(db);
+
+  const { dayStart, weekStart, dayEnd, weekEnd } = periodBounds(new Date(nowS * 1000));
+
+  if (place.dailyGoalMinutes != null) {
+    const totalMin = totalMinutesForPlace(entriesRepo, place.id, dayStart, dayEnd);
+    if (totalMin >= place.dailyGoalMinutes) {
+      const kvKey = goalKvKey("day", place.id, dayStart);
+      if (kv.get(kvKey) !== "1") {
+        const over = totalMin - place.dailyGoalMinutes;
+        const body =
+          over > 0
+            ? i18n.t("notifier.goal.daily.bodyOver", {
+                name: place.name,
+                hours: Math.floor(place.dailyGoalMinutes / 60),
+                over: formatDuration(over * 60),
+              })
+            : i18n.t("notifier.goal.daily.body", {
+                name: place.name,
+                hours: Math.floor(place.dailyGoalMinutes / 60),
+              });
+        await fireNotification(i18n.t("notifier.goal.daily.title"), body);
+        kv.set(kvKey, "1");
+      }
+    }
+  }
+
+  if (place.weeklyGoalMinutes != null) {
+    const totalMin = totalMinutesForPlace(entriesRepo, place.id, weekStart, weekEnd);
+    if (totalMin >= place.weeklyGoalMinutes) {
+      const kvKey = goalKvKey("week", place.id, weekStart);
+      if (kv.get(kvKey) !== "1") {
+        const over = totalMin - place.weeklyGoalMinutes;
+        const body =
+          over > 0
+            ? i18n.t("notifier.goal.weekly.bodyOver", {
+                name: place.name,
+                hours: Math.floor(place.weeklyGoalMinutes / 60),
+                over: formatDuration(over * 60),
+              })
+            : i18n.t("notifier.goal.weekly.body", {
+                name: place.name,
+                hours: Math.floor(place.weeklyGoalMinutes / 60),
+              });
+        await fireNotification(i18n.t("notifier.goal.weekly.title"), body);
+        kv.set(kvKey, "1");
+      }
+    }
+  }
+}
+
+function totalMinutesForPlace(
+  entriesRepo: InstanceType<typeof EntriesModule.EntriesRepo>,
+  placeId: string,
+  fromS: number,
+  toS: number,
+): number {
+  let total = 0;
+  for (const e of entriesRepo.listBetween(fromS, toS)) {
+    if (e.placeId !== placeId) continue;
+    if (e.endedAt == null) continue;
+    const seconds = e.endedAt - e.startedAt - (e.pauseS ?? 0);
+    if (seconds <= 0) continue;
+    total += Math.round(seconds / 60);
+  }
+  return total;
+}
+
+function periodBounds(now: Date): {
+  dayStart: number;
+  dayEnd: number;
+  weekStart: number;
+  weekEnd: number;
+} {
+  const day = new Date(now);
+  day.setHours(0, 0, 0, 0);
+  const dayStart = Math.floor(day.getTime() / 1000);
+  const dayEnd = dayStart + 86_400 - 1;
+  const week = new Date(day);
+  const dow = week.getDay();
+  const mondayOffset = dow === 0 ? 6 : dow - 1;
+  week.setDate(week.getDate() - mondayOffset);
+  const weekStart = Math.floor(week.getTime() / 1000);
+  const weekEnd = weekStart + 7 * 86_400 - 1;
+  return { dayStart, dayEnd, weekStart, weekEnd };
+}
+
+function goalKvKey(kind: "day" | "week", placeId: string, periodStartS: number): string {
+  const d = new Date(periodStartS * 1000);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `notifier.goal.${kind}.${placeId}.${y}-${m}-${dd}`;
 }
 
 /**

@@ -96,7 +96,7 @@ export function StatsScreen() {
           paddingBottom: insets.bottom + t.space[8],
         }}
       >
-        <SummaryCard totalMin={totalMin} perPlace={perPlace} />
+        <SummaryCard totalMin={totalMin} perPlace={perPlace} mode={mode} />
 
         {mode === "week" ? (
           <View style={{ paddingHorizontal: t.space[5], paddingVertical: t.space[2] }}>
@@ -192,9 +192,11 @@ function aggregate(
 function SummaryCard({
   totalMin,
   perPlace,
+  mode,
 }: {
   totalMin: number;
   perPlace: { place: Place; minutes: number }[];
+  mode: RangeMode;
 }) {
   const t = useTheme();
   const max = Math.max(1, ...perPlace.map((p) => p.minutes));
@@ -233,7 +235,7 @@ function SummaryCard({
         {perPlace.length > 0 ? (
           <View style={{ marginTop: t.space[3], gap: t.space[2] }}>
             {perPlace.map(({ place, minutes: m }) => (
-              <PlaceBar key={place.id} place={place} minutes={m} max={max} />
+              <PlaceBar key={place.id} place={place} minutes={m} max={max} mode={mode} />
             ))}
           </View>
         ) : (
@@ -253,13 +255,31 @@ function SummaryCard({
   );
 }
 
-function PlaceBar({ place, minutes, max }: { place: Place; minutes: number; max: number }) {
+function PlaceBar({
+  place,
+  minutes,
+  max,
+  mode,
+}: {
+  place: Place;
+  minutes: number;
+  max: number;
+  mode: RangeMode;
+}) {
   const t = useTheme();
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   const label =
     h === 0 ? i18n.t("stats.summary.rowMinutes", { m }) : i18n.t("stats.summary.rowHM", { h, m });
-  const pct = Math.max(4, Math.round((minutes / max) * 100));
+
+  // Pick the relevant goal for the current aggregation. Day view → daily
+  // goal. Week view → weekly goal. Month / year → weekly goal scaled up
+  // (simplistic but useful: "month of 40h/week" = 4 × 40 = 160h target).
+  const goal = pickGoal(place, mode);
+  const hasGoal = goal != null && goal > 0;
+  const ratio = hasGoal ? minutes / goal : minutes / max;
+  const pct = Math.max(4, Math.min(100, Math.round(ratio * 100)));
+  const over = hasGoal ? minutes - goal : 0;
   return (
     <View
       testID={`stats-place-bar-${place.id}`}
@@ -290,24 +310,64 @@ function PlaceBar({ place, minutes, max }: { place: Place; minutes: number; max:
           style={{
             width: `${pct}%`,
             height: "100%",
-            backgroundColor: place.color,
+            backgroundColor: hasGoal && over > 0 ? t.color("color.success") : place.color,
           }}
         />
       </View>
-      <Text
-        style={{
-          minWidth: 56,
-          textAlign: "right",
-          fontSize: t.type.size.s,
-          color: t.color("color.fg2"),
-          fontFamily: t.type.family.sans,
-          fontVariant: ["tabular-nums"],
-        }}
-      >
-        {label}
-      </Text>
+      <View style={{ minWidth: 72, alignItems: "flex-end" }}>
+        <Text
+          style={{
+            fontSize: t.type.size.s,
+            color: t.color("color.fg2"),
+            fontFamily: t.type.family.sans,
+            fontVariant: ["tabular-nums"],
+          }}
+        >
+          {label}
+        </Text>
+        {hasGoal ? (
+          <Text
+            style={{
+              marginTop: 1,
+              fontSize: t.type.size.xs,
+              color:
+                over > 0
+                  ? t.color("color.success")
+                  : over === 0
+                    ? t.color("color.fg3")
+                    : t.color("color.fg3"),
+              fontFamily: t.type.family.sans,
+              fontVariant: ["tabular-nums"],
+            }}
+            testID={`stats-goal-delta-${place.id}`}
+          >
+            {over > 0
+              ? i18n.t("stats.summary.overBy", { label: formatGoalDelta(over) })
+              : over === 0
+                ? i18n.t("stats.summary.atGoal")
+                : i18n.t("stats.summary.toGoal", { label: formatGoalDelta(-over) })}
+          </Text>
+        ) : null}
+      </View>
     </View>
   );
+}
+
+function pickGoal(place: Place, mode: RangeMode): number | null {
+  if (mode === "day") return place.dailyGoalMinutes ?? null;
+  if (place.weeklyGoalMinutes == null) return null;
+  if (mode === "week") return place.weeklyGoalMinutes;
+  // Rough month/year scaling so the same weekly target still reads as
+  // "on/off pace". Month = 4.33 weeks; year = 52 weeks.
+  if (mode === "month") return Math.round(place.weeklyGoalMinutes * 4.33);
+  return place.weeklyGoalMinutes * 52;
+}
+
+function formatGoalDelta(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return i18n.t("stats.summary.rowMinutes", { m });
+  return i18n.t("stats.summary.rowHM", { h, m });
 }
 
 function EntriesSection({

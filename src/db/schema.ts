@@ -11,6 +11,9 @@ export const places = sqliteTable("places", {
   exitBufferS: integer("exit_buffer_s").notNull().default(180),
   color: text("color").notNull(),
   icon: text("icon").notNull(),
+  // Per-place time targets (minutes). Null = no goal set.
+  dailyGoalMinutes: integer("daily_goal_minutes"),
+  weeklyGoalMinutes: integer("weekly_goal_minutes"),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at").notNull(),
   deletedAt: integer("deleted_at"),

@@ -17,6 +17,10 @@ export type CreatePlaceInput = {
   exitBufferS?: number;
   color?: string;
   icon?: string;
+  /** Daily target (minutes). Null / omitted = no goal. */
+  dailyGoalMinutes?: number | null;
+  /** Weekly target (minutes). Null / omitted = no goal. */
+  weeklyGoalMinutes?: number | null;
 };
 
 export class PlacesRepo {
@@ -38,6 +42,8 @@ export class PlacesRepo {
       exitBufferS: input.exitBufferS ?? 60,
       color: input.color ?? "#FF7A1A",
       icon: input.icon ?? "map-pin",
+      dailyGoalMinutes: input.dailyGoalMinutes ?? null,
+      weeklyGoalMinutes: input.weeklyGoalMinutes ?? null,
       createdAt: now,
       updatedAt: now,
       deletedAt: null,

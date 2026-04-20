@@ -41,6 +41,9 @@ export type PendingPlaceForm = {
   iconIdx: number;
   entryBufferMin: number;
   exitBufferMin: number;
+  /** null / omitted = goal not enabled */
+  dailyGoalMinutes: number | null;
+  weeklyGoalMinutes: number | null;
 };
 
 type SheetState = {

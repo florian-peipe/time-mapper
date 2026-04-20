@@ -35,6 +35,8 @@ function makePlace(id: string, overrides: Partial<Place> = {}): Place {
     exitBufferS: 180,
     color: "#FF7A1A",
     icon: "pin",
+    dailyGoalMinutes: null,
+    weeklyGoalMinutes: null,
     createdAt: 0,
     updatedAt: 0,
     deletedAt: null,
