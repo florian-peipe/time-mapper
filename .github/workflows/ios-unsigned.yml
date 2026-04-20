@@ -135,6 +135,27 @@ jobs:
             pod install --repo-update
           fi
 
+      # Cache Pods + app compilation output so `xcodebuild archive` starts
+      # from a warm incremental state (the biggest single lever here —
+      # dominant step drops from 8-10 min to 3-5 min on a cache hit).
+      #
+      # Key triggers: app.json (Expo plugin config), package-lock.json (JS
+      # or native dep bump), Podfile.lock (Pods graph). Restore-keys fall
+      # back to the latest cache for the same os+config when the exact
+      # key misses.
+      #
+      # Path: `build/DerivedData` (set explicitly via -derivedDataPath on
+      # xcodebuild below). Predictable, gitignored, smaller than the
+      # default `~/Library/Developer/Xcode/DerivedData` which accumulates
+      # stale indexes from every Xcode version on the runner image.
+      - name: Cache Xcode DerivedData
+        uses: actions/cache@v4
+        with:
+          path: build/DerivedData
+          key: derived-${{ runner.os }}-${{ env.CONFIGURATION }}-${{ hashFiles('app.json', 'package-lock.json', 'ios/Podfile.lock') }}
+          restore-keys: |
+            derived-${{ runner.os }}-${{ env.CONFIGURATION }}-
+
       # Resolve the scheme + workspace names AFTER `pod install` runs — the
       # .xcworkspace is created by CocoaPods, not by `expo prebuild`. Using
       # `find` rather than a glob keeps this portable across BSD and GNU ls.
@@ -176,6 +197,7 @@ jobs:
             -configuration "$CONFIGURATION" \
             -sdk iphoneos \
             -archivePath build/App.xcarchive \
+            -derivedDataPath build/DerivedData \
             -resultBundlePath build/xcresult \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
