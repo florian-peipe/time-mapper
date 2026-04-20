@@ -2,16 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useTheme } from "@/theme/useTheme";
-import {
-  Button,
-  Chip,
-  Icon,
-  Input,
-  PlaceBubble,
-  Sheet,
-  TextArea,
-  type IconName,
-} from "@/components";
+import { Button, Chip, Icon, PlaceBubble, Sheet, TextArea, type IconName } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { i18n } from "@/lib/i18n";
@@ -27,7 +18,6 @@ export type EntryEditSheetProps = {
   onClose: () => void;
 };
 
-const PAUSE_MAX_MIN = 720;
 /** Default start — 09:00 local on the anchor date. */
 function defaultStart(anchor: Date): Date {
   const d = new Date(anchor);
@@ -39,6 +29,21 @@ function defaultEnd(anchor: Date): Date {
   const d = new Date(anchor);
   d.setHours(10, 0, 0, 0);
   return d;
+}
+/**
+ * Encode a pause duration (in minutes) as a `Date` whose hours +
+ * minutes carry the value. Used as the `value` of the pause picker so
+ * the native time wheel can edit it. Seconds/date portions are fixed
+ * so the chip always reads "HH:MM".
+ */
+function pauseMinutesToDate(minutes: number): Date {
+  const d = new Date(0);
+  const clamped = Math.max(0, Math.min(minutes, 23 * 60 + 59));
+  d.setHours(Math.floor(clamped / 60), clamped % 60, 0, 0);
+  return d;
+}
+function pauseDateToMinutes(d: Date): number {
+  return d.getHours() * 60 + d.getMinutes();
 }
 
 export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProps) {
@@ -54,7 +59,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
   const [placeId, setPlaceId] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<Date>(() => defaultStart(new Date()));
   const [endDate, setEndDate] = useState<Date>(() => defaultEnd(new Date()));
-  const [pause, setPause] = useState<string>("0");
+  const [pauseDate, setPauseDate] = useState<Date>(() => pauseMinutesToDate(0));
   const [note, setNote] = useState<string>("");
   const [entrySource, setEntrySource] = useState<"auto" | "manual" | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -69,7 +74,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
         setEndDate(
           e.endedAt != null ? new Date(e.endedAt * 1000) : defaultEnd(new Date(e.startedAt * 1000)),
         );
-        setPause(String(Math.round((e.pauseS ?? 0) / 60)));
+        setPauseDate(pauseMinutesToDate(Math.round((e.pauseS ?? 0) / 60)));
         setNote(e.note ?? "");
         setEntrySource(e.source);
       }
@@ -78,7 +83,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
       const now = new Date();
       setStartDate(defaultStart(now));
       setEndDate(defaultEnd(now));
-      setPause("0");
+      setPauseDate(pauseMinutesToDate(0));
       setNote("");
       setEntrySource(null);
       setPickerOpen(false);
@@ -105,11 +110,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
     return Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / 60_000));
   }, [startDate, endDate]);
 
-  const pauseMin = useMemo(() => {
-    const n = parseInt(pause, 10);
-    if (Number.isNaN(n)) return 0;
-    return Math.min(Math.max(n, 0), PAUSE_MAX_MIN);
-  }, [pause]);
+  const pauseMin = useMemo(() => pauseDateToMinutes(pauseDate), [pauseDate]);
 
   const netMin = Math.max(0, grossMin - pauseMin);
 
@@ -441,17 +442,12 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           value={endDate}
           onChange={setEndDate}
         />
-        <FieldRow
+        <PickerRow
           label={i18n.t("entryEdit.label.pause")}
-          value={pause}
-          onChangeText={(v) => setPause(v.replace(/[^0-9]/g, ""))}
           testID="entry-edit-pause"
-          placeholder="0"
-          keyboardType="number-pad"
-          maxLength={3}
-          mono
-          suffix={i18n.t("entryEdit.label.minSuffix")}
-          last
+          mode="time"
+          value={pauseDate}
+          onChange={setPauseDate}
         />
       </View>
 
@@ -604,110 +600,6 @@ function PickerRow({
           }}
         />
       </View>
-    </View>
-  );
-}
-
-/** Re-used row inside the times card. */
-function FieldRow({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  keyboardType,
-  maxLength,
-  suffix,
-  error,
-  testID,
-  last,
-  mono,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (v: string) => void;
-  placeholder?: string;
-  keyboardType?: "numbers-and-punctuation" | "number-pad";
-  maxLength?: number;
-  suffix?: string;
-  error?: string;
-  testID?: string;
-  last?: boolean;
-  mono?: boolean;
-}) {
-  const t = useTheme();
-  return (
-    <View>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          // design-source: row padding 14/16
-          paddingVertical: 14,
-          paddingHorizontal: t.space[4],
-          borderBottomWidth: last ? 0 : 1,
-          borderBottomColor: t.color("color.border"),
-        }}
-      >
-        <Text
-          style={{
-            fontSize: t.type.size.s,
-            color: t.color("color.fg3"),
-            fontFamily: t.type.family.sans,
-            fontWeight: t.type.weight.medium,
-            width: 78, // design-source: label column 78
-          }}
-        >
-          {label}
-        </Text>
-        <Input
-          testID={testID}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          keyboardType={keyboardType}
-          maxLength={maxLength}
-          accessibilityLabel={label}
-          // Match the spreadsheet-like inline input — transparent, right-aligned,
-          // mono where tabular numbers matter.
-          style={{
-            flex: 1,
-            height: 28,
-            borderWidth: 0,
-            backgroundColor: "transparent",
-            paddingHorizontal: 0,
-            textAlign: "right",
-            fontFamily: mono ? t.type.family.mono : t.type.family.sans,
-            fontSize: t.type.size.m,
-            color: t.color("color.fg"),
-          }}
-        />
-        {suffix ? (
-          <Text
-            style={{
-              fontSize: t.type.size.s,
-              color: t.color("color.fg3"),
-              fontFamily: t.type.family.sans,
-              // design-source: 6 left margin on the "min" suffix
-              marginLeft: 6,
-            }}
-          >
-            {suffix}
-          </Text>
-        ) : null}
-      </View>
-      {error ? (
-        <View style={{ paddingHorizontal: t.space[4], paddingBottom: t.space[2] }}>
-          <Text
-            style={{
-              color: t.color("color.danger"),
-              fontSize: t.type.size.xs,
-              fontFamily: t.type.family.sans,
-            }}
-          >
-            {error}
-          </Text>
-        </View>
-      ) : null}
     </View>
   );
 }

@@ -4266,91 +4266,54 @@ exports[`snapshots — main screens EntryEditSheet (new entry) 1`] = `
                               "children": [
                                 {
                                   "children": [
-                                    {
-                                      "children": [
-                                        "Pause",
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "color": "#8A837A",
-                                          "fontFamily": "Inter",
-                                          "fontSize": 13,
-                                          "fontWeight": "500",
-                                          "width": 78,
-                                        },
-                                      },
-                                      "type": "Text",
+                                    "Pause",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#8A837A",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "500",
+                                      "width": 78,
                                     },
+                                  },
+                                  "type": "Text",
+                                },
+                                {
+                                  "children": [
                                     {
                                       "children": null,
                                       "props": {
-                                        "accessibilityLabel": "Pause",
-                                        "keyboardType": "number-pad",
-                                        "maxLength": 3,
-                                        "onBlur": [Function],
-                                        "onChangeText": [Function],
-                                        "onFocus": [Function],
-                                        "placeholder": "0",
-                                        "placeholderTextColor": "#8A837A",
-                                        "style": [
-                                          {
-                                            "backgroundColor": "#FFFFFF",
-                                            "borderColor": "#E9E4DD",
-                                            "borderRadius": 12,
-                                            "borderWidth": 1,
-                                            "color": "#1A1714",
-                                            "fontFamily": "Inter",
-                                            "fontSize": 15,
-                                            "height": 48,
-                                            "paddingHorizontal": 16,
-                                            "paddingLeft": 16,
-                                          },
-                                          {
-                                            "backgroundColor": "transparent",
-                                            "borderWidth": 0,
-                                            "color": "#1A1714",
-                                            "flex": 1,
-                                            "fontFamily": "JetBrainsMono",
-                                            "fontSize": 17,
-                                            "height": 28,
-                                            "paddingHorizontal": 0,
-                                            "textAlign": "right",
-                                          },
-                                        ],
-                                        "testID": "entry-edit-pause",
-                                        "value": "0",
-                                      },
-                                      "type": "TextInput",
-                                    },
-                                    {
-                                      "children": [
-                                        "min",
-                                      ],
-                                      "props": {
-                                        "style": {
-                                          "color": "#8A837A",
-                                          "fontFamily": "Inter",
-                                          "fontSize": 13,
-                                          "marginLeft": 6,
+                                        "accessibilityLabel": "datepicker-time",
+                                        "accessibilityValue": {
+                                          "text": "1969-12-31T23:00:00.000Z",
                                         },
+                                        "onChange": [Function],
+                                        "testID": "entry-edit-pause",
                                       },
-                                      "type": "Text",
+                                      "type": "View",
                                     },
                                   ],
                                   "props": {
                                     "style": {
-                                      "alignItems": "center",
-                                      "borderBottomColor": "#E9E4DD",
-                                      "borderBottomWidth": 0,
-                                      "flexDirection": "row",
-                                      "paddingHorizontal": 16,
-                                      "paddingVertical": 14,
+                                      "alignItems": "flex-end",
+                                      "flex": 1,
                                     },
                                   },
                                   "type": "View",
                                 },
                               ],
-                              "props": {},
+                              "props": {
+                                "style": {
+                                  "alignItems": "center",
+                                  "borderBottomColor": "#E9E4DD",
+                                  "borderBottomWidth": 1,
+                                  "flexDirection": "row",
+                                  "minHeight": 44,
+                                  "paddingHorizontal": 16,
+                                  "paddingVertical": 8,
+                                },
+                              },
                               "type": "View",
                             },
                           ],

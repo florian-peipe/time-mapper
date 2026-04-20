@@ -123,13 +123,6 @@ function setPickerTime(testID: string, hh: number, mm: number, dateRef: Date) {
     fireEvent(screen.getByTestId(testID), "change", { type: "set" }, d);
   });
 }
-function setPickerDate(testID: string, year: number, monthZeroBased: number, day: number) {
-  const d = new Date(year, monthZeroBased, day, 0, 0, 0, 0);
-  act(() => {
-    fireEvent(screen.getByTestId(testID), "change", { type: "set" }, d);
-  });
-}
-
 describe("EntryEditSheet — New mode", () => {
   it("renders the 'New entry' title and default fields (09:00 → 10:00, 0m break)", () => {
     setup({ nowMs: new Date(2026, 3, 17, 12, 0, 0).getTime(), mode: "new" });
@@ -140,10 +133,12 @@ describe("EntryEditSheet — New mode", () => {
     expect(screen.getByTestId("entry-edit-net").props.children).toBe("1h 00m");
     expect(screen.getByText(/1h 00m gross/)).toBeTruthy();
     expect(screen.getByText(/0m break/)).toBeTruthy();
-    // Pickers carry the default values — 09:00 → 10:00.
+    // Pickers carry the default values — 09:00 → 10:00, pause 00:00.
     expect(readPickerDate("entry-edit-start").getHours()).toBe(9);
     expect(readPickerDate("entry-edit-end").getHours()).toBe(10);
-    expect(screen.getByTestId("entry-edit-pause").props.value).toBe("0");
+    const pausePicker = readPickerDate("entry-edit-pause");
+    expect(pausePicker.getHours()).toBe(0);
+    expect(pausePicker.getMinutes()).toBe(0);
   });
 
   it("defaults the place to the first place in the list", () => {
@@ -194,7 +189,9 @@ describe("EntryEditSheet — Edit mode", () => {
     expect(startPicker.getMinutes()).toBe(15);
     expect(endPicker.getHours()).toBe(12);
     expect(endPicker.getMinutes()).toBe(0);
-    expect(screen.getByTestId("entry-edit-pause").props.value).toBe("15");
+    const pausePicker = readPickerDate("entry-edit-pause");
+    expect(pausePicker.getHours()).toBe(0);
+    expect(pausePicker.getMinutes()).toBe(15);
     // Note hydrated.
     expect(screen.getByTestId("entry-edit-note").props.value).toBe("client call");
   });
@@ -268,14 +265,15 @@ describe("EntryEditSheet — Net-duration math", () => {
     setup({ nowMs: new Date(2026, 3, 17, 12, 0, 0).getTime(), mode: "new" });
     // Default is 1h gross, 0m pause → 1h 00m net.
     expect(screen.getByTestId("entry-edit-net").props.children).toBe("1h 00m");
-    // Type 15 into the pause field.
-    fireEvent.changeText(screen.getByTestId("entry-edit-pause"), "15");
+    // Pick 0h 15m pause via the native time wheel.
+    setPickerTime("entry-edit-pause", 0, 15, new Date(0));
     expect(screen.getByTestId("entry-edit-net").props.children).toBe("45m");
   });
 
   it("clamps net to zero when pause exceeds gross", () => {
     setup({ nowMs: new Date(2026, 3, 17, 12, 0, 0).getTime(), mode: "new" });
-    fireEvent.changeText(screen.getByTestId("entry-edit-pause"), "999");
+    // 16h pause dwarfs the 1h default gross → net clamps to 0.
+    setPickerTime("entry-edit-pause", 16, 0, new Date(0));
     expect(screen.getByTestId("entry-edit-net").props.children).toBe("0m");
   });
 });
@@ -358,8 +356,8 @@ describe("EntryEditSheet — save", () => {
     expect(entry).not.toBeNull();
     if (!entry) return;
 
-    // Edit the pause and the note.
-    fireEvent.changeText(screen.getByTestId("entry-edit-pause"), "10");
+    // Edit the pause (via the native time wheel) and the note.
+    setPickerTime("entry-edit-pause", 0, 10, new Date(0));
     fireEvent.changeText(screen.getByTestId("entry-edit-note"), "new note");
     fireEvent.press(screen.getByTestId("entry-edit-save"));
 
