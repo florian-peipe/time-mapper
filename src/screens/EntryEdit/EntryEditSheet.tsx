@@ -14,7 +14,7 @@ import {
 import { usePlaces } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { i18n } from "@/lib/i18n";
-import { formatClock } from "@/lib/time";
+import { formatClock, formatDurationCompact } from "@/lib/time";
 import { useSnackbarStore } from "@/state/snackbarStore";
 import type { Entry, Place } from "@/db/schema";
 
@@ -290,7 +290,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
             marginTop: 2,
           }}
         >
-          {formatDur(netMin)}
+          {formatDurationCompact(netMin * 60)}
         </Text>
         <Text
           style={{
@@ -302,7 +302,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           }}
         >
           {i18n.t("entryEdit.label.grossAndBreak", {
-            gross: formatDur(grossMin),
+            gross: formatDurationCompact(grossMin * 60),
             pause: pauseMin,
           })}
         </Text>
@@ -653,13 +653,6 @@ function toMinutes(hhmm: string): number {
   const h = parseInt(parts[0] ?? "0", 10);
   const m = parseInt(parts[1] ?? "0", 10);
   return (Number.isNaN(h) ? 0 : h) * 60 + (Number.isNaN(m) ? 0 : m);
-}
-
-/** `1h 05m` style duration from a minute count (non-negative). */
-function formatDur(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h}h ${String(m).padStart(2, "0")}m`;
 }
 
 /**

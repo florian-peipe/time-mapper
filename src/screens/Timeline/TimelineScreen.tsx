@@ -9,12 +9,13 @@ import { useOngoingEntry } from "@/features/entries/useOngoingEntry";
 import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClose";
 import { useClosestPlace } from "@/features/places/useClosestPlace";
 import { usePlaces } from "@/features/places/usePlaces";
-import { rangeForMode } from "@/lib/range";
+import { rangeForMode, type RangeMode } from "@/lib/range";
+import { netMinutes } from "@/lib/entries";
 import { usePro } from "@/features/billing/usePro";
 import { useSheetStore } from "@/state/sheetStore";
-import type { Entry, Place } from "@/db/schema";
+import type { Place } from "@/db/schema";
 import type { IconName, SourceKind } from "@/components";
-import { DayNavHeader, type RangeMode } from "./DayNavHeader";
+import { DayNavHeader } from "./DayNavHeader";
 import { EntryRow } from "./EntryRow";
 import { NearbyPlacesBanner } from "./NearbyPlacesBanner";
 import { RunningTimerCard } from "./RunningTimerCard";
@@ -376,18 +377,6 @@ function NoEntriesEmptyState({ onAddAnotherPlace }: { onAddAnotherPlace: () => v
       </View>
     </View>
   );
-}
-
-/**
- * Net minutes (gross − pause) of an entry, clamped to 0. Ongoing entries
- * contribute 0 to the day total — they render through RunningTimerCard,
- * not the sum.
- */
-function netMinutes(entry: Entry): number {
-  if (entry.endedAt == null) return 0;
-  const seconds = entry.endedAt - entry.startedAt - (entry.pauseS ?? 0);
-  if (seconds <= 0) return 0;
-  return Math.round(seconds / 60);
 }
 
 function indexPlaces(places: Place[]): Map<string, Place> {

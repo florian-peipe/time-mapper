@@ -12,12 +12,24 @@ export function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   if (h === 0) return `${m} min`;
-  return `${h} h ${m.toString().padStart(2, "0")} min`;
+  return `${h} h ${padNumber(m)} min`;
 }
 
 /** Zero-pad `n` to `width` digits. Shared HH/MM/SS formatter helper. */
 export function padNumber(n: number, width = 2): string {
   return n.toString().padStart(width, "0");
+}
+
+/**
+ * Compact variant of `formatDuration` — `"1h 23m"` / `"23m"` — for
+ * notification bodies, bar-chart totals, and edit-preview chips. Use
+ * `formatDuration` when you want the spaced "1 h 23 min" human form.
+ */
+export function formatDurationCompact(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h === 0) return `${m}m`;
+  return `${h}h ${padNumber(m)}m`;
 }
 
 /**

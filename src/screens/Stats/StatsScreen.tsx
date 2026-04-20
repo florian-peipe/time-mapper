@@ -13,8 +13,9 @@ import { i18n } from "@/lib/i18n";
 import type { Entry, Place } from "@/db/schema";
 import type { IconName, SourceKind } from "@/components";
 import { EntryRow } from "@/screens/Timeline/EntryRow";
-import { DayNavHeader, FREE_HISTORY_DAYS, type RangeMode } from "@/screens/Timeline/DayNavHeader";
-import { rangeForMode } from "@/lib/range";
+import { DayNavHeader, FREE_HISTORY_DAYS } from "@/screens/Timeline/DayNavHeader";
+import { rangeForMode, type RangeMode } from "@/lib/range";
+import { netMinutes } from "@/lib/entries";
 import { WeekBarChart } from "./WeekBarChart";
 
 export function StatsScreen() {
@@ -454,13 +455,6 @@ function EntriesSection({
       )}
     </View>
   );
-}
-
-function netMinutes(entry: Entry): number {
-  if (entry.endedAt == null) return 0;
-  const seconds = entry.endedAt - entry.startedAt - (entry.pauseS ?? 0);
-  if (seconds <= 0) return 0;
-  return Math.round(seconds / 60);
 }
 
 function indexPlaces(places: Place[]): Map<string, Place> {

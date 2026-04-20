@@ -106,7 +106,7 @@ describe("notifications/notifier", () => {
       });
       expect(d.kind).toBe("fire");
       if (d.kind !== "fire") throw new Error("unreachable");
-      expect(d.body).toMatch(/1h 1m/);
+      expect(d.body).toMatch(/1h 01m/);
     });
 
     test("quiet hours → skip", () => {
@@ -199,6 +199,7 @@ describe("notifications/notifier", () => {
       await maybeNotifyForEffects(
         [{ kind: "open_entry", placeId: place.id, atS: 1000 }],
         placesRepo,
+        db,
         1000,
       );
       expect(mN.scheduleNotificationAsync).toHaveBeenCalledTimes(1);
@@ -219,10 +220,11 @@ describe("notifications/notifier", () => {
       await maybeNotifyForEffects(
         [{ kind: "close_entry", entryId: entry.id, atS: 4600 }],
         placesRepo,
+        db,
         4600,
       );
       const call = mN.scheduleNotificationAsync.mock.calls[0]?.[0];
-      expect(call?.content.body).toMatch(/1h 0m/);
+      expect(call?.content.body).toMatch(/1h 00m/);
     });
 
     test("persist_pending and clear_pending effects are ignored (no notification)", async () => {
@@ -243,6 +245,7 @@ describe("notifications/notifier", () => {
           { kind: "clear_pending", transitionId: "t1", outcome: "started" },
         ],
         placesRepo,
+        db,
         1000,
       );
       expect(mN.scheduleNotificationAsync).not.toHaveBeenCalled();
@@ -299,7 +302,7 @@ describe("notifications/notifier", () => {
       // 2026-04-15 16:00 local. Goal = 60 min. Prior = 30 min. Closing = 45 min.
       // Total after close = 75 min ≥ 60 → goal hit.
       const nowS = Math.floor(new Date(2026, 3, 15, 16, 0, 0).getTime() / 1000);
-      const { placesRepo, closing } = setupGoalScenario({
+      const { db, placesRepo, closing } = setupGoalScenario({
         dailyGoalMinutes: 60,
         priorTodayMin: 30,
         closingEntryMin: 45,
@@ -309,6 +312,7 @@ describe("notifications/notifier", () => {
       await maybeNotifyForEffects(
         [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
         placesRepo,
+        db,
         nowS,
       );
 
@@ -323,7 +327,7 @@ describe("notifications/notifier", () => {
 
     test("no goal notification when the day's total falls short", async () => {
       const nowS = Math.floor(new Date(2026, 3, 15, 16, 0, 0).getTime() / 1000);
-      const { placesRepo, closing } = setupGoalScenario({
+      const { db, placesRepo, closing } = setupGoalScenario({
         dailyGoalMinutes: 240, // 4h — well above what's been tracked
         priorTodayMin: 30,
         closingEntryMin: 45,
@@ -333,6 +337,7 @@ describe("notifications/notifier", () => {
       await maybeNotifyForEffects(
         [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
         placesRepo,
+        db,
         nowS,
       );
 
@@ -346,7 +351,7 @@ describe("notifications/notifier", () => {
 
     test("dedupes within the same day (second close doesn't re-fire)", async () => {
       const nowS = Math.floor(new Date(2026, 3, 15, 16, 0, 0).getTime() / 1000);
-      const { placesRepo, entriesRepo, place, closing } = setupGoalScenario({
+      const { db, placesRepo, entriesRepo, place, closing } = setupGoalScenario({
         dailyGoalMinutes: 60,
         priorTodayMin: 30,
         closingEntryMin: 45,
@@ -356,6 +361,7 @@ describe("notifications/notifier", () => {
       await maybeNotifyForEffects(
         [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
         placesRepo,
+        db,
         nowS,
       );
       expect(mN.scheduleNotificationAsync).toHaveBeenCalledTimes(2); // close + goal
@@ -369,6 +375,7 @@ describe("notifications/notifier", () => {
       await maybeNotifyForEffects(
         [{ kind: "close_entry", entryId: secondEntry.id, atS: nowS + 4200 }],
         placesRepo,
+        db,
         nowS + 4200,
       );
       // One more "Stopped tracking" but no second "Daily goal reached".
@@ -382,7 +389,7 @@ describe("notifications/notifier", () => {
 
     test("weekly goal fires its own notification when crossed", async () => {
       const nowS = Math.floor(new Date(2026, 3, 15, 16, 0, 0).getTime() / 1000);
-      const { placesRepo, closing } = setupGoalScenario({
+      const { db, placesRepo, closing } = setupGoalScenario({
         weeklyGoalMinutes: 60,
         priorTodayMin: 30,
         closingEntryMin: 45,
@@ -392,6 +399,7 @@ describe("notifications/notifier", () => {
       await maybeNotifyForEffects(
         [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
         placesRepo,
+        db,
         nowS,
       );
 
@@ -403,7 +411,7 @@ describe("notifications/notifier", () => {
 
     test("no-goal places stay silent", async () => {
       const nowS = Math.floor(new Date(2026, 3, 15, 16, 0, 0).getTime() / 1000);
-      const { placesRepo, closing } = setupGoalScenario({
+      const { db, placesRepo, closing } = setupGoalScenario({
         dailyGoalMinutes: null,
         weeklyGoalMinutes: null,
         priorTodayMin: 30,
@@ -414,6 +422,7 @@ describe("notifications/notifier", () => {
       await maybeNotifyForEffects(
         [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
         placesRepo,
+        db,
         nowS,
       );
       expect(mN.scheduleNotificationAsync).toHaveBeenCalledTimes(1); // just the close

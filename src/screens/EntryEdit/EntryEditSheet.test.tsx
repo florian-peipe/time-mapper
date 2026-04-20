@@ -241,13 +241,13 @@ describe("EntryEditSheet — Net-duration math", () => {
     expect(screen.getByTestId("entry-edit-net").props.children).toBe("1h 00m");
     // Type 15 into the pause field.
     fireEvent.changeText(screen.getByTestId("entry-edit-pause"), "15");
-    expect(screen.getByTestId("entry-edit-net").props.children).toBe("0h 45m");
+    expect(screen.getByTestId("entry-edit-net").props.children).toBe("45m");
   });
 
   it("clamps net to zero when pause exceeds gross", () => {
     setup({ nowMs: new Date(2026, 3, 17, 12, 0, 0).getTime(), mode: "new" });
     fireEvent.changeText(screen.getByTestId("entry-edit-pause"), "999");
-    expect(screen.getByTestId("entry-edit-net").props.children).toBe("0h 00m");
+    expect(screen.getByTestId("entry-edit-net").props.children).toBe("0m");
   });
 });
 

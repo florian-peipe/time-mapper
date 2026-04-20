@@ -1,13 +1,13 @@
 import { Platform } from "react-native";
 import type * as ExpoNotifications from "expo-notifications";
-import type * as KvModule from "@/db/repository/kv";
-import type * as EntriesModule from "@/db/repository/entries";
+import type { AnyDb } from "@/db/client";
+import { KvRepo } from "@/db/repository/kv";
+import { EntriesRepo } from "@/db/repository/entries";
 import type { Effect } from "@/features/tracking/stateMachine";
 import type { PlacesRepo } from "@/db/repository/places";
 import type { Place } from "@/db/schema";
 import { i18n } from "@/lib/i18n";
-
-type KvRepo = InstanceType<typeof KvModule.KvRepo>;
+import { formatDurationCompact, padNumber } from "@/lib/time";
 
 const KV_RECENT_TIMESTAMPS = "notifier.recent";
 const KV_QUIET_HOURS = "notifier.quiet_hours";
@@ -147,17 +147,10 @@ export function decideNotification(opts: {
     title: i18n.t("notifier.closed.title"),
     body: i18n.t("notifier.closed.body", {
       name: place.name,
-      duration: formatDuration(durationS ?? 0),
+      duration: formatDurationCompact(durationS ?? 0),
     }),
     recent: withThis,
   };
-}
-
-function formatDuration(s: number): string {
-  const hours = Math.floor(s / 3600);
-  const mins = Math.floor((s % 3600) / 60);
-  if (hours === 0) return `${mins}m`;
-  return `${hours}h ${mins}m`;
 }
 
 /**
@@ -284,21 +277,19 @@ export async function setDailyDigestSchedule(
  * state machine produced and fires an appropriate notification for any
  * `open_entry` / `close_entry`. Applies rate-limiting and quiet hours.
  *
- * Needs a KvRepo for state — constructs one lazily from the same db the
- * PlacesRepo already holds.
+ * `db` is passed in so the notifier can spin up sibling `KvRepo` /
+ * `EntriesRepo` without reflecting on `placesRepo`'s internals.
  */
 export async function maybeNotifyForEffects(
   effects: Effect[],
   placesRepo: PlacesRepo,
+  db: AnyDb,
   nowS: number,
 ): Promise<void> {
   const fireable = effects.filter((e) => e.kind === "open_entry" || e.kind === "close_entry");
   if (fireable.length === 0) return;
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { KvRepo: KvCtor } = require("@/db/repository/kv") as typeof KvModule;
-  const db = (placesRepo as unknown as { db: ConstructorParameters<typeof KvCtor>[0] }).db;
-  const kv = new KvCtor(db);
+  const kv = new KvRepo(db);
 
   const quiet = getQuietHours(kv);
   let recent = readRecent(kv);
@@ -320,7 +311,7 @@ export async function maybeNotifyForEffects(
       recent = decision.recent;
     } else {
       // close_entry
-      const allEntries = getEntryById(placesRepo, eff.entryId);
+      const allEntries = getEntryById(placesRepo, db, eff.entryId);
       if (!allEntries) continue;
       const { place, durationS } = allEntries;
       const decision = decideNotification({
@@ -340,7 +331,7 @@ export async function maybeNotifyForEffects(
       // place's running day/week totals past its configured target. If
       // yes, and we haven't already fired the corresponding "goal reached"
       // notification for this period, fire it now.
-      await maybeNotifyGoalReached(place, placesRepo, kv, nowS);
+      await maybeNotifyGoalReached(place, db, kv, nowS);
     }
   }
 
@@ -354,15 +345,12 @@ export async function maybeNotifyForEffects(
  */
 async function maybeNotifyGoalReached(
   place: Place,
-  placesRepo: PlacesRepo,
+  db: AnyDb,
   kv: KvRepo,
   nowS: number,
 ): Promise<void> {
   if (place.dailyGoalMinutes == null && place.weeklyGoalMinutes == null) return;
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { EntriesRepo } = require("@/db/repository/entries") as typeof EntriesModule;
-  const db = (placesRepo as unknown as { db: ConstructorParameters<typeof EntriesRepo>[0] }).db;
   const entriesRepo = new EntriesRepo(db);
 
   const { dayStart, weekStart, dayEnd, weekEnd } = periodBounds(new Date(nowS * 1000));
@@ -378,7 +366,7 @@ async function maybeNotifyGoalReached(
             ? i18n.t("notifier.goal.daily.bodyOver", {
                 name: place.name,
                 hours: Math.floor(place.dailyGoalMinutes / 60),
-                over: formatDuration(over * 60),
+                over: formatDurationCompact(over * 60),
               })
             : i18n.t("notifier.goal.daily.body", {
                 name: place.name,
@@ -401,7 +389,7 @@ async function maybeNotifyGoalReached(
             ? i18n.t("notifier.goal.weekly.bodyOver", {
                 name: place.name,
                 hours: Math.floor(place.weeklyGoalMinutes / 60),
-                over: formatDuration(over * 60),
+                over: formatDurationCompact(over * 60),
               })
             : i18n.t("notifier.goal.weekly.body", {
                 name: place.name,
@@ -415,7 +403,7 @@ async function maybeNotifyGoalReached(
 }
 
 function totalMinutesForPlace(
-  entriesRepo: InstanceType<typeof EntriesModule.EntriesRepo>,
+  entriesRepo: EntriesRepo,
   placeId: string,
   fromS: number,
   toS: number,
@@ -453,8 +441,8 @@ function periodBounds(now: Date): {
 function goalKvKey(kind: "day" | "week", placeId: string, periodStartS: number): string {
   const d = new Date(periodStartS * 1000);
   const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
+  const m = padNumber(d.getMonth() + 1);
+  const dd = padNumber(d.getDate());
   return `notifier.goal.${kind}.${placeId}.${y}-${m}-${dd}`;
 }
 
@@ -466,11 +454,9 @@ function goalKvKey(kind: "day" | "week", placeId: string, periodStartS: number):
  */
 function getEntryById(
   placesRepo: PlacesRepo,
+  db: AnyDb,
   entryId: string,
 ): { place: Place; durationS: number } | null {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { EntriesRepo } = require("@/db/repository/entries") as typeof EntriesModule;
-  const db = (placesRepo as unknown as { db: ConstructorParameters<typeof EntriesRepo>[0] }).db;
   const entries = new EntriesRepo(db);
   const entry = entries.get(entryId);
   if (!entry) return null;

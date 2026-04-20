@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Card } from "@/components";
 import { i18n } from "@/lib/i18n";
+import { formatDurationCompact } from "@/lib/time";
 import type { DayBuckets, PlaceWeekTotal } from "@/features/entries/useWeekStats";
 
 type Props = {
@@ -81,10 +82,12 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
               ? i18n.t("stats.a11y.dayEmpty", { day: longLabel })
               : i18n.t("stats.a11y.dayTotal", {
                   day: longLabel,
-                  total: formatTotal(daySumMinutes),
+                  total: formatDurationCompact(daySumMinutes * 60),
                 }) +
                 " — " +
-                breakdown.map((x) => `${x.name}: ${formatTotal(x.minutes)}`).join(", ");
+                breakdown
+                  .map((x) => `${x.name}: ${formatDurationCompact(x.minutes * 60)}`)
+                  .join(", ");
           return (
             <View
               key={dayKey}
@@ -179,7 +182,7 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
                   fontVariant: ["tabular-nums"],
                 }}
               >
-                {formatTotal(p.totalMin)}
+                {formatDurationCompact(p.totalMin * 60)}
               </Text>
             </View>
           ))}
@@ -203,10 +206,4 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
       )}
     </Card>
   );
-}
-
-function formatTotal(min: number): string {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return `${h}h ${String(m).padStart(2, "0")}m`;
 }

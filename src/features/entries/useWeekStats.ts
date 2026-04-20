@@ -3,6 +3,7 @@ import type { Entry, Place } from "@/db/schema";
 import { usePlacesRepo } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "./useEntries";
 import { useDataVersionStore } from "@/state/dataVersionStore";
+import { netMinutes } from "@/lib/entries";
 
 export type PlaceWeekTotal = { name: string; color: string; totalMin: number };
 export type DayBuckets = Record<string, number>;
@@ -32,15 +33,6 @@ function computeWeekStart(now: Date): Date {
   const offset = day === 0 ? 6 : day - 1;
   d.setDate(d.getDate() - offset);
   return d;
-}
-
-/** Net minutes for an entry, clamped to >= 0. Open entries (no endedAt) contribute 0. */
-function netMinutes(entry: Entry): number {
-  if (entry.endedAt == null) return 0;
-  const grossSeconds = entry.endedAt - entry.startedAt;
-  const netSeconds = grossSeconds - (entry.pauseS ?? 0);
-  if (netSeconds <= 0) return 0;
-  return Math.round(netSeconds / 60);
 }
 
 /** Index 0..6 (Mon..Sun) that `startedAt` (unix s) falls into, or -1 if outside the week. */

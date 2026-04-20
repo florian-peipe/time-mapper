@@ -4,20 +4,8 @@ import { useTheme } from "@/theme/useTheme";
 import { Icon } from "@/components";
 import { i18n } from "@/lib/i18n";
 import { localeForDateApis } from "@/lib/time";
+import { MODES, PERIOD_DAYS, type RangeMode } from "@/lib/range";
 import { openSheet as openPaywallIfGated } from "@/screens/Timeline/dayNavGuard";
-
-export type RangeMode = "day" | "week" | "month" | "year";
-
-/** Forward cycle used on tap; long-press iterates backward. */
-const MODES: readonly RangeMode[] = ["day", "week", "month", "year"] as const;
-
-/** Approximate days-per-period for the free-tier history gate. */
-const PERIOD_DAYS: Record<RangeMode, number> = {
-  day: 1,
-  week: 7,
-  month: 30,
-  year: 365,
-};
 
 type Props = {
   mode: RangeMode;

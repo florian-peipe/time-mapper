@@ -64,7 +64,7 @@ async function dispatch(
   }
   const r = step(state, event);
   applyEffects(r.effects, r.next, entries, pending, atS);
-  await maybeNotifyForEffects(r.effects, places, atS);
+  await maybeNotifyForEffects(r.effects, places, db, atS);
 }
 
 export async function simulateEnter(placeId: string, nowS?: number): Promise<void> {

@@ -1,4 +1,15 @@
-import type { RangeMode } from "@/screens/Timeline/DayNavHeader";
+export type RangeMode = "day" | "week" | "month" | "year";
+
+/** Forward cycle used on tap in DayNavHeader; long-press iterates backward. */
+export const MODES: readonly RangeMode[] = ["day", "week", "month", "year"] as const;
+
+/** Approximate days-per-period for the free-tier history gate. */
+export const PERIOD_DAYS: Record<RangeMode, number> = {
+  day: 1,
+  week: 7,
+  month: 30,
+  year: 365,
+};
 
 /**
  * Translate `(mode, offset)` into a `[startS, endS]` unix-second window

@@ -104,7 +104,7 @@ export async function handleGeofencingEvent(
   // runs AFTER the transaction commits — a rolled-back transaction would
   // have empty `allEffects`, so we won't send a notification for a write
   // that didn't persist.
-  await maybeNotifyForEffects(allEffects, placesOuter, nowS);
+  await maybeNotifyForEffects(allEffects, placesOuter, db, nowS);
 }
 
 function mapRegionEvent(data: GeofencingData, placesRepo: PlacesRepo, nowS: number): Event | null {
@@ -219,7 +219,7 @@ export async function dispatchSyntheticEnter(
     allEffects.push(...r2.effects);
   });
 
-  await maybeNotifyForEffects(allEffects, placesOuter, nowS);
+  await maybeNotifyForEffects(allEffects, placesOuter, db, nowS);
 }
 
 // Exported for tests only.

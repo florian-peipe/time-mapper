@@ -12,6 +12,7 @@ import {
   setDailyDigestSchedule,
 } from "@/features/notifications/notifier";
 import { i18n } from "@/lib/i18n";
+import { padNumber } from "@/lib/time";
 
 export type NotificationsSheetProps = {
   visible: boolean;
@@ -246,7 +247,7 @@ function HourRow({
     const next = (((hour + delta) % 24) + 24) % 24;
     onChange(next);
   };
-  const hhmm = `${String(hour).padStart(2, "0")}:00`;
+  const hhmm = `${padNumber(hour)}:00`;
   return (
     <View
       style={{

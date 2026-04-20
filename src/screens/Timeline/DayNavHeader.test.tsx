@@ -2,7 +2,8 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { useSheetStore } from "@/state/sheetStore";
-import { DayNavHeader, FREE_HISTORY_DAYS, type RangeMode } from "./DayNavHeader";
+import { DayNavHeader, FREE_HISTORY_DAYS } from "./DayNavHeader";
+import type { RangeMode } from "@/lib/range";
 
 type MountProps = {
   mode?: RangeMode;
