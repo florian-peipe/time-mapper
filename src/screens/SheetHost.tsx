@@ -7,11 +7,7 @@ import { AddPlaceSheet } from "@/screens/AddPlace/AddPlaceSheet";
 import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
 import { usePro } from "@/features/billing/usePro";
 
-const ADD_PLACE_SOURCES: readonly AddPlaceSource[] = [
-  "onboarding",
-  "places-list",
-  "settings-places",
-];
+const ADD_PLACE_SOURCES: readonly AddPlaceSource[] = ["onboarding", "places-tab"];
 
 function narrowAddPlaceSource(v: unknown): AddPlaceSource | undefined {
   if (typeof v !== "string") return undefined;

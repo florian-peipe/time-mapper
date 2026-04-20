@@ -17,22 +17,6 @@ import { DayNavHeader, FREE_HISTORY_DAYS, type RangeMode } from "@/screens/Timel
 import { rangeForMode } from "./range";
 import { WeekBarChart } from "./WeekBarChart";
 
-/**
- * Stats tab — aggregated view over a cyclable time window (Day / Week /
- * Month / Year). Tapping the period label in the header cycles modes;
- * chevrons step the offset inside the current mode. Matches the Timeline
- * header UX so the two tabs behave consistently.
- *
- * Layout:
- * 1. DayNavHeader (same component Timeline uses).
- * 2. Summary card — total time + per-place breakdown as horizontal bars.
- *    Works in every mode; for an empty window it says "no entries yet".
- * 3. WeekBarChart — only when `mode === "week"`. Seven bars mapped to
- *    weekdays; collapsing this to day/month/year would lose the point.
- * 4. Pro-upsell card (free users only) — opens the paywall.
- * 5. Entry list — the same EntryRow primitive Timeline renders,
- *    ordered by `startedAt DESC`. Bottom "+ Add entry" button.
- */
 export function StatsScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
@@ -110,7 +94,7 @@ export function StatsScreen() {
 
         {!isPro ? (
           <View style={{ paddingHorizontal: t.space[5], paddingVertical: t.space[2] }}>
-            <Card variant="tile" padding={4} onPress={handleOpenPaywall} testID="stats-pro-upsell">
+            <Card padding={4} onPress={handleOpenPaywall} testID="stats-pro-upsell">
               <View style={{ flexDirection: "row", alignItems: "center", gap: t.space[3] }}>
                 <IconBadge
                   icon="lock"
@@ -205,7 +189,7 @@ function SummaryCard({
 
   return (
     <View style={{ paddingHorizontal: t.space[5], paddingTop: t.space[2] }}>
-      <Card variant="tile" padding={4}>
+      <Card padding={4}>
         <Text
           style={{
             fontSize: t.type.size.xs,

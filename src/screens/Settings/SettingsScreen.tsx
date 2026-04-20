@@ -48,28 +48,9 @@ const STORE_REVIEW_FALLBACK_URL =
     ? "itms-apps://itunes.apple.com/app/id000000000?action=write-review"
     : "https://play.google.com/store/apps/details?id=com.timemapper.app";
 
-/**
- * Support email for mailto: row. Placeholder — the developer replaces with
- * their real address before ship (README tracks this as a user-provided
- * value).
- */
+// Placeholder — developer replaces before ship (tracked in README).
 const SUPPORT_MAILTO_URL = "mailto:support@timemapper.app?subject=Time%20Mapper%20support";
 
-/**
- * Settings tab — vertical list of grouped sections, with a Pro upsell banner
- * pinned at the top when the user is on the free plan. Each section is a
- * `Section` shell wrapping `ListRow`s. Tap handlers either:
- *   1. flip a piece of UI state (`themeOverride`, language),
- *   2. open a sheet (`paywall`, new NotificationsSheet / BuffersSheet),
- *   3. fire a platform-level side-effect (`Linking.openURL`,
- *      `Linking.openSettings`, `StoreReview.requestReview`).
- *
- * The "Developer" section is gated behind `__DEV__ || isMockMode()`. Real
- * production builds configure RevenueCat with valid keys so `isMockMode()`
- * returns false and the section stays hidden. Sideloaded Release builds
- * (no keys) stay in mock mode and therefore expose the Pro toggle so the
- * tester can flip Pro state without a real purchase.
- */
 export function SettingsScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
@@ -490,14 +471,6 @@ export function SettingsScreen() {
             onPress={handleExport}
             testID="settings-row-export"
           />
-          {/*
-            The former "History retention" row was a no-op — it advertised
-            a 14-day free cap but nothing in the app enforced it. Dropped
-            in the settings audit; re-add when retention trimming is real.
-            Export diagnostic log is a production feature (not gated by
-            __DEV__) — bug reporters should be able to send the payload
-            regardless of build type.
-          */}
           <ListRow
             icon="download"
             title={i18n.t("settings.data.backup")}

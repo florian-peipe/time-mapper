@@ -1,4 +1,3 @@
-import type { Place } from "@/db/schema";
 import * as Location from "expo-location";
 import type { LocationObjectCoords } from "expo-location";
 import {
@@ -11,6 +10,7 @@ import {
   MAX_PLACES,
   __internals,
 } from "../geofenceService";
+import { makePlace } from "@/features/places/testFixtures";
 
 jest.mock("expo-location", () => ({
   startGeofencingAsync: jest.fn(async () => undefined),
@@ -22,27 +22,6 @@ jest.mock("expo-location", () => ({
 }));
 
 const mLoc = Location as jest.Mocked<typeof Location>;
-
-function makePlace(id: string, overrides: Partial<Place> = {}): Place {
-  return {
-    id,
-    name: `P-${id}`,
-    address: "addr",
-    latitude: 52.52,
-    longitude: 13.405,
-    radiusM: 100,
-    entryBufferS: 300,
-    exitBufferS: 180,
-    color: "#FF7A1A",
-    icon: "pin",
-    dailyGoalMinutes: null,
-    weeklyGoalMinutes: null,
-    createdAt: 0,
-    updatedAt: 0,
-    deletedAt: null,
-    ...overrides,
-  };
-}
 
 describe("tracking/geofenceService", () => {
   beforeEach(() => {

@@ -29,9 +29,9 @@ Everything the MVP scope asks for is shipped and tested:
 - Local notifications on entry open / close (opt-in via OS settings).
 - Pro paywall with 4 trigger sources: 2nd-place, history depth,
   export, and the Settings upsell card.
-- Full Settings surface: OS permissions deep-link, per-place buffers,
-  notifications quiet-hours, theme, language, retention gate, legal
-  pages, support, Pro management, diagnostic export.
+- Full Settings surface: OS permissions deep-link, default buffers,
+  notifications quiet-hours, theme, language, legal pages, support,
+  Pro management, backup + diagnostic export.
 - Privacy: location data never leaves the device. Sentry is opt-in
   and location-field-stripped when enabled.
 - i18n: every user-facing string in en + de.
@@ -253,22 +253,23 @@ would otherwise reject the build.
 ```
 app/               expo-router routes (file-based)
   (onboarding)/    welcome → permissions → first-place
-  (tabs)/          timeline, stats, settings
+  (tabs)/          timeline, places, stats, settings
   legal/           privacy, terms, impressum
 src/
+  background/      OS geofence task registration (module-eval side-effect)
   components/      shared UI primitives (Banner, Button, Card, …)
   features/        domain logic (billing, places, tracking, diagnostics, …)
   screens/         composed screens
-  state/           Zustand stores (sheet, ui)
+  state/           Zustand stores (sheet, ui, snackbar, dataVersion)
   theme/           design tokens + ThemeProvider
   db/              Drizzle schema + migrations + repositories
-  lib/             tiny utilities (i18n, id, geocode, crash)
+  lib/             tiny utilities (i18n, id, geocode, crash, time, routes)
   locales/         en.json + de.json
-  __tests__/       barrel, a11y, critical-flows, snapshots, sanity
+  __tests__/       a11y, critical-flows
 docs/
   legal/           privacy/terms/impressum (markdown source of truth)
   SIDELOAD.md      zero-cost iPhone sideload guide
-  STATUS.md        release status + third-party checklist
+scripts/           generate-icons, patch-ipa-for-sideloader
 store/
   ios/             App Store Connect metadata.yaml
   android/         Play Console metadata.yaml

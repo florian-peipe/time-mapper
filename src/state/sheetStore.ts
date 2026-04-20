@@ -3,16 +3,12 @@ import { create } from "zustand";
 export type SheetName = "paywall" | "entryEdit" | "addPlace";
 
 /**
- * Loosely typed per-sheet payload. Each caller asserts the shape it needs when
- * reading `payload` — we don't attempt to narrow by `SheetName` at the store
- * level to keep the store trivially replaceable.
- *
- * `addPlace` accepts an optional `source` discriminator so callers like the
- * onboarding flow can mark the "first place" save path and get different
- * post-save behavior (mark onboarding complete, nav to tabs). Unknown sources
- * just no-op through the normal save.
+ * `addPlace` accepts an optional `source` discriminator so the onboarding flow
+ * can mark the "first place" save path and trigger different post-save
+ * behavior (mark onboarding complete, nav to tabs). Other sources get the
+ * default no-op save.
  */
-export type AddPlaceSource = "onboarding" | "places-list" | "settings-places" | "places-tab";
+export type AddPlaceSource = "onboarding" | "places-tab";
 
 export type SheetPayload =
   | { source: "2nd-place" | "export" | "history" | "settings" }

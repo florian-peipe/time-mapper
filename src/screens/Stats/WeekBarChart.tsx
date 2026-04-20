@@ -58,7 +58,7 @@ export function WeekBarChart({ byDay, byPlace, testID }: Props) {
   const placeLegend = byPlace;
 
   return (
-    <Card variant="tile" padding={5} testID={testID}>
+    <Card padding={5} testID={testID}>
       <View
         style={{
           flexDirection: "row",

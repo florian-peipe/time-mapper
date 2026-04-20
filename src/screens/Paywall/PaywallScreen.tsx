@@ -31,14 +31,6 @@ const FEATURE_KEYS: readonly string[] = [
   "paywall.features.export",
 ] as const;
 
-/**
- * Paywall sheet — full-bleed (92%) bottom sheet that pitches Time
- * Mapper Pro. Composition: hero (Rings + star + headline), feature
- * list, PlanPicker (yearly default + monthly), sticky footer (CTA +
- * Restore link + Terms/Privacy caption). The CTA invokes RevenueCat's
- * `purchase(pkg)`; on cancel/network error we surface a danger Banner
- * with a "Try again" action so the user isn't stranded.
- */
 export function PaywallScreen({ visible = true, onClose, source }: PaywallScreenProps) {
   const t = useTheme();
   const { offerings, purchase, restore } = usePro();

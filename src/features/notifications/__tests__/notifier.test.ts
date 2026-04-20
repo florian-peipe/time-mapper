@@ -13,9 +13,8 @@ import {
   ANDROID_CHANNEL_ID,
   IOS_CATEGORY_ID,
 } from "../notifier";
-import type { Place } from "@/db/schema";
-
 import * as N from "expo-notifications";
+import { makePlace as makePlaceBase } from "@/features/places/testFixtures";
 
 jest.mock("expo-notifications", () => ({
   scheduleNotificationAsync: jest.fn(async () => "notif-id"),
@@ -26,24 +25,10 @@ jest.mock("expo-notifications", () => ({
 
 const mN = N as jest.Mocked<typeof N>;
 
-function makePlace(id: string, name = "Home"): Place {
-  return {
-    id,
-    name,
-    address: "s",
-    latitude: 0,
-    longitude: 0,
-    radiusM: 100,
-    entryBufferS: 300,
-    exitBufferS: 180,
-    color: "#FF7A1A",
-    icon: "pin",
-    dailyGoalMinutes: null,
-    weeklyGoalMinutes: null,
-    createdAt: 0,
-    updatedAt: 0,
-    deletedAt: null,
-  };
+// Local wrapper around the shared fixture — keeps the notifier tests'
+// `makePlace(id, name)` signature while reusing the canonical defaults.
+function makePlace(id: string, name = "Home") {
+  return makePlaceBase(id, { name });
 }
 
 describe("notifications/notifier", () => {
@@ -261,6 +246,177 @@ describe("notifications/notifier", () => {
         1000,
       );
       expect(mN.scheduleNotificationAsync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("maybeNotifyGoalReached (via maybeNotifyForEffects)", () => {
+    /**
+     * Helper: set up a DB with a place that has goals, plus an entry
+     * that has just closed such that the day's total crosses the goal.
+     * Returns the pieces the test needs to invoke the close_entry path.
+     */
+    function setupGoalScenario(opts: {
+      dailyGoalMinutes?: number | null;
+      weeklyGoalMinutes?: number | null;
+      /** Total minutes of entries ALREADY closed today (excluding the one that fires). */
+      priorTodayMin?: number;
+      /** Duration of the entry that's about to fire close_entry (counts into the day). */
+      closingEntryMin: number;
+      /** Unix seconds "now" — controls which day/week the totals roll into. */
+      nowS: number;
+    }) {
+      const db = createTestDb();
+      const placesRepo = new PlacesRepo(db);
+      const entriesRepo = new EntriesRepo(db);
+      const place = placesRepo.create({
+        name: "Work",
+        address: "",
+        latitude: 0,
+        longitude: 0,
+        dailyGoalMinutes: opts.dailyGoalMinutes ?? null,
+        weeklyGoalMinutes: opts.weeklyGoalMinutes ?? null,
+      });
+      const dayStart = Math.floor(new Date(opts.nowS * 1000).setHours(0, 0, 0, 0) / 1000);
+      let cursor = dayStart;
+      if (opts.priorTodayMin) {
+        entriesRepo.createManual({
+          placeId: place.id,
+          startedAt: cursor,
+          endedAt: cursor + opts.priorTodayMin * 60,
+        });
+        cursor += opts.priorTodayMin * 60 + 60;
+      }
+      // The "just closed" entry.
+      const closing = entriesRepo.createManual({
+        placeId: place.id,
+        startedAt: cursor,
+        endedAt: cursor + opts.closingEntryMin * 60,
+      });
+      return { db, placesRepo, entriesRepo, place, closing };
+    }
+
+    test("fires a 'Daily goal reached' notification when the day's total crosses the goal", async () => {
+      // 2026-04-15 16:00 local. Goal = 60 min. Prior = 30 min. Closing = 45 min.
+      // Total after close = 75 min ≥ 60 → goal hit.
+      const nowS = Math.floor(new Date(2026, 3, 15, 16, 0, 0).getTime() / 1000);
+      const { placesRepo, closing } = setupGoalScenario({
+        dailyGoalMinutes: 60,
+        priorTodayMin: 30,
+        closingEntryMin: 45,
+        nowS,
+      });
+
+      await maybeNotifyForEffects(
+        [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
+        placesRepo,
+        nowS,
+      );
+
+      // 2 scheduleNotificationAsync calls: the regular "Stopped tracking"
+      // + the "Daily goal reached" follow-up.
+      expect(mN.scheduleNotificationAsync).toHaveBeenCalledTimes(2);
+      const titles = mN.scheduleNotificationAsync.mock.calls.map(
+        (call) => (call[0] as { content: { title: string } }).content.title,
+      );
+      expect(titles).toContain("Daily goal reached");
+    });
+
+    test("no goal notification when the day's total falls short", async () => {
+      const nowS = Math.floor(new Date(2026, 3, 15, 16, 0, 0).getTime() / 1000);
+      const { placesRepo, closing } = setupGoalScenario({
+        dailyGoalMinutes: 240, // 4h — well above what's been tracked
+        priorTodayMin: 30,
+        closingEntryMin: 45,
+        nowS,
+      });
+
+      await maybeNotifyForEffects(
+        [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
+        placesRepo,
+        nowS,
+      );
+
+      // Only the regular close notification, no goal-reached.
+      expect(mN.scheduleNotificationAsync).toHaveBeenCalledTimes(1);
+      const titles = mN.scheduleNotificationAsync.mock.calls.map(
+        (call) => (call[0] as { content: { title: string } }).content.title,
+      );
+      expect(titles).not.toContain("Daily goal reached");
+    });
+
+    test("dedupes within the same day (second close doesn't re-fire)", async () => {
+      const nowS = Math.floor(new Date(2026, 3, 15, 16, 0, 0).getTime() / 1000);
+      const { placesRepo, entriesRepo, place, closing } = setupGoalScenario({
+        dailyGoalMinutes: 60,
+        priorTodayMin: 30,
+        closingEntryMin: 45,
+        nowS,
+      });
+
+      await maybeNotifyForEffects(
+        [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
+        placesRepo,
+        nowS,
+      );
+      expect(mN.scheduleNotificationAsync).toHaveBeenCalledTimes(2); // close + goal
+
+      // Second close later the same day — add another entry + fire close.
+      const secondEntry = entriesRepo.createManual({
+        placeId: place.id,
+        startedAt: nowS + 3600,
+        endedAt: nowS + 3600 + 600, // +10 min
+      });
+      await maybeNotifyForEffects(
+        [{ kind: "close_entry", entryId: secondEntry.id, atS: nowS + 4200 }],
+        placesRepo,
+        nowS + 4200,
+      );
+      // One more "Stopped tracking" but no second "Daily goal reached".
+      expect(mN.scheduleNotificationAsync).toHaveBeenCalledTimes(3);
+      const dailyTitleCount = mN.scheduleNotificationAsync.mock.calls.filter(
+        (call) =>
+          (call[0] as { content: { title: string } }).content.title === "Daily goal reached",
+      ).length;
+      expect(dailyTitleCount).toBe(1);
+    });
+
+    test("weekly goal fires its own notification when crossed", async () => {
+      const nowS = Math.floor(new Date(2026, 3, 15, 16, 0, 0).getTime() / 1000);
+      const { placesRepo, closing } = setupGoalScenario({
+        weeklyGoalMinutes: 60,
+        priorTodayMin: 30,
+        closingEntryMin: 45,
+        nowS,
+      });
+
+      await maybeNotifyForEffects(
+        [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
+        placesRepo,
+        nowS,
+      );
+
+      const titles = mN.scheduleNotificationAsync.mock.calls.map(
+        (call) => (call[0] as { content: { title: string } }).content.title,
+      );
+      expect(titles).toContain("Weekly goal reached");
+    });
+
+    test("no-goal places stay silent", async () => {
+      const nowS = Math.floor(new Date(2026, 3, 15, 16, 0, 0).getTime() / 1000);
+      const { placesRepo, closing } = setupGoalScenario({
+        dailyGoalMinutes: null,
+        weeklyGoalMinutes: null,
+        priorTodayMin: 30,
+        closingEntryMin: 45,
+        nowS,
+      });
+
+      await maybeNotifyForEffects(
+        [{ kind: "close_entry", entryId: closing.id, atS: nowS }],
+        placesRepo,
+        nowS,
+      );
+      expect(mN.scheduleNotificationAsync).toHaveBeenCalledTimes(1); // just the close
     });
   });
 });

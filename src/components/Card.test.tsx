@@ -18,7 +18,7 @@ describe("Card", () => {
   it("renders children", () => {
     render(
       wrap(
-        <Card variant="tile">
+        <Card>
           <Text>Hello</Text>
         </Card>,
       ),
@@ -26,10 +26,10 @@ describe("Card", () => {
     expect(screen.getByText("Hello")).toBeTruthy();
   });
 
-  it("tile variant has 1px border and md radius, no shadow", () => {
+  it("has 1px border and md radius", () => {
     const { toJSON } = render(
       wrap(
-        <Card variant="tile">
+        <Card>
           <Text>x</Text>
         </Card>,
       ),
@@ -39,45 +39,13 @@ describe("Card", () => {
     const s = flat(root && (root as { props: { style: unknown } }).props.style);
     expect(s.borderWidth).toBe(1);
     expect(s.borderRadius).toBe(12); // tokens.radius.md
-    expect(s.shadowOpacity ?? 0).toBe(0);
-  });
-
-  it("hero variant has md radius, shadow, no border", () => {
-    const { toJSON } = render(
-      wrap(
-        <Card variant="hero">
-          <Text>x</Text>
-        </Card>,
-      ),
-    );
-    const tree = toJSON();
-    const root = Array.isArray(tree) ? tree[0] : tree;
-    const s = flat(root && (root as { props: { style: unknown } }).props.style);
-    expect(s.borderWidth ?? 0).toBe(0);
-    expect(s.borderRadius).toBe(12);
-    expect(s.shadowOpacity).toBeGreaterThan(0);
-  });
-
-  it("elevated variant has lg radius, shadow, no border", () => {
-    const { toJSON } = render(
-      wrap(
-        <Card variant="elevated">
-          <Text>x</Text>
-        </Card>,
-      ),
-    );
-    const tree = toJSON();
-    const root = Array.isArray(tree) ? tree[0] : tree;
-    const s = flat(root && (root as { props: { style: unknown } }).props.style);
-    expect(s.borderRadius).toBe(20); // tokens.radius.lg
-    expect(s.borderWidth ?? 0).toBe(0);
   });
 
   it("becomes pressable when onPress is provided", () => {
     const onPress = jest.fn();
     render(
       wrap(
-        <Card variant="tile" onPress={onPress}>
+        <Card onPress={onPress}>
           <Text>Tap</Text>
         </Card>,
       ),

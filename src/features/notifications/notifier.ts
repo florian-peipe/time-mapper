@@ -267,11 +267,9 @@ export async function setDailyDigestSchedule(
         sound: "default",
         categoryIdentifier: IOS_CATEGORY_ID,
       },
+      // expo-notifications changed DailyTriggerInput's `type` discriminator
+      // in SDK 54; cast so the call works across point releases.
       trigger: {
-        // Drizzle-style: cast the shape to `any` is unnecessary —
-        // expo-notifications' DailyTriggerInput is `{ hour, minute, repeats }`.
-        // `type: "daily"` in SDK 54+. We target both shapes with a cast so
-        // the call works across point releases.
         hour: clampedHour,
         minute: 0,
         repeats: true,

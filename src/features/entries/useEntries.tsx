@@ -4,11 +4,6 @@ import { EntriesRepo } from "@/db/repository/entries";
 import type { Entry } from "@/db/schema";
 import { useDataVersionStore } from "@/state/dataVersionStore";
 
-/**
- * Shared context for injecting an `EntriesRepo`. Used by `useEntries`,
- * `useOngoingEntry`, and `useWeekStats` so a test can inject one repo and have
- * every entries hook read from it. Mirrors the pattern in `usePlaces.tsx`.
- */
 const EntriesRepoContext = createContext<EntriesRepo | null>(null);
 
 export function EntriesRepoProvider({
@@ -32,16 +27,11 @@ function getDeviceRepo(): EntriesRepo {
   return cachedDeviceRepo;
 }
 
-/** Shared across all entries hooks — exported for the other hook files to reuse. */
 export function useEntriesRepo(): EntriesRepo {
   const injected = useContext(EntriesRepoContext);
   return useMemo(() => injected ?? getDeviceRepo(), [injected]);
 }
 
-/**
- * Returns the local-time start-of-day (as unix seconds) for today shifted by
- * `dayOffset`. `dayOffset = 0` → today, `-1` → yesterday.
- */
 function dayStartSeconds(dayOffset: number): number {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -52,27 +42,15 @@ export type UseEntriesResult = {
   entries: Entry[];
   loading: boolean;
   refresh: () => void;
-  createManual: (input: {
-    placeId: string;
-    startedAt: number;
-    endedAt: number;
-    note?: string;
-    pauseS?: number;
-  }) => Entry;
-  softDelete: (id: string) => void;
-  restore: (id: string) => void;
 };
 
 /**
  * Entries whose `startedAt` falls inside the local day (midnight → midnight)
  * identified by `dayOffset`. `dayOffset = 0` is today, `-1` yesterday, etc.
- * Re-queries when `dayOffset` changes or when mutations are issued through
- * the returned helpers.
  */
 export function useEntries(dayOffset: number): UseEntriesResult {
   const repo = useEntriesRepo();
   const version = useDataVersionStore((s) => s.entriesVersion);
-  const bumpEntries = useDataVersionStore((s) => s.bumpEntries);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -87,36 +65,5 @@ export function useEntries(dayOffset: number): UseEntriesResult {
     setLoading(false);
   }, [refresh, version]);
 
-  const createManual = useCallback(
-    (input: {
-      placeId: string;
-      startedAt: number;
-      endedAt: number;
-      note?: string;
-      pauseS?: number;
-    }) => {
-      const e = repo.createManual(input);
-      bumpEntries();
-      return e;
-    },
-    [repo, bumpEntries],
-  );
-
-  const softDelete = useCallback(
-    (id: string) => {
-      repo.softDelete(id);
-      bumpEntries();
-    },
-    [repo, bumpEntries],
-  );
-
-  const restore = useCallback(
-    (id: string) => {
-      repo.restore(id);
-      bumpEntries();
-    },
-    [repo, bumpEntries],
-  );
-
-  return { entries, loading, refresh, createManual, softDelete, restore };
+  return { entries, loading, refresh };
 }

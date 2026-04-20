@@ -80,27 +80,6 @@ const WEEKLY_GOAL_MIN_H = 1;
 const WEEKLY_GOAL_MAX_H = 80;
 const WEEKLY_GOAL_DEFAULT_H = 40;
 
-/**
- * AddPlaceSheet — two-phase flow for creating or editing a place.
- *
- * Phase 1: Search input (leading icon) + list of suggestion rows.
- * Suggestions come from `@/lib/geocode.autocomplete`, which calls Photon
- * (photon.komoot.io — OSM-backed, free, EU-hosted) and falls back to a
- * small hardcoded Köln/Düsseldorf demo list if the service is unreachable
- * or during Jest runs. Tap a suggestion to trigger `geocodePlace`
- * (decodes lat/lng from the synthetic placeId — no second HTTP round-trip)
- * and transition to Phase 2 with the name pre-filled.
- *
- * Phase 2: Name input, address preview card, geofence radius slider
- * (50–300 m), color picker (8 swatches), icon picker (9 tiles), and a
- * sticky Save footer. In edit mode a destructive "Delete place" row sits
- * below Save with a confirmation Alert.
- *
- * Pro gate: free users with ≥1 existing place see a "Unlock more places
- * with Pro" CTA that opens the paywall instead of calling
- * `placesRepo.create` — but only in NEW mode. Edit mode is never gated
- * (the user already owns the place; billing only limits adding more).
- */
 export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: AddPlaceSheetProps) {
   const t = useTheme();
   const { places, create, update, remove, restore, count } = usePlaces();
@@ -474,12 +453,6 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
       },
     ]);
   };
-
-  // Avoid using the source prop for behavior inside the sheet for now —
-  // the parent (SheetHost) is in charge of wiring `source === "onboarding"`
-  // into the `onSaved` callback. Keeping this reference prevents the lint
-  // rule from flagging the unused prop (TypeScript already tracks it).
-  void source;
 
   const saveLabel = shouldPaywall
     ? i18n.t("addPlace.cta.unlockPro")

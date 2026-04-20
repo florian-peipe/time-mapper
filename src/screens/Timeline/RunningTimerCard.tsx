@@ -31,12 +31,7 @@ export function RunningTimerCard({ placeName, startedAt, onStop, testID }: Props
       accessibilityLiveRegion="polite"
       accessibilityLabel={i18n.t("running.a11y.card", { name: placeName, elapsed })}
     >
-      <Card
-        variant="tile"
-        padding={4}
-        testID={testID}
-        style={{ backgroundColor: t.color("color.accent.soft") }}
-      >
+      <Card padding={4} testID={testID} style={{ backgroundColor: t.color("color.accent.soft") }}>
         <View
           style={{
             flexDirection: "row",

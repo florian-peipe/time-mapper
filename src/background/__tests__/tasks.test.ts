@@ -4,7 +4,7 @@ import { EntriesRepo } from "@/db/repository/entries";
 import { PendingTransitionsRepo } from "@/db/repository/pending";
 
 import * as TaskManager from "expo-task-manager";
-import { handleGeofencingEvent, TASK_NAME } from "../tasks";
+import { dispatchSyntheticEnter, handleGeofencingEvent, TASK_NAME } from "../tasks";
 import { maybeNotifyForEffects } from "@/features/notifications/notifier";
 
 jest.mock("expo-task-manager", () => ({
@@ -180,5 +180,67 @@ describe("background/tasks", () => {
       1000,
     );
     expect(maybeNotifyForEffects).toHaveBeenCalled();
+  });
+
+  describe("dispatchSyntheticEnter", () => {
+    test("IDLE → ACTIVE in one wake when entryBufferS=0 (entry opens immediately)", async () => {
+      const places = new PlacesRepo(currentDb!);
+      const place = places.create({
+        name: "Home",
+        address: "",
+        latitude: 0,
+        longitude: 0,
+        entryBufferS: 300, // default 5 min — irrelevant, synthesis uses 0
+      });
+
+      await dispatchSyntheticEnter(place.id, 2000);
+
+      const entries = new EntriesRepo(currentDb!);
+      const ongoing = entries.ongoing();
+      expect(ongoing).not.toBeNull();
+      expect(ongoing?.placeId).toBe(place.id);
+      expect(ongoing?.source).toBe("auto");
+      expect(ongoing?.startedAt).toBe(2000);
+    });
+
+    test("noop when the machine is already ACTIVE for the same place", async () => {
+      const places = new PlacesRepo(currentDb!);
+      const place = places.create({
+        name: "Home",
+        address: "",
+        latitude: 0,
+        longitude: 0,
+      });
+      // Prime state: open an entry directly.
+      const entries = new EntriesRepo(currentDb!);
+      entries.open({ placeId: place.id, source: "auto" });
+      const before = entries.listAll();
+      expect(before.length).toBe(1);
+
+      await dispatchSyntheticEnter(place.id, 3000);
+
+      const after = entries.listAll();
+      expect(after.length).toBe(1); // no second ongoing entry
+      expect(after[0]?.id).toBe(before[0]?.id);
+    });
+
+    test("fires a notification for the synthetic open (matches natural enter path)", async () => {
+      const places = new PlacesRepo(currentDb!);
+      const place = places.create({
+        name: "Home",
+        address: "",
+        latitude: 0,
+        longitude: 0,
+      });
+      await dispatchSyntheticEnter(place.id, 4000);
+      expect(maybeNotifyForEffects).toHaveBeenCalled();
+    });
+
+    test("noop when placeId doesn't exist (soft-deleted / stale race)", async () => {
+      const entriesBefore = new EntriesRepo(currentDb!).listAll().length;
+      await dispatchSyntheticEnter("does-not-exist", 5000);
+      const entriesAfter = new EntriesRepo(currentDb!).listAll().length;
+      expect(entriesAfter).toBe(entriesBefore);
+    });
   });
 });

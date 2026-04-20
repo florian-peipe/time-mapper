@@ -30,17 +30,6 @@ const PAUSE_MAX_MIN = 720;
 const DEFAULT_START = "09:00";
 const DEFAULT_END = "10:00";
 
-/**
- * EntryEditSheet — manual add/edit flow. Full form: net-duration readout,
- * place picker (collapsed row + chip list), HH:MM time fields, pause
- * minutes, note textarea, optional source chip, and a destructive
- * delete button in Edit mode.
- *
- * Notable numeric constants (kept as literals with inline justification):
- *   - heightPercent 86 (sheet height)
- *   - 44px display for the net-duration readout
- *   - pause input cap at 720 minutes
- */
 export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProps) {
   const t = useTheme();
   const { places } = usePlaces();

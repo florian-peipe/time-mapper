@@ -1,7 +1,7 @@
 // CRITICAL: this polyfill MUST be the very first import — it installs
 // `crypto.getRandomValues` on the Hermes global before any module touches
-// `uuid()` (PlacesRepo, seedDemoData, etc.). Without it, Hermes throws
-// "Property 'crypto' doesn't exist" on iOS/Android and the app fails to boot.
+// `uuid()`. Without it, Hermes throws "Property 'crypto' doesn't exist" on
+// iOS/Android and the app fails to boot.
 import "react-native-get-random-values";
 import React, { useEffect, useRef, useState } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
@@ -79,25 +79,18 @@ export default function RootLayout() {
     (async () => {
       initI18n(pickInitialLocale(localeOverride));
       await runMigrations();
-      // v1.0.1: crash reporting is opt-in per GDPR — check the KV flag.
-      // Must happen after migrations so the KV table exists; if a migration
-      // crash happens before this line, we'll miss it in Sentry, but
-      // privacy > observability for a pre-install fault.
+      // Crash reporting is opt-in per GDPR — check the KV flag. Must happen
+      // after migrations so the KV table exists; if reading KV throws, default
+      // to no-Sentry (privacy > observability for a pre-install fault).
       try {
         const consent = getTelemetryEnabled(new KvRepo(db));
         initCrashReporting({ consent });
       } catch {
         // Reading KV failed — default to no-Sentry to be safe.
       }
-      // v0.3: no auto-seed on boot. The app now starts empty so first-run
-      // feels like a real install (onboarding takes the user straight to
-      // "add your first place"). `seedDemoData` still exists in `db/seed.ts`
-      // for manual dev use, just nobody calls it from the boot path.
       setDbReady(true);
-      // v0.4: tracking engine bootstrap runs post-migrations.
-      // Fire-and-forget — the UI is already releasing. Bootstrapping
-      // reconciles OS geofences with our DB and catches up any pending
-      // transition left behind from a previous app session.
+      // Fire-and-forget — reconciles OS geofences with our DB and catches up
+      // any pending transition left behind from a previous app session.
       void bootstrapTracking();
     })().catch((err) => {
       console.error("Boot failure", err);
@@ -105,7 +98,7 @@ export default function RootLayout() {
       setDbReady(true); // fail-open rather than hang — UI can show error later
     });
     // Re-reconcile geofences whenever the app returns to foreground — catches
-    // permission downgrades that happened while backgrounded (v1.0.1 fix).
+    // permission downgrades that happened while backgrounded.
     const sub = startForegroundReconcileWatcher();
     return () => sub.remove();
   }, [localeOverride]);

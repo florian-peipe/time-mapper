@@ -35,8 +35,7 @@ Simulate visit` to produce an ongoing entry, then screenshot.
 3. **Add place sheet — Phase 2** — show the map preview with a pin +
    circle over Cologne (demo data's default). Highlights the radius slider.
 4. **Stats tab** — the week bar chart with a legend of 3–4 places
-   filling different bars. Pair with the ledger scrolled to show 1–2
-   rows at the bottom.
+   filling different bars.
 5. **Paywall** — the hero star + feature list + plan picker on year
    selected. Use mock-Pro toggle to ensure plans render.
 6. **Onboarding permissions** — the new "Your location never leaves

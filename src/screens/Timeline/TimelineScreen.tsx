@@ -20,20 +20,6 @@ import { NearbyPlacesBanner } from "./NearbyPlacesBanner";
 import { RunningTimerCard } from "./RunningTimerCard";
 import { TrackingBanner } from "./TrackingBanner";
 
-/**
- * Home tab — today by default, with chevron navigation back through days.
- *
- * Data wiring:
- * - `useEntries(dayOffset)` — the day's entries.
- * - `useOngoingEntry()` — the single currently-tracking entry, shown only on
- *   `dayOffset === 0` (you can't be tracking "yesterday").
- * - `usePlaces()` — metadata to decorate each entry row (name/icon/color).
- * - `useRefreshOnSheetClose(["entryEdit"], ...)` — when the user dismisses the
- *   edit sheet, re-fetch so any create/update/delete lands.
- *
- * Pure composition: no inline styles, no hex literals. All visual rhythm comes
- * through the shared primitives and `useTheme()` tokens.
- */
 export function TimelineScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
