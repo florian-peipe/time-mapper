@@ -91,13 +91,13 @@ describe("SettingsScreen", () => {
     expect(screen.queryByTestId("settings-section-places")).toBeNull();
   });
 
-  it("renders the Tracking rows with their default details", () => {
+  it("renders the Tracking rows", () => {
     render(wrap(<SettingsScreen />));
-    expect(screen.getByText("Location")).toBeTruthy();
-    expect(screen.getByText("Always")).toBeTruthy();
-    expect(screen.getByText("Notifications")).toBeTruthy();
-    expect(screen.getByText("On")).toBeTruthy();
-    expect(screen.getByText("Default buffers")).toBeTruthy();
+    expect(screen.getByTestId("settings-row-location")).toBeTruthy();
+    expect(screen.getByTestId("settings-row-notifications")).toBeTruthy();
+    expect(screen.getByTestId("settings-row-buffers")).toBeTruthy();
+    // Buffer row detail reads from the live KV defaults (2min entry, 1min
+    // exit) rather than a hardcoded string — asserting the formatted value.
     expect(screen.getByText("2 / 1 min")).toBeTruthy();
   });
 
@@ -261,13 +261,6 @@ describe("SettingsScreen", () => {
     expect(screen.queryByTestId("buffers-sheet")).toBeNull();
     fireEvent.press(screen.getByTestId("settings-row-buffers"));
     expect(screen.getByTestId("buffers-sheet")).toBeTruthy();
-  });
-
-  it("Retention row opens the paywall when not Pro", () => {
-    render(wrap(<SettingsScreen />));
-    fireEvent.press(screen.getByTestId("settings-row-retention"));
-    expect(useSheetStore.getState().active).toBe("paywall");
-    expect(useSheetStore.getState().payload).toEqual({ source: "history" });
   });
 
   it("Rate row attempts StoreReview first, falls back to Linking.openURL", () => {

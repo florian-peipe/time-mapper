@@ -19,6 +19,17 @@ verlässt, werden in einer SQLite-Datenbank innerhalb der App-Sandbox
 gespeichert. Beim Deinstallieren der App wird diese Datenbank
 vollständig entfernt.
 
+**Ziele und Ziel-erreicht-Benachrichtigungen.** Optionale tägliche und
+wöchentliche Zeitziele pro Ort werden ausschließlich lokal gespeichert.
+Wenn du ein Ziel erreichst, sendet die App eine lokale Benachrichtigung
+— vollständig auf deinem Gerät erzeugt und ausgeliefert, zu keinem
+Zeitpunkt an uns übertragen.
+
+**Von dir ausgelöste Exporte.** Wenn du in den Einstellungen CSV-Export,
+Backup-Export (JSON) oder Diagnoseprotokoll-Export antippst, wird die
+Datei dem OS-Teilen-Dialog übergeben. Wohin sie von dort aus geht,
+entscheidest du (Mail, Nachrichten, Dateien usw.). Wir erhalten nichts.
+
 **Abonnement-Berechtigung.** Wenn du Time Mapper Pro kaufst, wickeln
 Apple oder Google den Kauf ab. Wir erhalten über RevenueCat lediglich
 einen anonymen Berechtigungs-Token — keine personenbezogenen Daten

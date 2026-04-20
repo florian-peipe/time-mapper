@@ -17,6 +17,16 @@ locally via iOS Core Location and Android LocationManager.
 in a SQLite database inside the app's sandbox. Uninstalling the app
 removes this database entirely.
 
+**Goals and goal-reached notifications.** Optional per-place daily and
+weekly time targets are stored on-device only. When you cross one, the
+app fires a local notification — generated and delivered entirely on
+your device, never transmitted to us.
+
+**User-initiated exports.** When you tap Export CSV, Export backup
+(JSON), or Export diagnostic log in Settings, the file is handed to the
+operating system's share sheet. Where it goes from there is your choice
+(Mail, Messages, Files, etc.). We receive nothing.
+
 **Subscription entitlement.** When you purchase Time Mapper Pro, Apple
 or Google handles the transaction. We receive only an anonymous
 entitlement token via RevenueCat — no personally identifiable data is

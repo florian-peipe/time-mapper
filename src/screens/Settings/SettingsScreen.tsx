@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Alert, Linking, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -7,7 +7,8 @@ import { useTheme } from "@/theme/useTheme";
 import { ListRow, Section } from "@/components";
 import { usePlaces, usePlacesRepo } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
-import { useNotificationPermission } from "@/features/permissions/hooks";
+import { useLocationPermission, useNotificationPermission } from "@/features/permissions/hooks";
+import { readGlobalBuffers, BuffersSheet } from "./BuffersSheet";
 import { usePro } from "@/features/billing/usePro";
 import { isMockMode } from "@/features/billing/revenuecat";
 import { useSheetStore } from "@/state/sheetStore";
@@ -25,7 +26,6 @@ import { resetAllData } from "@/features/diagnostics/resetAllData";
 import { buildBackupPayload, exportBackupJson } from "@/features/diagnostics/backup";
 import { PendingTransitionsRepo } from "@/db/repository/pending";
 import { NotificationsSheet } from "./NotificationsSheet";
-import { BuffersSheet } from "./BuffersSheet";
 
 /**
  * Deep-link to the platform-specific subscription management page. iOS
@@ -265,6 +265,19 @@ export function SettingsScreen() {
   // recovery is the user flipping the toggle in Settings themselves.
   const notifPerm = useNotificationPermission();
   const notificationsDenied = notifPerm.status === "denied";
+  const locPerm = useLocationPermission();
+  const locationDetailKey = locationDetailKeyFor(locPerm.status);
+  const bufferDetail = useMemo(() => {
+    const { entryBufferS, exitBufferS } = readGlobalBuffers(kv);
+    return i18n.t("settings.tracking.buffers.detailValue", {
+      entry: Math.max(1, Math.round(entryBufferS / 60)),
+      exit: Math.max(1, Math.round(exitBufferS / 60)),
+    });
+    // buffersSheetVisible flips when the user closes BuffersSheet after
+    // persisting a new value — rebinding here catches that without a
+    // larger refactor to put the buffers into a reactive store.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kv, buffersSheetVisible]);
 
   const handleOpenNotifications = useCallback(() => {
     if (notificationsDenied) {
@@ -279,20 +292,6 @@ export function SettingsScreen() {
   const handleOpenBuffers = useCallback(() => {
     setBuffersSheetVisible(true);
   }, []);
-
-  const handleOpenRetention = useCallback(() => {
-    if (!isPro) {
-      handleOpenPaywall("history");
-      return;
-    }
-    // Pro: the retention detail already says "Unlimited" — for v1 we route a
-    // tap to the same paywall-like info screen (paywall itself is the canonical
-    // "what you get" page, scoped to history). A dedicated info screen can
-    // land in a later release without changing the tap target.
-    Alert.alert(i18n.t("settings.data.retention"), i18n.t("settings.data.retention.pro.detail"), [
-      { text: i18n.t("common.ok") },
-    ]);
-  }, [isPro, handleOpenPaywall]);
 
   const handleRateApp = useCallback(() => {
     (async () => {
@@ -399,10 +398,16 @@ export function SettingsScreen() {
         <Section title={i18n.t("settings.section.tracking")} testID="settings-section-tracking">
           <ListRow
             icon="map-pin"
-            iconBg={t.color("color.success.soft")}
-            iconColor={t.color("color.success")}
+            iconBg={
+              locPerm.status === "granted"
+                ? t.color("color.success.soft")
+                : t.color("color.warning.soft")
+            }
+            iconColor={
+              locPerm.status === "granted" ? t.color("color.success") : t.color("color.warning")
+            }
             title={i18n.t("settings.tracking.location")}
-            detail={i18n.t("settings.tracking.location.detail")}
+            detail={i18n.t(locationDetailKey)}
             onPress={handleOpenLocationSettings}
             testID="settings-row-location"
           />
@@ -424,7 +429,7 @@ export function SettingsScreen() {
           <ListRow
             icon="clock"
             title={i18n.t("settings.tracking.buffers")}
-            detail={i18n.t("settings.tracking.buffers.detail")}
+            detail={bufferDetail}
             onPress={handleOpenBuffers}
             last
             testID="settings-row-buffers"
@@ -485,18 +490,10 @@ export function SettingsScreen() {
             onPress={handleExport}
             testID="settings-row-export"
           />
-          <ListRow
-            icon="clock"
-            title={i18n.t("settings.data.retention")}
-            detail={
-              isPro
-                ? i18n.t("settings.data.retention.pro.detail")
-                : i18n.t("settings.data.retention.detail")
-            }
-            onPress={handleOpenRetention}
-            testID="settings-row-retention"
-          />
           {/*
+            The former "History retention" row was a no-op — it advertised
+            a 14-day free cap but nothing in the app enforced it. Dropped
+            in the settings audit; re-add when retention trimming is real.
             Export diagnostic log is a production feature (not gated by
             __DEV__) — bug reporters should be able to send the payload
             regardless of build type.
@@ -663,6 +660,20 @@ function languageLabel(override: string | null): string {
  * because `expo-localization` pulls a native module we don't want to touch
  * in Jest unless we have to.
  */
+/**
+ * Pick the right i18n key for the Location row detail based on live OS
+ * permission state. Keeps the row honest — if the user flipped Always
+ * → When in use in iOS Settings, the row immediately reflects that.
+ */
+function locationDetailKeyFor(
+  status: "granted" | "foreground-only" | "denied" | "undetermined",
+): string {
+  if (status === "granted") return "settings.tracking.location.detail";
+  if (status === "foreground-only") return "settings.tracking.location.detailForeground";
+  if (status === "denied") return "settings.tracking.location.detailDenied";
+  return "settings.tracking.location.detailUndetermined";
+}
+
 function pickSystemLocale(): string {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
