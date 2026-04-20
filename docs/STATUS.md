@@ -7,7 +7,7 @@ _Updated ahead of TestFlight distribution via an invited collaborator._
 | Field         | Value                                                    |
 | ------------- | -------------------------------------------------------- |
 | `package.json` version | `1.1.0`                                        |
-| `app.json` version     | `1.0.0` (bump before store submission)         |
+| `app.json` version     | `1.1.0` (in sync)                              |
 | Test count    | 630 passing across 83 suites                             |
 | Typecheck     | Clean (`tsc --noEmit`)                                   |
 | Lint          | Clean (0 warnings, 0 errors)                             |
@@ -98,36 +98,41 @@ npx eas secret:create --name EXPO_PUBLIC_SENTRY_DSN             --value https://
 
 ## Next steps (for the collaborator)
 
-1. **Clone + install:**
+The codebase is ready. Only the Apple-Developer-account tasks remain
+— none of these require editing source code.
+
+1. **Clone + verify green:**
    ```sh
    git clone <repo-url>
    cd opus-4.7-time-mapper
    npm ci
-   cp src/screens/Legal/contact.local.example.ts src/screens/Legal/contact.local.ts
-   # edit the contact file with real Impressum details
+   npm test && npm run typecheck && npm run lint && npm run build:check
    ```
-2. **Verify green build:** `npm test && npm run typecheck && npm run lint && npm run build:check`
-3. **Provision third-party accounts** (see checklist above).
-4. **Push EAS secrets** for all `EXPO_PUBLIC_*` keys.
-5. **Bump `app.json::expo.version` to `1.1.0`** so it matches `package.json`.
-6. **Build a development client:**
-   ```sh
-   npx eas build --profile development --platform ios
-   ```
-   Install on a real device and verify auto-tracking by walking into /
-   out of a saved place — the notification + Timeline entry should land
-   within the configured entry/exit buffers.
-7. **Capture screenshots** via `store/screenshots/README.md`.
-8. **Build + submit production binaries:**
+2. **Fill `eas.json → submit.production.ios`** with the three fields:
+   - `appleId`  — your Apple ID email
+   - `appleTeamId` — from Apple Developer → Membership
+   - `ascAppId` — from App Store Connect → My Apps → Time Mapper →
+     App Information → Apple ID
+3. **Build + submit:**
    ```sh
    npx eas build --profile production --platform ios
    npx eas submit --profile production --platform ios
    ```
+4. The build appears in TestFlight inside App Store Connect — invite
+   internal testers or process it through beta review for external
+   testers.
+
+The checklist items above (RevenueCat keys, Google Maps Android key,
+Impressum contact details, support email, screenshots) are NOT
+blockers for TestFlight internal testing. They are needed before a
+public App Store / Play Store release — the app falls back gracefully
+without them (mock purchases, Android map warning Banner, neutral
+Impressum variant) so the TestFlight flow does not require any of them.
 
 ## Verdict
 
-Shippable to TestFlight once the paid developer cert + `app.json`
-version bump are in place. No known bugs, no skipped tests, no TODOs
-in the source tree. UI, domain logic, persistence, billing, goals,
-and places-tab paths are all feature-complete and covered by the
-630-test suite.
+Shippable to TestFlight today. No known bugs, no skipped tests, no
+TODOs in the source tree. 630 tests across 83 suites, typecheck clean,
+lint clean, iOS bundle cleanly (`expo export --platform ios` green in
+CI). UI, domain logic, persistence, billing, goals, and places-tab
+paths are all feature-complete.
