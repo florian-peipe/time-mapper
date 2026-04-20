@@ -9,7 +9,7 @@
  * the exact copy. Translation audits already guarantee the strings exist.
  */
 import React from "react";
-import { render } from "@testing-library/react-native";
+import { render, fireEvent } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { Banner, Button, Chip, ListRow, Sheet } from "@/components";
@@ -397,26 +397,17 @@ describe("a11y — screens", () => {
     expect(headers.length).toBeGreaterThanOrEqual(5);
   });
 
-  it("Settings places row includes an a11y hint pointing at the edit action", () => {
+  it("Places list-view rows include an a11y hint pointing at the edit action", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { SettingsScreen } = require("@/screens/Settings/SettingsScreen");
+    const { PlacesScreen } = require("@/screens/Places/PlacesScreen");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepo } = require("@/db/repository/places");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { KvRepo } = require("@/db/repository/kv");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { createTestDb } = require("@/db/testClient");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PlacesRepoProvider } = require("@/features/places/usePlaces");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { EntriesRepoProvider } = require("@/features/entries/useEntries");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { EntriesRepo } = require("@/db/repository/entries");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { KvRepoProvider } = require("@/features/onboarding/useOnboardingGate");
     const db = createTestDb();
     const repo = new PlacesRepo(db);
-    const kv = new KvRepo(db);
     const place = repo.create({
       name: "Home",
       address: "1 Example Ln",
@@ -425,16 +416,15 @@ describe("a11y — screens", () => {
     });
     const { getByTestId } = render(
       wrap(
-        <KvRepoProvider value={kv}>
-          <PlacesRepoProvider value={repo}>
-            <EntriesRepoProvider value={new EntriesRepo(db)}>
-              <SettingsScreen />
-            </EntriesRepoProvider>
-          </PlacesRepoProvider>
-        </KvRepoProvider>,
+        <PlacesRepoProvider value={repo}>
+          <PlacesScreen />
+        </PlacesRepoProvider>,
       ),
     );
-    const row = getByTestId(`settings-row-place-${place.id}`);
+    // Switch to list view so the row is rendered (map mode renders into
+    // native map primitives that don't expose a11y props in the test tree).
+    fireEvent.press(getByTestId("places-toggle-list"));
+    const row = getByTestId(`places-list-row-${place.id}`);
     expect(row.props.accessibilityHint).toBeDefined();
   });
 

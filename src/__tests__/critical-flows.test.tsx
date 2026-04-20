@@ -176,22 +176,6 @@ describe("critical flows — Timeline + manual entry", () => {
 });
 
 describe("critical flows — Settings", () => {
-  it("Settings Places section lists seeded places and tap opens edit", () => {
-    const fixture = makeFixture({ seedPlace: true });
-    const placeId = fixture.placesRepo.list()[0]!.id;
-    const { getByTestId } = render(
-      <Wrap fixture={fixture}>
-        <SettingsScreen />
-      </Wrap>,
-    );
-    const row = getByTestId(`settings-row-place-${placeId}`);
-    expect(row).toBeTruthy();
-    fireEvent.press(row);
-    expect(useSheetStore.getState().active).toBe("addPlace");
-    const payload = useSheetStore.getState().payload as { placeId: string };
-    expect(payload.placeId).toBe(placeId);
-  });
-
   it("Settings Export CSV row opens the paywall for free users", () => {
     const fixture = makeFixture({ seedPlace: true });
     const { getByTestId } = render(

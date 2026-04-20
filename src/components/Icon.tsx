@@ -39,6 +39,8 @@ import {
   CircleAlert,
   Trash2,
   Repeat,
+  List as ListIcon,
+  Map as MapIcon,
   type LucideProps,
 } from "lucide-react-native";
 import { useTheme } from "@/theme/useTheme";
@@ -65,6 +67,8 @@ const ICONS = {
   waves: Waves,
   mountain: Mountain,
   "map-pin": MapPin,
+  // Legacy alias — older Place rows stored `pin` before we switched to `map-pin`.
+  pin: MapPin,
   star: Star,
   // System icons
   "chevron-left": ChevronLeft,
@@ -86,6 +90,8 @@ const ICONS = {
   "alert-circle": CircleAlert,
   "trash-2": Trash2,
   repeat: Repeat,
+  list: ListIcon,
+  map: MapIcon,
 } as const;
 
 export type IconName = keyof typeof ICONS;

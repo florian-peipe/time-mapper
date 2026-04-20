@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as StoreReview from "expo-store-review";
 import { useTheme } from "@/theme/useTheme";
-import { ListRow, Section, type IconName } from "@/components";
+import { ListRow, Section } from "@/components";
 import { usePlaces, usePlacesRepo } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { usePro } from "@/features/billing/usePro";
@@ -79,21 +79,6 @@ export function SettingsScreen() {
   const { places } = usePlaces();
   const placesRepo = usePlacesRepo();
   const entriesRepo = useEntriesRepo();
-  // Lifetime net-minute totals per place. Computed on every render — with
-  // dozens of places and hundreds of entries the cost is negligible, and
-  // there's no reactive `entries` value at this level we could key a
-  // useMemo on cleanly. `places` is already reactive via `usePlaces` so
-  // a new place mutation re-renders this component anyway.
-  const lifetimeByPlace = (() => {
-    const totals = new Map<string, number>();
-    for (const e of entriesRepo.listAll()) {
-      if (e.endedAt == null) continue; // ongoing — don't count toward lifetime yet
-      const gross = Math.max(0, e.endedAt - e.startedAt);
-      const net = Math.max(0, gross - (e.pauseS ?? 0));
-      totals.set(e.placeId, (totals.get(e.placeId) ?? 0) + net);
-    }
-    return totals;
-  })();
   const kv = useKvRepo();
   const [telemetryEnabled, setTelemetryEnabledLocal] = useState(() => getTelemetryEnabled(kv));
   const { reset: resetOnboardingFlag } = useOnboardingGate();
@@ -108,17 +93,6 @@ export function SettingsScreen() {
   // widening the sheetStore payload discriminator.
   const [notificationsSheetVisible, setNotificationsSheetVisible] = useState(false);
   const [buffersSheetVisible, setBuffersSheetVisible] = useState(false);
-
-  const handleAddPlace = useCallback(() => {
-    openSheet("addPlace", { placeId: null, source: "settings-places" });
-  }, [openSheet]);
-
-  const handleEditPlace = useCallback(
-    (placeId: string) => {
-      openSheet("addPlace", { placeId, source: "settings-places" });
-    },
-    [openSheet],
-  );
 
   const handleOpenPaywall = useCallback(
     (source: "settings" | "export" | "history") => {
@@ -407,51 +381,6 @@ export function SettingsScreen() {
           />
         ) : null}
 
-        <Section title={i18n.t("settings.section.places")} testID="settings-section-places">
-          {places.length === 0 ? (
-            <ListRow
-              icon="map-pin"
-              iconBg={t.color("color.accent.soft")}
-              iconColor={t.color("color.accent")}
-              title={i18n.t("settings.places.addFirst")}
-              onPress={handleAddPlace}
-              last
-              testID="settings-row-add-first-place"
-            />
-          ) : (
-            <>
-              {places.map((p) => {
-                const lifetime = formatLifetimeTotal(lifetimeByPlace.get(p.id) ?? 0);
-                const detail = p.address
-                  ? lifetime
-                    ? `${p.address} · ${lifetime}`
-                    : p.address
-                  : (lifetime ?? undefined);
-                return (
-                  <ListRow
-                    key={p.id}
-                    icon={toIconName(p.icon)}
-                    iconBg={p.color}
-                    iconColor={t.color("color.accent.contrast")}
-                    title={p.name}
-                    detail={detail}
-                    onPress={() => handleEditPlace(p.id)}
-                    testID={`settings-row-place-${p.id}`}
-                    accessibilityHint={i18n.t("common.edit")}
-                  />
-                );
-              })}
-              <ListRow
-                icon="plus"
-                title={i18n.t("settings.places.addAnother")}
-                onPress={handleAddPlace}
-                last
-                testID="settings-row-add-place"
-              />
-            </>
-          )}
-        </Section>
-
         <Section title={i18n.t("settings.section.tracking")} testID="settings-section-tracking">
           <ListRow
             icon="map-pin"
@@ -667,21 +596,6 @@ export function SettingsScreen() {
  * Right-side label for the Restore purchases row. Reflects the in-flight
  * + post-completion state so the user knows their tap was acknowledged.
  */
-/**
- * Short lifetime-total label for the Places ListRow right-side detail
- * (e.g. "42h", "3h 15m", "45m"). Returns null when the place has no
- * recorded time yet, so the caller can decide whether to show the
- * address alone or hide the detail entirely.
- */
-function formatLifetimeTotal(minutes: number): string | null {
-  if (minutes <= 0) return null;
-  if (minutes < 60) return `${minutes}m`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h >= 100 || m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
-}
-
 function restoreLabel(state: "idle" | "busy" | "done" | "error"): string | undefined {
   if (state === "busy") return i18n.t("settings.subscription.restore.busy");
   if (state === "done") return i18n.t("settings.subscription.restore.done");
@@ -738,38 +652,6 @@ function pickSystemLocale(): string {
   } catch {
     return "en";
   }
-}
-
-/**
- * Known places-repo icon names (superset of the `AddPlaceSheet` picker).
- * Anything else we observe in the DB — including the legacy default "pin"
- * from older Place rows — falls back to `"map-pin"` so we never pass an
- * unregistered name into `<Icon>` (which would throw at render time).
- */
-const KNOWN_PLACE_ICONS: readonly IconName[] = [
-  "home",
-  "briefcase",
-  "dumbbell",
-  "coffee",
-  "book-open",
-  "shopping-bag",
-  "plane",
-  "car",
-  "heart",
-  "music",
-  "utensils",
-  "bed",
-  "baby",
-  "tree-pine",
-  "waves",
-  "mountain",
-  "map-pin",
-  "star",
-];
-
-function toIconName(raw: string | undefined): IconName {
-  if (!raw) return "map-pin";
-  return (KNOWN_PLACE_ICONS as readonly string[]).includes(raw) ? (raw as IconName) : "map-pin";
 }
 
 /**

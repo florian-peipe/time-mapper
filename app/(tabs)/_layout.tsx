@@ -33,6 +33,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="places"
+        options={{
+          title: i18n.t("tabs.places"),
+          tabBarIcon: ({ color, size }) => <Icon name="map-pin" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="stats"
         options={{
           title: i18n.t("tabs.stats"),

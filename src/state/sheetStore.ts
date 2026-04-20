@@ -12,7 +12,7 @@ export type SheetName = "paywall" | "entryEdit" | "addPlace";
  * post-save behavior (mark onboarding complete, nav to tabs). Unknown sources
  * just no-op through the normal save.
  */
-export type AddPlaceSource = "onboarding" | "places-list" | "settings-places";
+export type AddPlaceSource = "onboarding" | "places-list" | "settings-places" | "places-tab";
 
 export type SheetPayload =
   | { source: "2nd-place" | "export" | "history" | "settings" }

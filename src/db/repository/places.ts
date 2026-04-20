@@ -37,7 +37,7 @@ export class PlacesRepo {
       entryBufferS: input.entryBufferS ?? 120,
       exitBufferS: input.exitBufferS ?? 60,
       color: input.color ?? "#FF7A1A",
-      icon: input.icon ?? "pin",
+      icon: input.icon ?? "map-pin",
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
