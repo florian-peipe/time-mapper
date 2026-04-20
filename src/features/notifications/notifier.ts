@@ -275,7 +275,6 @@ export async function setDailyDigestSchedule(
         hour: clampedHour,
         minute: 0,
         repeats: true,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
     });
     kv.set(KV_DIGEST_ID, id);

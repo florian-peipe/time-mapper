@@ -14436,6 +14436,34 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                                   },
                                   "type": "View",
                                 },
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        "No entries yet",
+                                      ],
+                                      "props": {
+                                        "style": {
+                                          "color": "#8A837A",
+                                          "fontFamily": "Inter",
+                                          "fontSize": 13,
+                                        },
+                                      },
+                                      "type": "Text",
+                                    },
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "alignItems": "center",
+                                      "borderTopColor": "#E9E4DD",
+                                      "borderTopWidth": 1,
+                                      "paddingVertical": 24,
+                                      "width": 867,
+                                    },
+                                    "testID": "ledger-empty",
+                                  },
+                                  "type": "View",
+                                },
                               ],
                               "props": {
                                 "style": {
@@ -14454,33 +14482,6 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                         "showsHorizontalScrollIndicator": false,
                       },
                       "type": "RCTScrollView",
-                    },
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            "No entries yet",
-                          ],
-                          "props": {
-                            "style": {
-                              "color": "#8A837A",
-                              "fontFamily": "Inter",
-                              "fontSize": 13,
-                            },
-                          },
-                          "type": "Text",
-                        },
-                      ],
-                      "props": {
-                        "style": {
-                          "alignItems": "center",
-                          "borderTopColor": "#E9E4DD",
-                          "borderTopWidth": 1,
-                          "paddingVertical": 24,
-                        },
-                        "testID": "ledger-empty",
-                      },
-                      "type": "View",
                     },
                   ],
                   "props": {

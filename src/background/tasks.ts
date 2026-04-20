@@ -173,5 +173,54 @@ export async function runOpportunisticResolve(
   return loadState(new EntriesRepo(db), new PendingTransitionsRepo(db));
 }
 
+/**
+ * Seed an immediate entry when the user is already inside a place the OS
+ * won't fire `didEnter` for — typical case: adding a place at the current
+ * address, or cold-booting inside a region the OS dropped on reboot. Uses
+ * `entryBufferS: 0` so the pending-enter promotes to ACTIVE on the same
+ * wake, giving the user instant feedback. Noop if state is already ACTIVE
+ * or PENDING_ENTER for the same place.
+ */
+export async function dispatchSyntheticEnter(
+  placeId: string,
+  nowS: number = Math.floor(Date.now() / 1000),
+): Promise<void> {
+  const db = getDb();
+  const placesOuter = new PlacesRepo(db);
+  const kv = new KvRepo(db);
+  recordBgFire(kv, nowS);
+
+  const allEffects: ReturnType<typeof step>["effects"] = [];
+  db.transaction((tx) => {
+    const entries = new EntriesRepo(tx);
+    const pending = new PendingTransitionsRepo(tx);
+    const places = new PlacesRepo(tx);
+
+    if (!places.get(placeId)) return;
+
+    let state = loadState(entries, pending);
+    if ((state.kind === "ACTIVE" || state.kind === "PENDING_ENTER") && state.placeId === placeId) {
+      return;
+    }
+
+    const event: Event = {
+      kind: "REGION_ENTER",
+      placeId,
+      atS: nowS,
+      entryBufferS: 0,
+      transitionId: uuid(),
+    };
+    const r1 = step(state, event);
+    state = applyEffects(r1.effects, r1.next, entries, pending, nowS);
+    allEffects.push(...r1.effects);
+
+    const r2 = step(state, { kind: "CONFIRM", atS: nowS });
+    state = applyEffects(r2.effects, r2.next, entries, pending, nowS);
+    allEffects.push(...r2.effects);
+  });
+
+  await maybeNotifyForEffects(allEffects, placesOuter, nowS);
+}
+
 // Exported for tests only.
 export const __internals = { mapRegionEvent };

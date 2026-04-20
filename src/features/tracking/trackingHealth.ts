@@ -30,7 +30,6 @@ export type TrackingHealthLevel = "healthy" | "degraded" | "stopped" | "unknown"
 
 export type TrackingHealthInput = {
   locationStatus: "granted" | "foreground-only" | "denied" | "unknown";
-  notificationsGranted: boolean;
   lastBgFireAtS: number | null;
   nowS: number;
   placesCount: number;
@@ -58,9 +57,8 @@ export function classifyTrackingHealth(input: TrackingHealthInput): TrackingHeal
 
   // granted — check staleness
   if (lastBgFireAtS == null) {
-    // Never fired. Either the app is fresh (<24h) or the OS has decided
-    // our geofences aren't interesting. Treat as healthy for 24h, then
-    // degraded.
+    // Never fired — app probably fresh; no signal either way. Staying
+    // conservative to avoid a false "something's wrong" banner.
     return "healthy";
   }
   const ageS = nowS - lastBgFireAtS;

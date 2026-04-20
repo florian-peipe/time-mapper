@@ -27,8 +27,8 @@ export type BackupPayloadV1 = {
   entries: Entry[];
   pendingTransitions: PendingTransition[];
   tamper?: {
-    algorithm: "sha-256";
-    /** Hex digest of a canonical JSON representation of `entries`. */
+    algorithm: "djb2";
+    /** Hex digest of a canonical serialization of `entries`. Prefixed with the algorithm. */
     entriesHash: string;
   };
 };
@@ -49,7 +49,7 @@ export function buildBackupPayload(
     entries,
     pendingTransitions,
     tamper: {
-      algorithm: "sha-256",
+      algorithm: "djb2",
       entriesHash: tamperHash(entries),
     },
   };
@@ -77,12 +77,11 @@ export function tamperHash(entries: Entry[]): string {
 }
 
 /**
- * djb2 is a small, deterministic string hash. Not cryptographic but
- * collision-resistant enough for tamper-markers on a few thousand rows.
- * Implementing here (instead of pulling in a hash lib) keeps the app
- * dependency-free for this feature — the SHA-256 label on the payload is
- * a forward-compatible promise; current builds ship djb2. When the audit
- * use-case solidifies, swap in a real SHA-256 via `expo-crypto`.
+ * djb2 is a small deterministic string hash. Not cryptographic, just a
+ * sanity marker so a user can spot accidental truncation of an exported
+ * JSON. The algorithm name ships verbatim in the payload so a future
+ * version can upgrade to SHA-256 (via `expo-crypto`) without breaking
+ * verification of old exports.
  */
 function djb2(s: string): string {
   let h = 5381;

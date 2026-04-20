@@ -29,23 +29,16 @@ export function TrackingBanner() {
 
   // Derive health from perm + last task fire. Re-evaluates on render, so
   // any KV write or permission change is reflected without manual refresh.
-  const health = useMemo(() => {
-    const locationStatus: "granted" | "foreground-only" | "denied" | "unknown" =
-      status === "granted"
-        ? "granted"
-        : status === "foreground-only"
-          ? "foreground-only"
-          : status === "denied"
-            ? "denied"
-            : "unknown";
-    return classifyTrackingHealth({
-      locationStatus,
-      notificationsGranted: true,
-      lastBgFireAtS: readLastBgFire(kv),
-      nowS: Math.floor(Date.now() / 1000),
-      placesCount: places.length,
-    });
-  }, [status, kv, places.length]);
+  const health = useMemo(
+    () =>
+      classifyTrackingHealth({
+        locationStatus: status === "undetermined" ? "unknown" : status,
+        lastBgFireAtS: readLastBgFire(kv),
+        nowS: Math.floor(Date.now() / 1000),
+        placesCount: places.length,
+      }),
+    [status, kv, places.length],
+  );
 
   if (status === "granted" && health === "healthy") return null;
   if (status === "undetermined") return null;

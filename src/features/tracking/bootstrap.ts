@@ -2,10 +2,10 @@ import { AppState, type AppStateStatus } from "react-native";
 import type * as DbClientModule from "@/db/client";
 import { PlacesRepo } from "@/db/repository/places";
 import { KvRepo } from "@/db/repository/kv";
-import { reconcileGeofences } from "./geofenceService";
+import { getCurrentPlaceId, reconcileGeofences } from "./geofenceService";
 import { getLocationStatus } from "@/features/permissions";
 import { configureNotificationChannels } from "@/features/notifications/notifier";
-import { runOpportunisticResolve } from "@/background/tasks";
+import { dispatchSyntheticEnter, runOpportunisticResolve } from "@/background/tasks";
 
 /**
  * Initialize the tracking engine. Called once from `app/_layout.tsx` after
@@ -31,7 +31,13 @@ export async function bootstrapTracking(): Promise<void> {
 
     const locStatus = await getLocationStatus();
     if (locStatus === "granted") {
-      await reconcileGeofences(places.list());
+      const list = places.list();
+      await reconcileGeofences(list);
+      // iOS only fires didEnter on boundary crossing. If the user is standing
+      // inside a saved place at boot (or added one then backgrounded), seed
+      // an entry so the Timeline doesn't look frozen.
+      const currentPlaceId = await getCurrentPlaceId(list);
+      if (currentPlaceId) await dispatchSyntheticEnter(currentPlaceId);
     }
 
     // Always run opportunistic resolve — it's cheap and catches up any
@@ -53,9 +59,11 @@ export async function reconcileAfterPlaceChange(): Promise<void> {
     const { db } = require("@/db/client") as typeof DbClientModule;
     const places = new PlacesRepo(db);
     const locStatus = await getLocationStatus();
-    if (locStatus === "granted") {
-      await reconcileGeofences(places.list());
-    }
+    if (locStatus !== "granted") return;
+    const list = places.list();
+    await reconcileGeofences(list);
+    const currentPlaceId = await getCurrentPlaceId(list);
+    if (currentPlaceId) await dispatchSyntheticEnter(currentPlaceId);
   } catch (err) {
     console.warn("[reconcileAfterPlaceChange] failed:", err);
   }

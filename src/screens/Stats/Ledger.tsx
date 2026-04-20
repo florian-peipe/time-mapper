@@ -207,35 +207,30 @@ export function Ledger({ entries, placesById, onOpenEntry, onAddRow, testID }: P
                 cellPadV={cellPadV}
                 cellPadH={cellPadH}
               />
-            ) : null}
+            ) : (
+              <View
+                testID="ledger-empty"
+                style={{
+                  width: totalW,
+                  paddingVertical: t.space[6],
+                  alignItems: "center",
+                  borderTopWidth: 1,
+                  borderTopColor: t.color("color.border"),
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: t.type.size.s,
+                    color: t.color("color.fg3"),
+                    fontFamily: t.type.family.sans,
+                  }}
+                >
+                  {i18n.t("stats.empty.noRows")}
+                </Text>
+              </View>
+            )}
           </View>
         </ScrollView>
-        {/*
-          When the ledger is empty, just column headers floating above a blank
-          bar reads as broken. A single muted "No entries yet" row below the
-          headers makes the zero state legible without breaking the mono grid.
-        */}
-        {rows.length === 0 ? (
-          <View
-            testID="ledger-empty"
-            style={{
-              paddingVertical: t.space[6],
-              alignItems: "center",
-              borderTopWidth: 1,
-              borderTopColor: t.color("color.border"),
-            }}
-          >
-            <Text
-              style={{
-                fontSize: t.type.size.s,
-                color: t.color("color.fg3"),
-                fontFamily: t.type.family.sans,
-              }}
-            >
-              {i18n.t("stats.empty.noRows")}
-            </Text>
-          </View>
-        ) : null}
       </View>
     </View>
   );
@@ -375,7 +370,10 @@ function LedgerBodyRow({
       }}
     >
       <View
-        style={[gutterBodyStyle(t, gutterW, cellPadV), { backgroundColor: t.color("color.surface2") }]}
+        style={[
+          gutterBodyStyle(t, gutterW, cellPadV),
+          { backgroundColor: t.color("color.surface2") },
+        ]}
       >
         <Text
           style={{
@@ -452,7 +450,7 @@ function LedgerBodyRow({
       <View
         style={{
           width: columns[5]!.width,
-          paddingVertical: cellPadH,
+          paddingVertical: cellPadV,
           paddingHorizontal: cellPadH,
         }}
       >
@@ -501,7 +499,10 @@ function SumRow({
       }}
     >
       <View
-        style={[gutterBodyStyle(t, gutterW, cellPadV), { backgroundColor: t.color("color.surface2") }]}
+        style={[
+          gutterBodyStyle(t, gutterW, cellPadV),
+          { backgroundColor: t.color("color.surface2") },
+        ]}
       >
         <Text
           style={{
@@ -518,7 +519,7 @@ function SumRow({
       <View
         style={{
           width: columns[0]!.width,
-          paddingVertical: cellPadH,
+          paddingVertical: cellPadV,
           paddingHorizontal: cellPadH,
           borderRightWidth: 1,
           borderRightColor: t.color("color.border"),
@@ -557,7 +558,7 @@ function SumRow({
       <View
         style={{
           width: columns[5]!.width,
-          paddingVertical: cellPadH,
+          paddingVertical: cellPadV,
           paddingHorizontal: cellPadH,
         }}
       />
