@@ -15,7 +15,7 @@ import {
 import { usePlaces } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { i18n } from "@/lib/i18n";
-import { formatClock, formatDurationCompact } from "@/lib/time";
+import { formatDurationCompact } from "@/lib/time";
 import { useSnackbarStore } from "@/state/snackbarStore";
 import { useDataVersionStore } from "@/state/dataVersionStore";
 import type { Entry, Place } from "@/db/schema";
@@ -27,11 +27,19 @@ export type EntryEditSheetProps = {
   onClose: () => void;
 };
 
-/** Matches HH:MM (1- or 2-digit hours, 2-digit minutes). */
-const TIME_RE = /^\d{1,2}:\d{2}$/;
 const PAUSE_MAX_MIN = 720;
-const DEFAULT_START = "09:00";
-const DEFAULT_END = "10:00";
+/** Default start — 09:00 local on the anchor date. */
+function defaultStart(anchor: Date): Date {
+  const d = new Date(anchor);
+  d.setHours(9, 0, 0, 0);
+  return d;
+}
+/** Default end — 10:00 local on the anchor date. */
+function defaultEnd(anchor: Date): Date {
+  const d = new Date(anchor);
+  d.setHours(10, 0, 0, 0);
+  return d;
+}
 
 export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProps) {
   const t = useTheme();
@@ -44,19 +52,12 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
   // Hydrate form state. Effects below rebuild state when entryId changes or
   // when places load (for the New-mode default place).
   const [placeId, setPlaceId] = useState<string | null>(null);
-  const [start, setStart] = useState<string>(DEFAULT_START);
-  const [end, setEnd] = useState<string>(DEFAULT_END);
+  const [startDate, setStartDate] = useState<Date>(() => defaultStart(new Date()));
+  const [endDate, setEndDate] = useState<Date>(() => defaultEnd(new Date()));
   const [pause, setPause] = useState<string>("0");
   const [note, setNote] = useState<string>("");
   const [entrySource, setEntrySource] = useState<"auto" | "manual" | null>(null);
-  const [startError, setStartError] = useState<string | undefined>();
-  const [endError, setEndError] = useState<string | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
-  // Anchor timestamp for HH:MM → unix conversion. In edit mode this is the
-  // entry's original `startedAt` so we preserve the original date when the
-  // user only tweaks the clock time. In new mode it's "now".
-  const [anchorS, setAnchorS] = useState<number>(() => Math.floor(Date.now() / 1000));
 
   // Hydrate from the selected entry (Edit mode) or apply defaults (New mode).
   useEffect(() => {
@@ -64,22 +65,23 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
       const e: Entry | null = entriesRepo.get(entryId);
       if (e) {
         setPlaceId(e.placeId);
-        setStart(formatClock(e.startedAt));
-        setEnd(e.endedAt != null ? formatClock(e.endedAt) : DEFAULT_END);
+        setStartDate(new Date(e.startedAt * 1000));
+        setEndDate(
+          e.endedAt != null ? new Date(e.endedAt * 1000) : defaultEnd(new Date(e.startedAt * 1000)),
+        );
         setPause(String(Math.round((e.pauseS ?? 0) / 60)));
         setNote(e.note ?? "");
         setEntrySource(e.source);
-        setAnchorS(e.startedAt);
       }
     } else {
-      // New mode defaults.
-      setStart(DEFAULT_START);
-      setEnd(DEFAULT_END);
+      // New mode defaults — 09:00–10:00 today.
+      const now = new Date();
+      setStartDate(defaultStart(now));
+      setEndDate(defaultEnd(now));
       setPause("0");
       setNote("");
       setEntrySource(null);
       setPickerOpen(false);
-      setAnchorS(Math.floor(Date.now() / 1000));
     }
   }, [entryId, entriesRepo]);
 
@@ -97,9 +99,11 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
   }, [placeId, places]);
 
   const grossMin = useMemo(() => {
-    if (!TIME_RE.test(start) || !TIME_RE.test(end)) return 0;
-    return Math.max(0, toMinutes(end) - toMinutes(start));
-  }, [start, end]);
+    // If end is before start the user is describing a cross-midnight
+    // entry. We handle that on save (roll end +24h); for the live
+    // preview we show 0 until end catches up.
+    return Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / 60_000));
+  }, [startDate, endDate]);
 
   const pauseMin = useMemo(() => {
     const n = parseInt(pause, 10);
@@ -109,29 +113,11 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
 
   const netMin = Math.max(0, grossMin - pauseMin);
 
-  const runValidation = useCallback((): boolean => {
-    let ok = true;
-    if (!TIME_RE.test(start)) {
-      setStartError(i18n.t("entryEdit.error.hhmm"));
-      ok = false;
-    } else {
-      setStartError(undefined);
-    }
-    if (!TIME_RE.test(end)) {
-      setEndError(i18n.t("entryEdit.error.hhmm"));
-      ok = false;
-    } else {
-      setEndError(undefined);
-    }
-    return ok;
-  }, [start, end]);
-
   const handleSave = useCallback(() => {
-    if (!runValidation()) return;
     if (!placeId) return; // no place selected — shouldn't happen post-load.
 
-    const startedAt = hhmmToUnixSecondsAt(start, anchorS);
-    let endedAt = hhmmToUnixSecondsAt(end, anchorS);
+    const startedAt = Math.floor(startDate.getTime() / 1000);
+    let endedAt = Math.floor(endDate.getTime() / 1000);
     // If end < start the user is describing an entry that crosses midnight.
     // Roll the end-date forward one day so the resulting entry still has
     // positive duration.
@@ -190,18 +176,16 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
     }
     commit();
   }, [
-    runValidation,
     placeId,
     isNew,
     entryId,
-    start,
-    end,
+    startDate,
+    endDate,
     pauseMin,
     note,
     entriesRepo,
     bumpEntries,
     onClose,
-    anchorS,
   ]);
 
   const handleDelete = useCallback(() => {
@@ -427,37 +411,35 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           overflow: "hidden",
         }}
       >
-        <DateRow
+        <PickerRow
           label={i18n.t("entryEdit.label.date")}
-          anchorS={anchorS}
-          onPress={() => setDatePickerOpen(true)}
           testID="entry-edit-date"
+          mode="date"
+          value={startDate}
+          maximumDate={new Date()}
+          onChange={(d) => {
+            // Keep the existing clock time — only change the date.
+            const newStart = new Date(startDate);
+            newStart.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
+            const newEnd = new Date(endDate);
+            newEnd.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
+            setStartDate(newStart);
+            setEndDate(newEnd);
+          }}
         />
-        <FieldRow
+        <PickerRow
           label={i18n.t("entryEdit.label.start")}
-          value={start}
-          onChangeText={(v) => {
-            setStart(v);
-            if (startError) setStartError(undefined);
-          }}
           testID="entry-edit-start"
-          error={startError}
-          placeholder="HH:MM"
-          keyboardType="numbers-and-punctuation"
-          mono
+          mode="time"
+          value={startDate}
+          onChange={setStartDate}
         />
-        <FieldRow
+        <PickerRow
           label={i18n.t("entryEdit.label.end")}
-          value={end}
-          onChangeText={(v) => {
-            setEnd(v);
-            if (endError) setEndError(undefined);
-          }}
           testID="entry-edit-end"
-          error={endError}
-          placeholder="HH:MM"
-          keyboardType="numbers-and-punctuation"
-          mono
+          mode="time"
+          value={endDate}
+          onChange={setEndDate}
         />
         <FieldRow
           label={i18n.t("entryEdit.label.pause")}
@@ -553,78 +535,44 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           </Button>
         </View>
       ) : null}
-
-      {datePickerOpen ? (
-        <DateTimePicker
-          mode="date"
-          // Upper bound is today — forward-dated entries are a confusing UX
-          // (we don't yet track future scheduled sessions) and the state
-          // machine would flag them as drift.
-          maximumDate={new Date()}
-          value={new Date(anchorS * 1000)}
-          onChange={(event: DateTimePickerEvent, selected?: Date) => {
-            // Android fires `dismissed` for cancel; iOS fires `set` on every
-            // scroll. Only commit when the user picked a value.
-            if (Platform.OS === "android") setDatePickerOpen(false);
-            if (event.type === "set" && selected) {
-              // Preserve the clock time — only change the date.
-              const prev = new Date(anchorS * 1000);
-              selected.setHours(prev.getHours(), prev.getMinutes(), 0, 0);
-              setAnchorS(Math.floor(selected.getTime() / 1000));
-            }
-          }}
-        />
-      ) : null}
-      {Platform.OS === "ios" && datePickerOpen ? (
-        <View style={{ alignItems: "center", marginBottom: t.space[3] }}>
-          <Button variant="secondary" size="sm" onPress={() => setDatePickerOpen(false)}>
-            {i18n.t("common.done")}
-          </Button>
-        </View>
-      ) : null}
     </Sheet>
   );
 }
 
 /**
- * Date row for the times card — shows the anchor date as a localized
- * string and opens the native date picker on tap. Styled to match
- * `FieldRow` so the two sit cleanly in the same card.
+ * Row that hosts a native `DateTimePicker` inline — `display="compact"`
+ * on iOS renders a tappable chip with the current value that opens the
+ * native wheel picker in a popover when pressed; Android shows the
+ * value as text and opens the system picker dialog on tap. Either way
+ * the user never sees a keyboard or a custom parser — the OS controls
+ * time entry.
  */
-function DateRow({
+function PickerRow({
   label,
-  anchorS,
-  onPress,
+  value,
+  mode,
+  onChange,
+  maximumDate,
   testID,
 }: {
   label: string;
-  anchorS: number;
-  onPress: () => void;
+  value: Date;
+  mode: "date" | "time";
+  onChange: (d: Date) => void;
+  maximumDate?: Date;
   testID?: string;
 }) {
   const t = useTheme();
-  const dateLabel = useMemo(() => {
-    const d = new Date(anchorS * 1000);
-    return d.toLocaleDateString(i18n.locale.startsWith("de") ? "de-DE" : "en-US", {
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }, [anchorS]);
   return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${label}, ${dateLabel}`}
+    <View
       style={{
         flexDirection: "row",
         alignItems: "center",
-        paddingVertical: 14,
+        paddingVertical: 8,
         paddingHorizontal: t.space[4],
         borderBottomWidth: 1,
         borderBottomColor: t.color("color.border"),
+        minHeight: t.minTouchTarget,
       }}
     >
       <Text
@@ -638,19 +586,25 @@ function DateRow({
       >
         {label}
       </Text>
-      <Text
-        style={{
-          flex: 1,
-          fontSize: t.type.size.body,
-          color: t.color("color.fg"),
-          fontFamily: t.type.family.sans,
-          textAlign: "right",
-        }}
-      >
-        {dateLabel}
-      </Text>
-      <Icon name="chevron-right" size={16} color={t.color("color.fg3")} />
-    </Pressable>
+      <View style={{ flex: 1, alignItems: "flex-end" }}>
+        <DateTimePicker
+          testID={testID}
+          mode={mode}
+          display={Platform.OS === "ios" ? "compact" : "default"}
+          value={value}
+          maximumDate={maximumDate}
+          onChange={(event: DateTimePickerEvent, selected?: Date) => {
+            // Android's picker fires once and dismisses; iOS fires on
+            // every scroll of the wheel. Only commit when a value came
+            // through — `type` is `"set"` on both platforms when the
+            // user has chosen a value (vs `"dismissed"` for cancel).
+            if (event.type === "set" && selected) {
+              onChange(selected);
+            }
+          }}
+        />
+      </View>
+    </View>
   );
 }
 
@@ -756,29 +710,4 @@ function FieldRow({
       ) : null}
     </View>
   );
-}
-
-/** `"09:15" → 9*60 + 15`. Caller guarantees the input matches TIME_RE. */
-function toMinutes(hhmm: string): number {
-  const parts = hhmm.split(":");
-  const h = parseInt(parts[0] ?? "0", 10);
-  const m = parseInt(parts[1] ?? "0", 10);
-  return (Number.isNaN(h) ? 0 : h) * 60 + (Number.isNaN(m) ? 0 : m);
-}
-
-/**
- * Convert a local HH:MM clock reading to unix seconds, anchored to the
- * local-calendar day of `anchorUnixSeconds`. Critical for edit mode: if the
- * user edits yesterday's entry and only changes the clock, we keep
- * "yesterday" fixed instead of snapping to today. Exported for unit tests.
- *
- * Caller guarantees the HH:MM string matches `TIME_RE`.
- */
-export function hhmmToUnixSecondsAt(hhmm: string, anchorUnixSeconds: number): number {
-  const parts = hhmm.split(":");
-  const h = parseInt(parts[0] ?? "0", 10);
-  const m = parseInt(parts[1] ?? "0", 10);
-  const d = new Date(anchorUnixSeconds * 1000);
-  d.setHours(Number.isNaN(h) ? 0 : h, Number.isNaN(m) ? 0 : m, 0, 0);
-  return Math.floor(d.getTime() / 1000);
 }

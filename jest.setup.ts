@@ -45,6 +45,34 @@ jest.mock("expo-task-manager", () => ({
   isTaskDefined: jest.fn(() => false),
 }));
 
+// The native DateTimePicker is a real UI component in production; in tests
+// we stub it to a `<View>` that exposes the current `value` via
+// `accessibilityValue` and wires the prop's `onChange` through. Tests can
+// read the current value or fire a synthetic change event to simulate a
+// user picking a different date/time.
+jest.mock("@react-native-community/datetimepicker", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require("react");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require("react-native");
+  const Mock = (props: {
+    testID?: string;
+    value?: Date;
+    mode?: "date" | "time";
+    onChange?: (event: { type: string }, selected?: Date) => void;
+  }) =>
+    React.createElement(View, {
+      testID: props.testID,
+      accessibilityValue: { text: props.value ? props.value.toISOString() : "" },
+      accessibilityLabel: `datepicker-${props.mode ?? "date"}`,
+      // Tests fire a synthetic "change" event via fireEvent on this view;
+      // we forward it to the real onChange prop so the component under
+      // test sees the new Date.
+      onChange: props.onChange,
+    });
+  return { __esModule: true, default: Mock };
+});
+
 jest.mock("expo-notifications", () => ({
   scheduleNotificationAsync: jest.fn(async () => "notif-id"),
   setNotificationChannelAsync: jest.fn(async () => undefined),

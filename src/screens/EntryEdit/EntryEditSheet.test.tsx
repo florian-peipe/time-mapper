@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { PlacesRepoProvider } from "@/features/places/usePlaces";
 import { EntriesRepoProvider } from "@/features/entries/useEntries";
@@ -105,6 +105,31 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
+/**
+ * The DateTimePicker mock (in jest.setup.ts) renders a View whose
+ * `accessibilityValue.text` is the ISO timestamp of the current value.
+ * Parse it back into a Date so tests can inspect local fields.
+ */
+function readPickerDate(testID: string): Date {
+  const node = screen.getByTestId(testID);
+  const v = node.props.accessibilityValue as { text?: string } | undefined;
+  if (!v?.text) throw new Error(`picker ${testID} has no accessibilityValue.text`);
+  return new Date(v.text);
+}
+function setPickerTime(testID: string, hh: number, mm: number, dateRef: Date) {
+  const d = new Date(dateRef);
+  d.setHours(hh, mm, 0, 0);
+  act(() => {
+    fireEvent(screen.getByTestId(testID), "change", { type: "set" }, d);
+  });
+}
+function setPickerDate(testID: string, year: number, monthZeroBased: number, day: number) {
+  const d = new Date(year, monthZeroBased, day, 0, 0, 0, 0);
+  act(() => {
+    fireEvent(screen.getByTestId(testID), "change", { type: "set" }, d);
+  });
+}
+
 describe("EntryEditSheet — New mode", () => {
   it("renders the 'New entry' title and default fields (09:00 → 10:00, 0m break)", () => {
     setup({ nowMs: new Date(2026, 3, 17, 12, 0, 0).getTime(), mode: "new" });
@@ -115,9 +140,9 @@ describe("EntryEditSheet — New mode", () => {
     expect(screen.getByTestId("entry-edit-net").props.children).toBe("1h 00m");
     expect(screen.getByText(/1h 00m gross/)).toBeTruthy();
     expect(screen.getByText(/0m break/)).toBeTruthy();
-    // Time inputs carry the default values.
-    expect(screen.getByTestId("entry-edit-start").props.value).toBe("09:00");
-    expect(screen.getByTestId("entry-edit-end").props.value).toBe("10:00");
+    // Pickers carry the default values — 09:00 → 10:00.
+    expect(readPickerDate("entry-edit-start").getHours()).toBe(9);
+    expect(readPickerDate("entry-edit-end").getHours()).toBe(10);
     expect(screen.getByTestId("entry-edit-pause").props.value).toBe("0");
   });
 
@@ -162,9 +187,13 @@ describe("EntryEditSheet — Edit mode", () => {
     expect(screen.getByText("Edit entry")).toBeTruthy();
     // Selected place is Office.
     expect(screen.getByText("Office")).toBeTruthy();
-    // Time fields hydrated as local HH:MM.
-    expect(screen.getByTestId("entry-edit-start").props.value).toBe("10:15");
-    expect(screen.getByTestId("entry-edit-end").props.value).toBe("12:00");
+    // Picker values hydrated from the entry's unix timestamps.
+    const startPicker = readPickerDate("entry-edit-start");
+    const endPicker = readPickerDate("entry-edit-end");
+    expect(startPicker.getHours()).toBe(10);
+    expect(startPicker.getMinutes()).toBe(15);
+    expect(endPicker.getHours()).toBe(12);
+    expect(endPicker.getMinutes()).toBe(0);
     expect(screen.getByTestId("entry-edit-pause").props.value).toBe("15");
     // Note hydrated.
     expect(screen.getByTestId("entry-edit-note").props.value).toBe("client call");
@@ -251,24 +280,8 @@ describe("EntryEditSheet — Net-duration math", () => {
   });
 });
 
-describe("EntryEditSheet — validation", () => {
-  it("shows an inline error and does NOT save when the Start value is invalid", () => {
-    const onClose = jest.fn();
-    const { entriesRepo } = setup({
-      nowMs: new Date(2026, 3, 17, 12, 0, 0).getTime(),
-      mode: "new",
-      onClose,
-    });
-    // Break the start field.
-    fireEvent.changeText(screen.getByTestId("entry-edit-start"), "abc");
-    // Attempt save.
-    fireEvent.press(screen.getByTestId("entry-edit-save"));
-    expect(onClose).not.toHaveBeenCalled();
-    expect(entriesRepo.listBetween(0, 2_000_000_000)).toEqual([]);
-    // Inline error text is visible.
-    expect(screen.getByText(/HH:MM/)).toBeTruthy();
-  });
-});
+// Validation of HH:MM text no longer applies — the native picker only
+// produces valid Date values, so there's nothing to catch at save time.
 
 describe("EntryEditSheet — place picker", () => {
   it("lets the user switch place via the expanded chip list", () => {
@@ -356,7 +369,7 @@ describe("EntryEditSheet — save", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("preserves the original date when editing yesterday's entry and only changing HH:MM", () => {
+  it("preserves the original date when editing yesterday's entry and only changing the time", () => {
     // Today is 2026-04-17 12:00 local; seed an entry that started yesterday
     // at 09:00 and ended yesterday at 10:00.
     const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
@@ -375,8 +388,9 @@ describe("EntryEditSheet — save", () => {
     expect(entry).not.toBeNull();
     if (!entry) return;
 
-    // Only change the HH:MM clock of the end time.
-    fireEvent.changeText(screen.getByTestId("entry-edit-end"), "11:30");
+    // Only change the end time — the underlying Date in state is still
+    // anchored to yesterday, so bumping the clock preserves the date.
+    setPickerTime("entry-edit-end", 11, 30, new Date(yesterdayEnd * 1000));
     fireEvent.press(screen.getByTestId("entry-edit-save"));
 
     const fresh = entriesRepo.get(entry.id);
@@ -393,8 +407,9 @@ describe("EntryEditSheet — save", () => {
     // Start 22:00, end 02:00 → end + 86400.
     const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
     const { entriesRepo } = setup({ nowMs, mode: "new" });
-    fireEvent.changeText(screen.getByTestId("entry-edit-start"), "22:00");
-    fireEvent.changeText(screen.getByTestId("entry-edit-end"), "02:00");
+    const today = new Date(nowMs);
+    setPickerTime("entry-edit-start", 22, 0, today);
+    setPickerTime("entry-edit-end", 2, 0, today);
     fireEvent.press(screen.getByTestId("entry-edit-save"));
 
     const list = entriesRepo.listBetween(0, 2_000_000_000);
