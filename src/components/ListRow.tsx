@@ -78,8 +78,10 @@ export function ListRow({
   const content = (
     <>
       {icon && <IconBadge icon={icon} bg={iconBg} color={iconColor} />}
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, flexShrink: 1 }}>
         <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
           style={{
             fontSize: t.type.size.body,
             color: t.color("color.fg"),
@@ -91,7 +93,11 @@ export function ListRow({
       </View>
       {typeof detail === "string" ? (
         <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
           style={{
+            flexShrink: 1,
+            maxWidth: "50%",
             fontSize: t.type.size.body,
             color: t.color("color.fg3"),
             fontFamily: t.type.family.sans,

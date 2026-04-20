@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useTheme } from "@/theme/useTheme";
 import {
   Button,
@@ -16,6 +17,7 @@ import { useEntriesRepo } from "@/features/entries/useEntries";
 import { i18n } from "@/lib/i18n";
 import { formatClock, formatDurationCompact } from "@/lib/time";
 import { useSnackbarStore } from "@/state/snackbarStore";
+import { useDataVersionStore } from "@/state/dataVersionStore";
 import type { Entry, Place } from "@/db/schema";
 
 export type EntryEditSheetProps = {
@@ -35,6 +37,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
   const t = useTheme();
   const { places } = usePlaces();
   const entriesRepo = useEntriesRepo();
+  const bumpEntries = useDataVersionStore((s) => s.bumpEntries);
 
   const isNew = entryId == null;
 
@@ -49,6 +52,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
   const [startError, setStartError] = useState<string | undefined>();
   const [endError, setEndError] = useState<string | undefined>();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   // Anchor timestamp for HH:MM → unix conversion. In edit mode this is the
   // entry's original `startedAt` so we preserve the original date when the
   // user only tweaks the clock time. In new mode it's "now".
@@ -157,6 +161,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           pauseS,
         });
       }
+      bumpEntries();
       onClose();
     };
 
@@ -194,6 +199,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
     pauseMin,
     note,
     entriesRepo,
+    bumpEntries,
     onClose,
     anchorS,
   ]);
@@ -201,6 +207,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
   const handleDelete = useCallback(() => {
     if (!entryId) return;
     entriesRepo.softDelete(entryId);
+    bumpEntries();
     // Offer a 5s Undo via the global snackbar. Tapping Undo clears the
     // `deletedAt` mark so the entry reappears in Timeline/Stats. If the TTL
     // elapses first the deletion becomes durable (retention purge eventually
@@ -212,6 +219,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
         onPress: () => {
           try {
             entriesRepo.restore(entryId);
+            bumpEntries();
           } catch {
             // Row was hard-purged between delete and undo — nothing we can
             // do; the snack host will dismiss regardless.
@@ -221,7 +229,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
       ttlMs: 5000,
     });
     onClose();
-  }, [entryId, entriesRepo, onClose]);
+  }, [entryId, entriesRepo, bumpEntries, onClose]);
 
   const handlePickPlace = useCallback((p: Place) => {
     setPlaceId(p.id);
@@ -419,6 +427,12 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           overflow: "hidden",
         }}
       >
+        <DateRow
+          label={i18n.t("entryEdit.label.date")}
+          anchorS={anchorS}
+          onPress={() => setDatePickerOpen(true)}
+          testID="entry-edit-date"
+        />
         <FieldRow
           label={i18n.t("entryEdit.label.start")}
           value={start}
@@ -539,7 +553,104 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           </Button>
         </View>
       ) : null}
+
+      {datePickerOpen ? (
+        <DateTimePicker
+          mode="date"
+          // Upper bound is today — forward-dated entries are a confusing UX
+          // (we don't yet track future scheduled sessions) and the state
+          // machine would flag them as drift.
+          maximumDate={new Date()}
+          value={new Date(anchorS * 1000)}
+          onChange={(event: DateTimePickerEvent, selected?: Date) => {
+            // Android fires `dismissed` for cancel; iOS fires `set` on every
+            // scroll. Only commit when the user picked a value.
+            if (Platform.OS === "android") setDatePickerOpen(false);
+            if (event.type === "set" && selected) {
+              // Preserve the clock time — only change the date.
+              const prev = new Date(anchorS * 1000);
+              selected.setHours(prev.getHours(), prev.getMinutes(), 0, 0);
+              setAnchorS(Math.floor(selected.getTime() / 1000));
+            }
+          }}
+        />
+      ) : null}
+      {Platform.OS === "ios" && datePickerOpen ? (
+        <View style={{ alignItems: "center", marginBottom: t.space[3] }}>
+          <Button variant="secondary" size="sm" onPress={() => setDatePickerOpen(false)}>
+            {i18n.t("common.done")}
+          </Button>
+        </View>
+      ) : null}
     </Sheet>
+  );
+}
+
+/**
+ * Date row for the times card — shows the anchor date as a localized
+ * string and opens the native date picker on tap. Styled to match
+ * `FieldRow` so the two sit cleanly in the same card.
+ */
+function DateRow({
+  label,
+  anchorS,
+  onPress,
+  testID,
+}: {
+  label: string;
+  anchorS: number;
+  onPress: () => void;
+  testID?: string;
+}) {
+  const t = useTheme();
+  const dateLabel = useMemo(() => {
+    const d = new Date(anchorS * 1000);
+    return d.toLocaleDateString(i18n.locale.startsWith("de") ? "de-DE" : "en-US", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }, [anchorS]);
+  return (
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}, ${dateLabel}`}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 14,
+        paddingHorizontal: t.space[4],
+        borderBottomWidth: 1,
+        borderBottomColor: t.color("color.border"),
+      }}
+    >
+      <Text
+        style={{
+          fontSize: t.type.size.s,
+          color: t.color("color.fg3"),
+          fontFamily: t.type.family.sans,
+          fontWeight: t.type.weight.medium,
+          width: 78,
+        }}
+      >
+        {label}
+      </Text>
+      <Text
+        style={{
+          flex: 1,
+          fontSize: t.type.size.body,
+          color: t.color("color.fg"),
+          fontFamily: t.type.family.sans,
+          textAlign: "right",
+        }}
+      >
+        {dateLabel}
+      </Text>
+      <Icon name="chevron-right" size={16} color={t.color("color.fg3")} />
+    </Pressable>
   );
 }
 

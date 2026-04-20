@@ -169,8 +169,22 @@ export function Sheet({
           {/* Body */}
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{ padding: t.space[5] }}
+            contentContainerStyle={{
+              padding: t.space[5],
+              // Extra bottom breathing room so the last control sits well
+              // clear of the sticky footer (or the system home indicator on
+              // footer-less sheets) — otherwise users complain it's "hard
+              // to scroll the last slider into view".
+              paddingBottom: t.space[10],
+            }}
             keyboardShouldPersistTaps="handled"
+            // Android mesh-scroll fix — without this, a parent ScrollView
+            // (when the sheet is rendered inside a scrollable modal frame)
+            // can claim the gesture.
+            nestedScrollEnabled
+            // Let drags dismiss the keyboard so the last slider is reachable
+            // without needing an extra tap outside.
+            keyboardDismissMode="on-drag"
           >
             {children}
           </ScrollView>

@@ -3161,8 +3161,11 @@ exports[`snapshots — main screens AddPlaceSheet (edit mode, pre-filled place) 
                   "props": {
                     "contentContainerStyle": {
                       "padding": 20,
+                      "paddingBottom": 40,
                     },
+                    "keyboardDismissMode": "on-drag",
                     "keyboardShouldPersistTaps": "handled",
+                    "nestedScrollEnabled": true,
                     "style": {
                       "flex": 1,
                     },
@@ -4101,6 +4104,160 @@ exports[`snapshots — main screens EntryEditSheet (new entry) 1`] = `
                               "children": [
                                 {
                                   "children": [
+                                    "Date",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#8A837A",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 13,
+                                      "fontWeight": "500",
+                                      "width": 78,
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                                {
+                                  "children": [
+                                    "Fri, Apr 17, 2026",
+                                  ],
+                                  "props": {
+                                    "style": {
+                                      "color": "#1A1714",
+                                      "flex": 1,
+                                      "fontFamily": "Inter",
+                                      "fontSize": 15,
+                                      "textAlign": "right",
+                                    },
+                                  },
+                                  "type": "Text",
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "children": null,
+                                          "props": {
+                                            "d": "m9 18 6-6-6-6",
+                                            "fill": null,
+                                            "propList": [
+                                              "fill",
+                                              "stroke",
+                                              "strokeWidth",
+                                              "strokeLinecap",
+                                              "strokeLinejoin",
+                                            ],
+                                            "stroke": {
+                                              "payload": 4287267706,
+                                              "type": 0,
+                                            },
+                                            "strokeLinecap": 1,
+                                            "strokeLinejoin": 1,
+                                            "strokeWidth": 1.75,
+                                          },
+                                          "type": "RNSVGPath",
+                                        },
+                                      ],
+                                      "props": {
+                                        "fill": null,
+                                        "propList": [
+                                          "fill",
+                                          "stroke",
+                                          "strokeWidth",
+                                          "strokeLinecap",
+                                          "strokeLinejoin",
+                                        ],
+                                        "stroke": {
+                                          "payload": 4287267706,
+                                          "type": 0,
+                                        },
+                                        "strokeLinecap": 1,
+                                        "strokeLinejoin": 1,
+                                        "strokeWidth": 1.75,
+                                      },
+                                      "type": "RNSVGGroup",
+                                    },
+                                  ],
+                                  "props": {
+                                    "align": "xMidYMid",
+                                    "bbHeight": 16,
+                                    "bbWidth": 16,
+                                    "className": undefined,
+                                    "data-testid": undefined,
+                                    "fill": "none",
+                                    "focusable": false,
+                                    "height": 16,
+                                    "meetOrSlice": 0,
+                                    "minX": 0,
+                                    "minY": 0,
+                                    "stroke": "#8A837A",
+                                    "strokeLinecap": "round",
+                                    "strokeLinejoin": "round",
+                                    "strokeWidth": 1.75,
+                                    "style": [
+                                      {
+                                        "backgroundColor": "transparent",
+                                        "borderWidth": 0,
+                                      },
+                                      {
+                                        "flex": 0,
+                                        "height": 16,
+                                        "width": 16,
+                                      },
+                                    ],
+                                    "vbHeight": 24,
+                                    "vbWidth": 24,
+                                    "width": 16,
+                                    "xmlns": "http://www.w3.org/2000/svg",
+                                  },
+                                  "type": "RNSVGSvgView",
+                                },
+                              ],
+                              "props": {
+                                "accessibilityLabel": "Date, Fri, Apr 17, 2026",
+                                "accessibilityRole": "button",
+                                "accessibilityState": {
+                                  "busy": undefined,
+                                  "checked": undefined,
+                                  "disabled": undefined,
+                                  "expanded": undefined,
+                                  "selected": undefined,
+                                },
+                                "accessibilityValue": {
+                                  "max": undefined,
+                                  "min": undefined,
+                                  "now": undefined,
+                                  "text": undefined,
+                                },
+                                "accessible": true,
+                                "collapsable": false,
+                                "focusable": true,
+                                "onBlur": [Function],
+                                "onClick": [Function],
+                                "onFocus": [Function],
+                                "onResponderGrant": [Function],
+                                "onResponderMove": [Function],
+                                "onResponderRelease": [Function],
+                                "onResponderTerminate": [Function],
+                                "onResponderTerminationRequest": [Function],
+                                "onStartShouldSetResponder": [Function],
+                                "style": {
+                                  "alignItems": "center",
+                                  "borderBottomColor": "#E9E4DD",
+                                  "borderBottomWidth": 1,
+                                  "flexDirection": "row",
+                                  "paddingHorizontal": 16,
+                                  "paddingVertical": 14,
+                                },
+                                "testID": "entry-edit-date",
+                              },
+                              "type": "View",
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
                                     {
                                       "children": [
                                         "Start",
@@ -4434,8 +4591,11 @@ exports[`snapshots — main screens EntryEditSheet (new entry) 1`] = `
                   "props": {
                     "contentContainerStyle": {
                       "padding": 20,
+                      "paddingBottom": 40,
                     },
+                    "keyboardDismissMode": "on-drag",
                     "keyboardShouldPersistTaps": "handled",
+                    "nestedScrollEnabled": true,
                     "style": {
                       "flex": 1,
                     },
@@ -5759,8 +5919,11 @@ exports[`snapshots — main screens Paywall (year plan selected) 1`] = `
                   "props": {
                     "contentContainerStyle": {
                       "padding": 20,
+                      "paddingBottom": 40,
                     },
+                    "keyboardDismissMode": "on-drag",
                     "keyboardShouldPersistTaps": "handled",
+                    "nestedScrollEnabled": true,
                     "style": {
                       "flex": 1,
                     },
@@ -6486,6 +6649,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Location",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -6498,6 +6663,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -6507,10 +6673,14 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                             "Not set — tap to grant",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -6768,6 +6938,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Notifications",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -6780,6 +6952,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -6789,10 +6962,14 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                             "On",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -7052,6 +7229,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Default buffers",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -7064,6 +7243,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -7073,10 +7253,14 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                             "2 / 1 min",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -7357,6 +7541,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Theme",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -7369,6 +7555,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -7378,10 +7565,14 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                             "System",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -7663,6 +7854,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Language",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -7675,6 +7868,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -7684,10 +7878,14 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                             "System",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -8034,6 +8232,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Restore purchases",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -8046,6 +8246,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -8370,6 +8571,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Export CSV",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -8382,6 +8585,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -8690,6 +8894,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Export backup (JSON)",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -8702,19 +8908,24 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
                         },
                         {
                           "children": [
-                            "Save everything to a file you can keep safe",
+                            "Save to a file",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -8802,7 +9013,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                         },
                       ],
                       "props": {
-                        "accessibilityLabel": "Export backup (JSON), Save everything to a file you can keep safe",
+                        "accessibilityLabel": "Export backup (JSON), Save to a file",
                         "accessibilityRole": "button",
                         "accessibilityState": {
                           "busy": undefined,
@@ -8994,6 +9205,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Export diagnostic log",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -9006,6 +9219,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -9015,10 +9229,14 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                             "For bug reports",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -9281,6 +9499,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Crash reports",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -9293,6 +9513,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -9302,10 +9523,14 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                             "Disabled",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -9604,9 +9829,11 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "children": [
                             {
                               "children": [
-                                "Show setup again",
+                                "Replay intro",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -9619,19 +9846,24 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
                         },
                         {
                           "children": [
-                            "Walk through the intro screens",
+                            "6 screens",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -9719,7 +9951,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                         },
                       ],
                       "props": {
-                        "accessibilityLabel": "Show setup again, Walk through the intro screens",
+                        "accessibilityLabel": "Replay intro, 6 screens",
                         "accessibilityRole": "button",
                         "accessibilityState": {
                           "busy": undefined,
@@ -9889,6 +10121,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Erase all data",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -9901,19 +10135,24 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
                         },
                         {
                           "children": [
-                            "Removes every place, entry and preference",
+                            "Wipes all local data",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -10001,7 +10240,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                         },
                       ],
                       "props": {
-                        "accessibilityLabel": "Erase all data, Removes every place, entry and preference",
+                        "accessibilityLabel": "Erase all data, Wipes all local data",
                         "accessibilityRole": "button",
                         "accessibilityState": {
                           "busy": undefined,
@@ -10194,6 +10433,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Privacy policy",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -10206,6 +10447,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -10463,6 +10705,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Terms of service",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -10475,6 +10719,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -10756,6 +11001,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Impressum",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -10768,6 +11015,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -11025,6 +11273,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Email support",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -11037,6 +11287,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
@@ -11046,10 +11297,14 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                             "Questions, bug reports",
                           ],
                           "props": {
+                            "ellipsizeMode": "tail",
+                            "numberOfLines": 1,
                             "style": {
                               "color": "#8A837A",
+                              "flexShrink": 1,
                               "fontFamily": "Inter",
                               "fontSize": 15,
+                              "maxWidth": "50%",
                             },
                           },
                           "type": "Text",
@@ -11285,6 +11540,8 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                                 "Rate Time Mapper",
                               ],
                               "props": {
+                                "ellipsizeMode": "tail",
+                                "numberOfLines": 1,
                                 "style": {
                                   "color": "#1A1714",
                                   "fontFamily": "Inter",
@@ -11297,6 +11554,7 @@ exports[`snapshots — main screens Settings (free user, one place) 1`] = `
                           "props": {
                             "style": {
                               "flex": 1,
+                              "flexShrink": 1,
                             },
                           },
                           "type": "View",
