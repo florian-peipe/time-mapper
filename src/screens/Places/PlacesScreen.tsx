@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import Constants from "expo-constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Banner, Button, Icon, Rings } from "@/components";
+import { Banner, Button, Fab, Icon, Rings } from "@/components";
 import { i18n } from "@/lib/i18n";
 import { useTheme } from "@/theme/useTheme";
 import { usePlaces } from "@/features/places/usePlaces";
@@ -57,31 +57,21 @@ export function PlacesScreen() {
       )}
 
       {places.length > 0 ? (
-        <Pressable
-          onPress={handleAdd}
-          accessibilityRole="button"
-          accessibilityLabel={i18n.t("places.add")}
-          testID="places-fab-add"
-          hitSlop={t.space[3]}
+        <View
+          pointerEvents="box-none"
           style={{
             position: "absolute",
             right: t.space[5],
             bottom: t.space[5] + insets.bottom,
-            width: t.space[14],
-            height: t.space[14],
-            borderRadius: t.radius.pill,
-            backgroundColor: t.color("color.accent"),
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: t.color("color.fg"),
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 10,
-            elevation: 4,
           }}
         >
-          <Icon name="plus" size={24} color={t.color("color.accent.contrast")} />
-        </Pressable>
+          <Fab
+            icon="plus"
+            onPress={handleAdd}
+            accessibilityLabel={i18n.t("places.add")}
+            testID="places-fab-add"
+          />
+        </View>
       ) : null}
     </View>
   );

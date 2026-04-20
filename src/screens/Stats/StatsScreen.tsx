@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/useTheme";
-import { Card, Icon, IconBadge } from "@/components";
+import { Card, Fab, Icon, IconBadge } from "@/components";
 import { usePro } from "@/features/billing/usePro";
 import { useEntriesRange } from "@/features/entries/useEntriesRange";
 import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClose";
@@ -135,9 +135,24 @@ export function StatsScreen() {
           entries={range.entries}
           placesById={placesById}
           onOpenEntry={handleOpenEntry}
-          onAddEntry={handleAddEntry}
         />
       </ScrollView>
+
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: "absolute",
+          right: t.space[5],
+          bottom: t.space[5] + insets.bottom,
+        }}
+      >
+        <Fab
+          icon="plus"
+          onPress={handleAddEntry}
+          accessibilityLabel={i18n.t("stats.entries.add")}
+          testID="stats-add-entry"
+        />
+      </View>
     </View>
   );
 }
@@ -359,24 +374,15 @@ function EntriesSection({
   entries,
   placesById,
   onOpenEntry,
-  onAddEntry,
 }: {
   entries: Entry[];
   placesById: Map<string, Place>;
   onOpenEntry: (id: string) => void;
-  onAddEntry: () => void;
 }) {
   const t = useTheme();
   return (
     <View style={{ paddingHorizontal: t.space[5], paddingTop: t.space[3] }}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingBottom: t.space[2],
-        }}
-      >
+      <View style={{ paddingBottom: t.space[2] }}>
         <Text
           style={{
             fontSize: t.type.size.s,
@@ -388,34 +394,6 @@ function EntriesSection({
         >
           {i18n.t("stats.entries.sectionTitle")}
         </Text>
-        <Pressable
-          onPress={onAddEntry}
-          accessibilityRole="button"
-          accessibilityLabel={i18n.t("stats.entries.add")}
-          testID="stats-add-entry"
-          hitSlop={t.space[2]}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: t.space[1],
-            paddingHorizontal: t.space[2] + 1,
-            paddingVertical: t.space[1] + 2,
-            borderRadius: t.radius.pill,
-            backgroundColor: t.color("color.fg"),
-          }}
-        >
-          <Icon name="plus" size={13} color={t.color("color.bg")} />
-          <Text
-            style={{
-              fontSize: t.type.size.xs,
-              fontWeight: t.type.weight.semibold,
-              color: t.color("color.bg"),
-              fontFamily: t.type.family.sans,
-            }}
-          >
-            {i18n.t("stats.entries.add")}
-          </Text>
-        </Pressable>
       </View>
 
       {entries.length === 0 ? (

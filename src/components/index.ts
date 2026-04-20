@@ -3,6 +3,7 @@ export { Button, type ButtonVariant, type ButtonSize } from "./Button";
 export { Card } from "./Card";
 export { Chip, type ChipTone } from "./Chip";
 export { ErrorBoundary } from "./ErrorBoundary";
+export { Fab } from "./Fab";
 export { Icon, type IconName } from "./Icon";
 export { IconBadge } from "./IconBadge";
 export { Input } from "./Input";
