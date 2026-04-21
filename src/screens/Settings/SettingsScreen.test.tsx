@@ -13,6 +13,7 @@ import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore } from "@/state/uiStore";
 import { grantProMock, resetProMock } from "@/features/billing/useProMock";
+import * as openPaywallModule from "@/features/billing/openPaywall";
 import { SettingsScreen } from "./SettingsScreen";
 
 // Capture router.push() calls for legal-screen navigation assertions.
@@ -115,11 +116,12 @@ describe("SettingsScreen", () => {
     expect(screen.queryByTestId("settings-pro-upsell")).toBeNull();
   });
 
-  it("tapping the Pro upsell CTA opens the paywall sheet with source=settings", () => {
+  it("tapping the Pro upsell CTA calls openPaywall with source=settings", () => {
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     render(wrap(<SettingsScreen />));
     fireEvent.press(screen.getByTestId("settings-pro-upsell-cta"));
-    expect(useSheetStore.getState().active).toBe("paywall");
-    expect(useSheetStore.getState().payload).toEqual({ source: "settings" });
+    expect(spy).toHaveBeenCalledWith({ source: "settings" });
+    spy.mockRestore();
   });
 
   it("Theme row defaults to 'System' and cycles System → Light → Dark → System", () => {
@@ -152,18 +154,21 @@ describe("SettingsScreen", () => {
     expect(useUiStore.getState().localeOverride).toBeNull();
   });
 
-  it("tapping Export CSV while NOT Pro opens the paywall with source=export", () => {
+  it("tapping Export CSV while NOT Pro calls openPaywall with source=export", () => {
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     render(wrap(<SettingsScreen />));
     fireEvent.press(screen.getByTestId("settings-row-export"));
-    expect(useSheetStore.getState().active).toBe("paywall");
-    expect(useSheetStore.getState().payload).toEqual({ source: "export" });
+    expect(spy).toHaveBeenCalledWith({ source: "export" });
+    spy.mockRestore();
   });
 
   it("tapping Export CSV while Pro does NOT open the paywall", () => {
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     grantProMock();
     render(wrap(<SettingsScreen />));
     fireEvent.press(screen.getByTestId("settings-row-export"));
-    expect(useSheetStore.getState().active).toBeNull();
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 
   it("tapping the Privacy row navigates to /legal/privacy", () => {

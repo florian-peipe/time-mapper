@@ -16,14 +16,22 @@
  * `_layout.tsx` calling it on every mount is harmless.
  */
 import { Platform } from "react-native";
-import Purchases, { type CustomerInfo, type PurchasesPackage } from "react-native-purchases";
+import Purchases, {
+  type CustomerInfo,
+  type PurchasesOffering,
+  type PurchasesPackage,
+} from "react-native-purchases";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+
+export { PAYWALL_RESULT } from "react-native-purchases-ui";
 
 /**
- * The entitlement identifier we attach to both the monthly + yearly
- * RevenueCat products. Configured in the RC dashboard on the entitlement
- * page; if the user changes it there, change it here too.
+ * The entitlement identifier set in the RevenueCat dashboard. Both the
+ * monthly + yearly products link to it. Must match the dashboard byte-for-
+ * byte — `Purchases.getCustomerInfo()` returns entitlements keyed by this
+ * string and a mismatch silently produces `isPro = false`.
  */
-export const PRO_ENTITLEMENT_ID = "pro";
+export const PRO_ENTITLEMENT_ID = "Time Mapper Pro";
 
 /**
  * The offering identifier we expose on the dashboard. RC's `getOfferings()`
@@ -154,4 +162,57 @@ export function onCustomerInfoUpdate(cb: (info: CustomerInfo) => void): () => vo
   return () => {
     Purchases.removeCustomerInfoUpdateListener(cb);
   };
+}
+
+/**
+ * Present the RevenueCat-hosted paywall UI. The paywall is configured in
+ * the RC dashboard ("Paywalls" tab → attach to an offering) and shown as a
+ * native modal — Apple / Google styling on each platform, localized, and
+ * A/B-testable without a rebuild.
+ *
+ * In mock mode this resolves to `NOT_PRESENTED` so callers can fall back
+ * to the custom sheet paywall used for dev without keys.
+ */
+export async function presentPaywall(offering?: PurchasesOffering): Promise<PAYWALL_RESULT> {
+  if (mode === "mock") return PAYWALL_RESULT.NOT_PRESENTED;
+  return RevenueCatUI.presentPaywall(offering ? { offering } : undefined);
+}
+
+/**
+ * Present the paywall only if the user lacks the `Time Mapper Pro`
+ * entitlement. Short-circuits to `NOT_PRESENTED` when the user is already
+ * Pro — cheaper than reading customerInfo + guarding on the caller side.
+ */
+export async function presentPaywallIfNeeded(
+  offering?: PurchasesOffering,
+): Promise<PAYWALL_RESULT> {
+  if (mode === "mock") return PAYWALL_RESULT.NOT_PRESENTED;
+  return RevenueCatUI.presentPaywallIfNeeded({
+    requiredEntitlementIdentifier: PRO_ENTITLEMENT_ID,
+    ...(offering ? { offering } : {}),
+  });
+}
+
+/**
+ * Callback bag forwarded to the native Customer Center. Shape is the SDK's
+ * own — re-export so call sites don't need to import from the UI package
+ * directly.
+ */
+export type CustomerCenterCallbacks = NonNullable<
+  Parameters<typeof RevenueCatUI.presentCustomerCenter>[0]
+>["callbacks"];
+
+/**
+ * Present the RevenueCat Customer Center — self-service UI where users
+ * cancel, restore, request a refund (iOS), change plans, and view
+ * subscription status. Replaces the platform deep-link ("Manage
+ * subscription" → itms-apps / Google Play subscriptions) with an in-app
+ * flow that's consistent across platforms and surfaces RC-side changes
+ * immediately.
+ *
+ * No-op in mock mode — callers should fall back to the OS deep-link.
+ */
+export async function presentCustomerCenter(callbacks?: CustomerCenterCallbacks): Promise<void> {
+  if (mode === "mock") return;
+  await RevenueCatUI.presentCustomerCenter(callbacks ? { callbacks } : undefined);
 }

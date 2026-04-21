@@ -194,15 +194,40 @@ keys from `EXPO_PUBLIC_*` env vars (which Expo substitutes into
 
 ### RevenueCat
 
+The app uses RevenueCat for subscription management with **RevenueCat-hosted
+paywalls** (A/B-testable, styled per platform, no rebuild needed to change
+copy) and the **Customer Center** (in-app subscription management for
+cancel / restore / refund / change-plan).
+
 1. Create a project at https://app.revenuecat.com and add iOS + Android
    apps for the bundle id `com.timemapper.app`.
 2. In App Store Connect + Google Play Console, configure two products:
-   - `tm_pro_monthly` — auto-renewable, €4.99 / month
-   - `tm_pro_yearly` — auto-renewable, €29.99 / year with a 7-day free trial
+   - Monthly — auto-renewable, €4.99 / month (product id of your choice)
+   - Yearly — auto-renewable, €29.99 / year with a 7-day free trial
 3. In the RevenueCat dashboard:
-   - Create an offering called `default` and attach both products.
-   - Create an entitlement called `pro` and link both products to it.
+   - Create an offering called `default`. Import both products; name the
+     packages `monthly` and `yearly` (RC's standard package identifiers).
+   - Create an entitlement called **`Time Mapper Pro`** and link both
+     products to it. The code in `src/features/billing/revenuecat.ts`
+     checks this exact string — rename it there if you change it.
+   - **Paywalls tab** → create a paywall, attach it to the `default`
+     offering. The app presents it via `RevenueCatUI.presentPaywall()` —
+     copy / layout / A/B changes ship to existing installs without a
+     rebuild.
+   - **Customer Center tab** → review the defaults (cancel, restore,
+     refund on iOS, feedback survey). Exposed in app via Settings →
+     Subscription → "Time Mapper Pro" row when subscribed.
 4. Copy the iOS + Android public API keys into `.env.local`.
+
+**Dev vs production keys**
+
+- Development: a single RevenueCat test key (prefix `test_...`) works
+  cross-platform. Drop it into both the iOS + Android slots in
+  `.env.local` to iterate on paywall + purchase flows against the Apple /
+  Google sandbox.
+- Production: separate keys per platform (prefix `appl_...` for iOS,
+  `goog_...` for Android). Push via `eas secret:create` so the production
+  EAS build picks them up instead of local `.env.local` values.
 
 ### Photon (address autocomplete + geocoding)
 

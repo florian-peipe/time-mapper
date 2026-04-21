@@ -6,6 +6,16 @@ import { tokens } from "@/theme/tokens";
 
 type Props = {
   children: React.ReactNode;
+  /**
+   * Optional inline fallback used when wrapping a single widget. When
+   * omitted the boundary falls back to the full-screen "something went
+   * wrong" page — appropriate only at the app root. Scoped sub-boundaries
+   * should pass an inline fallback so the rest of the screen stays
+   * interactive when one widget crashes.
+   */
+  fallback?: (reset: () => void) => React.ReactNode;
+  /** Label forwarded to Sentry so we can tell which subtree crashed. */
+  scope?: string;
 };
 
 type State = {
@@ -13,16 +23,13 @@ type State = {
 };
 
 /**
- * Top-level React error boundary. Catches uncaught exceptions thrown from
- * any rendered descendant, reports them through `captureException` (Sentry
- * when configured, console otherwise), and shows a minimal "something went
- * wrong" fallback with a Restart button that resets the boundary state so
- * the subtree re-renders.
+ * React error boundary. Catches uncaught render-phase exceptions from any
+ * descendant, reports them through `captureException` (Sentry when
+ * configured, console otherwise), and renders either a full-screen fallback
+ * (default) or a caller-supplied inline one.
  *
  * NOT a replacement for proper error handling in effects or async code —
- * JS errors in those paths don't reach error boundaries. This is the last
- * line of defense for render-phase crashes that would otherwise leave the
- * user staring at a frozen screen.
+ * JS errors in those paths don't reach error boundaries.
  */
 export class ErrorBoundary extends React.Component<Props, State> {
   override state: State = { hasError: false };
@@ -32,7 +39,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, info: React.ErrorInfo): void {
-    captureException(error, { componentStack: info.componentStack ?? undefined });
+    captureException(error, {
+      componentStack: info.componentStack ?? undefined,
+      scope: this.props.scope,
+    });
   }
 
   reset = (): void => {
@@ -41,6 +51,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   override render() {
     if (!this.state.hasError) return this.props.children;
+    if (this.props.fallback) return this.props.fallback(this.reset);
     return <ErrorFallback onReset={this.reset} />;
   }
 }

@@ -166,3 +166,26 @@ jest.mock("react-native-purchases", () => ({
     removeCustomerInfoUpdateListener: jest.fn(() => true),
   },
 }));
+
+// react-native-purchases-ui has the same ESM-at-require issue as its core
+// sibling. Stub the paywall + Customer Center entry points with the minimum
+// surface our wrapper touches. Real behavior runs only on a device / dev
+// client — unit tests assert we routed through.
+jest.mock("react-native-purchases-ui", () => {
+  const PAYWALL_RESULT = {
+    PURCHASED: "PURCHASED",
+    RESTORED: "RESTORED",
+    CANCELLED: "CANCELLED",
+    NOT_PRESENTED: "NOT_PRESENTED",
+    ERROR: "ERROR",
+  };
+  return {
+    __esModule: true,
+    PAYWALL_RESULT,
+    default: {
+      presentPaywall: jest.fn(async () => PAYWALL_RESULT.NOT_PRESENTED),
+      presentPaywallIfNeeded: jest.fn(async () => PAYWALL_RESULT.NOT_PRESENTED),
+      presentCustomerCenter: jest.fn(async () => undefined),
+    },
+  };
+});

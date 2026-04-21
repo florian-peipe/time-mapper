@@ -3,9 +3,20 @@ import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import Slider from "@react-native-community/slider";
 import { useTheme } from "@/theme/useTheme";
 import { PLACE_COLORS } from "@/theme/tokens";
-import { Banner, Button, DayPicker, Icon, Input, Sheet, Toggle, type IconName } from "@/components";
+import {
+  Banner,
+  Button,
+  DayPicker,
+  Icon,
+  Input,
+  Sheet,
+  Toggle,
+  WidgetBoundary,
+  type IconName,
+} from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { usePro } from "@/features/billing/usePro";
+import { openPaywall } from "@/features/billing/openPaywall";
 import { useSnackbarStore } from "@/state/snackbarStore";
 import { useSheetStore, type AddPlaceSource, type PendingPlaceForm } from "@/state/sheetStore";
 import { MAX_PLACES } from "@/features/tracking/geofenceService";
@@ -94,7 +105,6 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   const t = useTheme();
   const { places, create, update, remove, restore, count } = usePlaces();
   const { isPro } = usePro();
-  const openSheet = useSheetStore((s) => s.openSheet);
   const pendingPlaceForm = useSheetStore((s) => s.pendingPlaceForm);
   const setPendingPlaceForm = useSheetStore((s) => s.setPendingPlaceForm);
   const kv = useKvRepo();
@@ -381,7 +391,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
         };
         setPendingPlaceForm(stash);
       }
-      openSheet("paywall", { source: "2nd-place" });
+      openPaywall({ source: "2nd-place" });
       return;
     }
     // iOS caps geofence regions at 20. We enforce the same limit on Android
@@ -694,13 +704,15 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
             rather than drawing a pin in the middle of the Atlantic.
           */}
           {selected.latitude !== 0 || selected.longitude !== 0 ? (
-            <MapPreview
-              latitude={selected.latitude}
-              longitude={selected.longitude}
-              radiusM={radius}
-              color={PLACE_COLORS[colorIdx] ?? PLACE_COLORS[0]!}
-              testID="add-place-map-preview"
-            />
+            <WidgetBoundary scope="addPlace.mapPreview">
+              <MapPreview
+                latitude={selected.latitude}
+                longitude={selected.longitude}
+                radiusM={radius}
+                color={PLACE_COLORS[colorIdx] ?? PLACE_COLORS[0]!}
+                testID="add-place-map-preview"
+              />
+            </WidgetBoundary>
           ) : null}
 
           {/* Radius section. */}

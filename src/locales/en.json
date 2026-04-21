@@ -31,6 +31,7 @@
   "common.close": "Close",
   "common.ok": "OK",
   "common.done": "Done",
+  "common.retry": "Retry",
   "timeline.emptyNoPlaces.title": "Add a place to start tracking",
   "timeline.emptyNoPlaces.body": "Pick a place you visit often. Time Mapper logs the rest automatically.",
   "timeline.emptyNoPlaces.cta": "Add place",
@@ -298,5 +299,8 @@
   "errorBoundary.title": "Something went wrong",
   "errorBoundary.body": "Time Mapper hit an unexpected error. Tap Restart to recover — your data is safe on-device.",
   "errorBoundary.restart": "Restart",
+  "widgetError.title": "This section couldn't load",
+  "widgetError.body": "The rest of the screen is fine. Tap Retry to reload this part.",
+  "paywall.mockMode": "RevenueCat is in mock mode — toggle Pro from Settings → Developer.",
   "legal.back": "Back to Settings"
 }

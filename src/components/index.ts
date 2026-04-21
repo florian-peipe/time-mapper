@@ -4,6 +4,7 @@ export { Card } from "./Card";
 export { Chip, type ChipTone } from "./Chip";
 export { DayPicker, ISO_DAYS } from "./DayPicker";
 export { ErrorBoundary } from "./ErrorBoundary";
+export { WidgetBoundary } from "./WidgetBoundary";
 export { Fab } from "./Fab";
 export { Icon, type IconName } from "./Icon";
 export { IconBadge } from "./IconBadge";

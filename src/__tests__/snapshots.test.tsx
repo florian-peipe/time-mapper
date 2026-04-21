@@ -26,7 +26,6 @@ import { resetProMock } from "@/features/billing/useProMock";
 import { TimelineScreen } from "@/screens/Timeline/TimelineScreen";
 import { StatsScreen } from "@/screens/Stats/StatsScreen";
 import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
-import { PaywallScreen } from "@/screens/Paywall/PaywallScreen";
 import { EntryEditSheet } from "@/screens/EntryEdit/EntryEditSheet";
 import { AddPlaceSheet } from "@/screens/AddPlace/AddPlaceSheet";
 
@@ -156,16 +155,6 @@ describe("snapshots — main screens", () => {
     const tree = render(
       <Wrap fixture={fixture}>
         <SettingsScreen />
-      </Wrap>,
-    ).toJSON();
-    expect(stableSnapshot(tree)).toMatchSnapshot();
-  });
-
-  it("Paywall (year plan selected)", () => {
-    const fixture = makeFixture(false);
-    const tree = render(
-      <Wrap fixture={fixture}>
-        <PaywallScreen onClose={() => {}} />
       </Wrap>,
     ).toJSON();
     expect(stableSnapshot(tree)).toMatchSnapshot();

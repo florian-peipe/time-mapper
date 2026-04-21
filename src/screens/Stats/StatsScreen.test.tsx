@@ -8,6 +8,8 @@ import { PlacesRepo } from "@/db/repository/places";
 import { EntriesRepo } from "@/db/repository/entries";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
+import * as openPaywallModule from "@/features/billing/openPaywall";
+import { _resetRateLimit } from "@/screens/Timeline/dayNavGuard";
 import { grantProMock, resetProMock } from "@/features/billing/useProMock";
 import { StatsScreen } from "./StatsScreen";
 
@@ -123,11 +125,13 @@ describe("StatsScreen", () => {
     expect(screen.queryByTestId("stats-pro-upsell")).toBeNull();
   });
 
-  it("tapping the Pro upsell opens the paywall sheet", () => {
+  it("tapping the Pro upsell calls openPaywall with source=history", () => {
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
     setup({ nowMs });
     fireEvent.press(screen.getByTestId("stats-pro-upsell"));
-    expect(useSheetStore.getState().active).toBe("paywall");
+    expect(spy).toHaveBeenCalledWith({ source: "history" });
+    spy.mockRestore();
   });
 
   it("tapping the Add entry button opens entryEdit with a null entryId", () => {
@@ -169,17 +173,17 @@ describe("StatsScreen", () => {
     expect(screen.getAllByTestId(/^stats-entry-row-/).length).toBe(2);
   });
 
-  it("tapping prev while on week mode and NOT Pro opens the paywall", () => {
+  it("tapping prev while on week mode and NOT Pro calls openPaywall with source=history", () => {
+    _resetRateLimit();
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
     setup({ nowMs });
-    // Week mode offset 0; one step back is 7 days → 7 > FREE_HISTORY_DAYS/7
-    // … actually the gate is at 14 cumulative days. Three weeks back (-3)
-    // is 21 days, which IS past the gate. One week back is within it.
-    // Tap prev three times to cross the gate.
+    // Week mode offset 0; one step back is 7 days. The gate is 14 days →
+    // three weeks back (-3) crosses it. Tap prev three times.
     fireEvent.press(screen.getByTestId("stats-nav-prev"));
     fireEvent.press(screen.getByTestId("stats-nav-prev"));
     fireEvent.press(screen.getByTestId("stats-nav-prev"));
-    expect(useSheetStore.getState().active).toBe("paywall");
-    expect(useSheetStore.getState().payload).toEqual({ source: "history" });
+    expect(spy).toHaveBeenCalledWith({ source: "history" });
+    spy.mockRestore();
   });
 });

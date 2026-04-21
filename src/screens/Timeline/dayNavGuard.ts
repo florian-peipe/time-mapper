@@ -1,4 +1,4 @@
-import { useSheetStore } from "@/state/sheetStore";
+import { openPaywall } from "@/features/billing/openPaywall";
 
 // Debounce window for repeated history-paywall attempts. After the user
 // cancels a paywall (or the paywall closes for any reason), we suppress
@@ -20,7 +20,7 @@ export function openSheet(): void {
   const now = Date.now();
   if (now - lastOpenedAt < RATE_LIMIT_MS) return;
   lastOpenedAt = now;
-  useSheetStore.getState().openSheet("paywall", { source: "history" });
+  openPaywall({ source: "history" });
 }
 
 /** Test hook — reset the rate-limit clock. */

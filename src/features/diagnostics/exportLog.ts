@@ -9,6 +9,14 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
+import type { Counters } from "./counters";
+
+// expo-file-system v19 hides the classic functional API behind a non-typed
+// default — cast once so the call-sites stay compact.
+type LegacyFs = {
+  documentDirectory?: string | null;
+  writeAsStringAsync: (uri: string, data: string) => Promise<void>;
+};
 
 export type DiagnosticPayload = {
   generatedAt: string;
@@ -17,6 +25,7 @@ export type DiagnosticPayload = {
   anonUserId?: string;
   pendingTransitions: unknown[];
   recentEvents: unknown[];
+  counters: Counters;
   environment: {
     hasRevenueCatIos: boolean;
     hasRevenueCatAndroid: boolean;
@@ -39,12 +48,32 @@ export function buildDiagnosticPayload(extra: Partial<DiagnosticPayload> = {}): 
     anonUserId: extra.anonUserId,
     pendingTransitions: extra.pendingTransitions ?? loadPendingTransitionsSafely(),
     recentEvents: extra.recentEvents ?? [],
+    counters: extra.counters ?? loadCountersSafely(),
     environment: extra.environment ?? {
       hasRevenueCatIos: !!process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
       hasRevenueCatAndroid: !!process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
       hasSentryDsn: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
     },
   };
+}
+
+/** Best-effort counter read — same import guard as pending transitions. */
+function loadCountersSafely(): Counters {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { KvRepo } = require("@/db/repository/kv") as {
+      KvRepo: new (db: unknown) => unknown;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { readCounters } = require("./counters") as {
+      readCounters: (kv: unknown) => Counters;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { db } = require("@/db/client") as { db: unknown };
+    return readCounters(new KvRepo(db));
+  } catch {
+    return {};
+  }
 }
 
 /**
@@ -88,14 +117,11 @@ export async function exportDiagnosticLog(extra: Partial<DiagnosticPayload> = {}
   }
 
   try {
-    const dir = (FileSystem as unknown as { documentDirectory?: string | null }).documentDirectory;
+    const fs = FileSystem as unknown as LegacyFs;
+    const dir = fs.documentDirectory;
     if (!dir) return;
     const uri = `${dir}time-mapper-diagnostics-${Date.now()}.json`;
-    await (
-      FileSystem as unknown as {
-        writeAsStringAsync: (uri: string, data: string) => Promise<void>;
-      }
-    ).writeAsStringAsync(uri, json);
+    await fs.writeAsStringAsync(uri, json);
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(uri, {
         mimeType: "application/json",

@@ -165,10 +165,10 @@ describe("revenuecat — wrappers", () => {
     await expect(restorePurchases()).resolves.toBe(info);
   });
 
-  it("isProActive reads `entitlements.active.pro`", () => {
+  it("isProActive reads the `Time Mapper Pro` entitlement", () => {
     const { isProActive } = loadModule();
     expect(isProActive(makeCustomerInfo({}))).toBe(false);
-    expect(isProActive(makeCustomerInfo({ pro: { isActive: true } }))).toBe(true);
+    expect(isProActive(makeCustomerInfo({ "Time Mapper Pro": { isActive: true } }))).toBe(true);
     expect(isProActive(makeCustomerInfo({ otherEntitlement: { isActive: true } }))).toBe(false);
   });
 

@@ -30,6 +30,7 @@ import {
   restorePurchases,
 } from "./revenuecat";
 import { useProMock } from "./useProMock";
+import { bumpFirstSafely } from "@/features/diagnostics/counters";
 
 export type UseProResult = {
   /** Whether the user currently has an active Pro entitlement. */
@@ -142,8 +143,10 @@ function useRealPro(): UseProResult {
       try {
         const [info, off] = await Promise.all([getCustomerInfo(), getOfferings()]);
         if (!mounted.current) return;
-        setIsPro(isProActive(info));
+        const active = isProActive(info);
+        setIsPro(active);
         setOfferings(off);
+        if (active) bumpFirstSafely("pro_granted");
       } catch (err) {
         // Swallow — the SDK may be momentarily unreachable. Subsequent
         // listener events will reconcile state. We still log so dev sees it.
@@ -156,7 +159,9 @@ function useRealPro(): UseProResult {
     // Live updates from the SDK (renewal, refund, RC dashboard push).
     const unsubscribe = onCustomerInfoUpdate((info) => {
       if (!mounted.current) return;
-      setIsPro(isProActive(info));
+      const active = isProActive(info);
+      setIsPro(active);
+      if (active) bumpFirstSafely("pro_granted");
     });
 
     return () => {
@@ -167,12 +172,16 @@ function useRealPro(): UseProResult {
 
   const purchase = useCallback(async (pkg: PurchasesPackage) => {
     const info = await purchasePackage(pkg);
-    setIsPro(isProActive(info));
+    const active = isProActive(info);
+    setIsPro(active);
+    if (active) bumpFirstSafely("pro_granted");
   }, []);
 
   const restore = useCallback(async () => {
     const info = await restorePurchases();
-    setIsPro(isProActive(info));
+    const active = isProActive(info);
+    setIsPro(active);
+    if (active) bumpFirstSafely("pro_granted");
   }, []);
 
   const grant = useCallback(() => {

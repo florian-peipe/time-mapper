@@ -10,7 +10,8 @@ import { useEntriesRepo } from "@/features/entries/useEntries";
 import { useLocationPermission, useNotificationPermission } from "@/features/permissions/hooks";
 import { readGlobalBuffers, BuffersSheet } from "./BuffersSheet";
 import { usePro } from "@/features/billing/usePro";
-import { useSheetStore } from "@/state/sheetStore";
+import { openPaywall, type PaywallSource } from "@/features/billing/openPaywall";
+import { isMockMode, presentCustomerCenter } from "@/features/billing/revenuecat";
 import { useUiStore, type ThemeOverride } from "@/state/uiStore";
 import { useSnackbarStore } from "@/state/snackbarStore";
 import { i18n, setLocale } from "@/lib/i18n";
@@ -61,7 +62,6 @@ export function SettingsScreen() {
   const kv = useKvRepo();
   const [telemetryEnabled, setTelemetryEnabledLocal] = useState(() => getTelemetryEnabled(kv));
   const { reset: resetOnboardingFlag } = useOnboardingGate();
-  const openSheet = useSheetStore((s) => s.openSheet);
   const themeOverride = useUiStore((s) => s.themeOverride);
   const setThemeOverride = useUiStore((s) => s.setThemeOverride);
   const localeOverride = useUiStore((s) => s.localeOverride);
@@ -73,12 +73,9 @@ export function SettingsScreen() {
   const [notificationsSheetVisible, setNotificationsSheetVisible] = useState(false);
   const [buffersSheetVisible, setBuffersSheetVisible] = useState(false);
 
-  const handleOpenPaywall = useCallback(
-    (source: "settings" | "export" | "history") => {
-      openSheet("paywall", { source });
-    },
-    [openSheet],
-  );
+  const handleOpenPaywall = useCallback((source: PaywallSource) => {
+    openPaywall({ source });
+  }, []);
 
   const handleCycleTheme = useCallback(() => {
     setThemeOverride(nextTheme(themeOverride));
@@ -292,7 +289,16 @@ export function SettingsScreen() {
   }, []);
 
   const handleManageSubscription = useCallback(() => {
-    void Linking.openURL(SUBSCRIPTION_MANAGEMENT_URL);
+    if (isMockMode()) {
+      // No RC customer center without keys — fall through to the native
+      // platform subscription management URL.
+      void Linking.openURL(SUBSCRIPTION_MANAGEMENT_URL);
+      return;
+    }
+    void presentCustomerCenter().catch((err) => {
+      console.warn("Customer Center failed, falling back to OS deep-link", err);
+      void Linking.openURL(SUBSCRIPTION_MANAGEMENT_URL);
+    });
   }, []);
 
   const handleRestore = useCallback(async () => {

@@ -25,7 +25,7 @@ import { SheetHost } from "@/screens/SheetHost";
 import { TimelineScreen } from "@/screens/Timeline/TimelineScreen";
 import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
 import { FirstPlaceScreen } from "@/screens/Onboarding/FirstPlaceScreen";
-import { PaywallScreen } from "@/screens/Paywall/PaywallScreen";
+import * as openPaywallModule from "@/features/billing/openPaywall";
 
 // Mock router so any `useRouter()` call in a screen doesn't crash.
 const mockPush = jest.fn();
@@ -182,6 +182,7 @@ describe("critical flows — Timeline + manual entry", () => {
 
 describe("critical flows — Settings", () => {
   it("Settings Export CSV row opens the paywall for free users", () => {
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     const fixture = makeFixture({ seedPlace: true });
     const { getByTestId } = render(
       <Wrap fixture={fixture}>
@@ -189,10 +190,12 @@ describe("critical flows — Settings", () => {
       </Wrap>,
     );
     fireEvent.press(getByTestId("settings-row-export"));
-    expect(useSheetStore.getState().active).toBe("paywall");
+    expect(spy).toHaveBeenCalledWith({ source: "export" });
+    spy.mockRestore();
   });
 
   it("Settings Export CSV row NO-OPs for Pro users (CSV logic lands later)", () => {
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     grantProMock();
     const fixture = makeFixture({ seedPlace: true });
     const { getByTestId } = render(
@@ -201,8 +204,9 @@ describe("critical flows — Settings", () => {
       </Wrap>,
     );
     fireEvent.press(getByTestId("settings-row-export"));
-    // Pro bypasses the paywall; no sheet opens.
-    expect(useSheetStore.getState().active).toBeNull();
+    // Pro bypasses the paywall.
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 
   it("Settings Theme row cycles light → dark", () => {
@@ -233,6 +237,7 @@ describe("critical flows — Paywall + Pro gate", () => {
   });
 
   it("Pro upsell card opens the paywall", () => {
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     const fixture = makeFixture({ seedPlace: true });
     const { getByTestId } = render(
       <Wrap fixture={fixture}>
@@ -240,7 +245,8 @@ describe("critical flows — Paywall + Pro gate", () => {
       </Wrap>,
     );
     fireEvent.press(getByTestId("settings-pro-upsell"));
-    expect(useSheetStore.getState().active).toBe("paywall");
+    expect(spy).toHaveBeenCalledWith({ source: "settings" });
+    spy.mockRestore();
   });
 
   it("Pro users do not see the upsell card", () => {
@@ -265,18 +271,6 @@ describe("critical flows — Paywall + Pro gate", () => {
     expect(queryByTestId("settings-row-pro-active")).toBeNull();
     grantProMock();
     await waitFor(() => getByTestId("settings-row-pro-active"));
-  });
-
-  it("Paywall can be closed via the overlay scrim", () => {
-    const fixture = makeFixture({ seedPlace: true });
-    const onClose = jest.fn();
-    const { getByTestId } = render(
-      <Wrap fixture={fixture}>
-        <PaywallScreen onClose={onClose} />
-      </Wrap>,
-    );
-    fireEvent.press(getByTestId("sheet-overlay"));
-    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
 

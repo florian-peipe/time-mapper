@@ -2,7 +2,9 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { useSheetStore } from "@/state/sheetStore";
+import * as openPaywallModule from "@/features/billing/openPaywall";
 import { DayNavHeader, FREE_HISTORY_DAYS } from "./DayNavHeader";
+import { _resetRateLimit } from "./dayNavGuard";
 import type { RangeMode } from "@/lib/range";
 
 type MountProps = {
@@ -34,6 +36,8 @@ function mount(props: MountProps) {
 
 beforeEach(() => {
   useSheetStore.setState({ active: null, payload: null });
+  _resetRateLimit();
+  jest.restoreAllMocks();
 });
 
 describe("DayNavHeader", () => {
@@ -58,18 +62,19 @@ describe("DayNavHeader", () => {
   });
 
   it("opens the paywall instead of navigating when a free user steps past the free-history limit", () => {
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     const { onChangeOffset } = mount({ offset: -FREE_HISTORY_DAYS, isPro: false });
     fireEvent.press(screen.getByTestId("day-nav-header-prev"));
     expect(onChangeOffset).not.toHaveBeenCalled();
-    expect(useSheetStore.getState().active).toBe("paywall");
-    expect(useSheetStore.getState().payload).toEqual({ source: "history" });
+    expect(spy).toHaveBeenCalledWith({ source: "history" });
   });
 
   it("Pro users can step past the 14-day limit without the paywall", () => {
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     const { onChangeOffset } = mount({ offset: -FREE_HISTORY_DAYS, isPro: true });
     fireEvent.press(screen.getByTestId("day-nav-header-prev"));
     expect(onChangeOffset).toHaveBeenCalledWith(-FREE_HISTORY_DAYS - 1);
-    expect(useSheetStore.getState().active).toBeNull();
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it("meets the 44pt minimum touch-target on prev + next", () => {

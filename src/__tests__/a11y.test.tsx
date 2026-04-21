@@ -432,13 +432,6 @@ describe("a11y — screens", () => {
     const row = getByTestId(`places-list-row-${place.id}`);
     expect(row.props.accessibilityHint).toBeDefined();
   });
-
-  it("Paywall renders headers for plans and benefits sections", () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PaywallScreen } = require("@/screens/Paywall/PaywallScreen");
-    const { getAllByRole } = render(wrap(<PaywallScreen onClose={() => {}} />));
-    expect(getAllByRole("header").length).toBeGreaterThan(0);
-  });
 });
 
 describe("a11y — adjustable control (slider in AddPlaceSheet)", () => {

@@ -46,42 +46,20 @@ beforeEach(() => {
 });
 
 describe("SheetHost", () => {
-  it("mounts with all three sheets hidden initially", () => {
+  it("mounts with both sheets hidden initially", () => {
     mount();
-
-    // Each sheet's testID comes from the underlying RN Modal, which is still
-    // in the tree while the Sheet primitive is `visible=false`. We assert the
-    // user-visible content is absent for each sheet to prove hidden state.
-    expect(screen.queryByText("Track every place that matters.")).toBeNull(); // Paywall hero
-    expect(screen.queryByText("New entry")).toBeNull(); // EntryEdit (new mode)
-    expect(screen.queryByText("Edit entry")).toBeNull(); // EntryEdit (edit mode)
-    expect(screen.queryByText("Add place")).toBeNull(); // AddPlace title
-  });
-
-  it("renders the paywall sheet when active=paywall", () => {
-    mount();
-    act(() => {
-      useSheetStore.getState().openSheet("paywall", { source: "settings" });
-    });
-    // Paywall hero is now visible; neither other sheet's body is.
-    expect(screen.getByText("Track every place that matters.")).toBeTruthy();
     expect(screen.queryByText("New entry")).toBeNull();
+    expect(screen.queryByText("Edit entry")).toBeNull();
     expect(screen.queryByText("Add place")).toBeNull();
   });
 
-  it("switches to entryEdit and hides the paywall", () => {
+  it("renders EntryEditSheet when active=entryEdit", () => {
     mount();
-    act(() => {
-      useSheetStore.getState().openSheet("paywall", { source: "settings" });
-    });
-    expect(screen.getByText("Track every place that matters.")).toBeTruthy();
-
     act(() => {
       useSheetStore.getState().openSheet("entryEdit", { entryId: null });
     });
-    // Paywall hero gone; EntryEditSheet (new mode) title visible.
-    expect(screen.queryByText("Track every place that matters.")).toBeNull();
     expect(screen.getByText("New entry")).toBeTruthy();
+    expect(screen.queryByText("Add place")).toBeNull();
   });
 
   it("renders AddPlaceSheet when active=addPlace", () => {
@@ -90,28 +68,25 @@ describe("SheetHost", () => {
       useSheetStore.getState().openSheet("addPlace", { placeId: null });
     });
     expect(screen.getByText("Add place")).toBeTruthy();
-    expect(screen.queryByText("Track every place that matters.")).toBeNull();
     expect(screen.queryByText("New entry")).toBeNull();
   });
 
   it("hides everything when closeSheet is called", () => {
     mount();
     act(() => {
-      useSheetStore.getState().openSheet("paywall", { source: "settings" });
+      useSheetStore.getState().openSheet("entryEdit", { entryId: null });
     });
-    expect(screen.getByText("Track every place that matters.")).toBeTruthy();
+    expect(screen.getByText("New entry")).toBeTruthy();
 
     act(() => {
       useSheetStore.getState().closeSheet();
     });
-    expect(screen.queryByText("Track every place that matters.")).toBeNull();
     expect(screen.queryByText("New entry")).toBeNull();
     expect(screen.queryByText("Add place")).toBeNull();
   });
 
   it("narrows entryId from the payload when opening entryEdit with an id", () => {
     const { entriesRepo, placesRepo } = mount();
-    // Seed a place + entry so EntryEditSheet can hydrate in edit mode.
     const place = placesRepo.create({
       name: "Home",
       address: "",
@@ -129,7 +104,6 @@ describe("SheetHost", () => {
       useSheetStore.getState().openSheet("entryEdit", { entryId: entry.id });
     });
 
-    // Edit-mode title appears and the hydrated note is visible.
     expect(screen.getByText("Edit entry")).toBeTruthy();
     expect(screen.getByTestId("entry-edit-note").props.value).toBe("seeded note");
   });

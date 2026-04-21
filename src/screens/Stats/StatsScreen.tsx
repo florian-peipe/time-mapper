@@ -2,8 +2,9 @@ import React, { useCallback, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/useTheme";
-import { Card, Fab, Icon, IconBadge } from "@/components";
+import { Card, Fab, Icon, IconBadge, WidgetBoundary } from "@/components";
 import { usePro } from "@/features/billing/usePro";
+import { openPaywall } from "@/features/billing/openPaywall";
 import { useEntriesRange } from "@/features/entries/useEntriesRange";
 import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClose";
 import { useWeekStats } from "@/features/entries/useWeekStats";
@@ -58,8 +59,8 @@ export function StatsScreen() {
   }, [openSheet]);
 
   const handleOpenPaywall = useCallback(() => {
-    openSheet("paywall", { source: "history" });
-  }, [openSheet]);
+    openPaywall({ source: "history" });
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.color("color.bg") }}>
@@ -90,11 +91,13 @@ export function StatsScreen() {
 
         {mode === "week" ? (
           <View style={{ paddingHorizontal: t.space[5], paddingVertical: t.space[2] }}>
-            <WeekBarChart
-              byDay={weekStats.byDay}
-              byPlace={weekStats.byPlace}
-              testID="week-bar-chart"
-            />
+            <WidgetBoundary scope="stats.weekBarChart">
+              <WeekBarChart
+                byDay={weekStats.byDay}
+                byPlace={weekStats.byPlace}
+                testID="week-bar-chart"
+              />
+            </WidgetBoundary>
           </View>
         ) : null}
 

@@ -1,11 +1,9 @@
 import React, { useCallback } from "react";
 import { useRouter } from "expo-router";
 import { useSheetStore, type AddPlaceSource } from "@/state/sheetStore";
-import { PaywallScreen } from "@/screens/Paywall/PaywallScreen";
 import { EntryEditSheet } from "@/screens/EntryEdit/EntryEditSheet";
 import { AddPlaceSheet } from "@/screens/AddPlace/AddPlaceSheet";
 import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
-import { usePro } from "@/features/billing/usePro";
 
 const ADD_PLACE_SOURCES: readonly AddPlaceSource[] = ["onboarding", "places-tab"];
 
@@ -15,35 +13,22 @@ function narrowAddPlaceSource(v: unknown): AddPlaceSource | undefined {
 }
 
 /**
- * Global sheet orchestrator — mounted once at the app root (inside the
- * ThemeProvider subtree in `app/_layout.tsx`). Every sheet in the app is
- * owned here and listens to `useSheetStore` for `{ active, payload }`.
+ * Global sheet orchestrator — mounted once at the app root. Owns the two
+ * in-app sheets (`entryEdit`, `addPlace`) and listens to `useSheetStore`
+ * for `{ active, payload }`. Both sheet components are always rendered;
+ * the underlying `Sheet` primitive's RN Modal handles show/hide natively
+ * via its `visible` prop.
  *
- * Implementation note: all three sheet components are ALWAYS rendered; the
- * underlying `Sheet` primitive's RN `Modal` handles show/hide natively via
- * its own `visible` prop. This avoids mount/unmount churn when the user
- * flips between sheets (e.g. Add Place → Paywall upsell), keeping the
- * gesture handlers + form state stable across transitions.
- *
- * Payload type narrowing happens here so the child sheet props stay strict:
- *   - `entryEdit` → `{ entryId: string | null }`
- *   - `addPlace`  → `{ placeId: string | null; source?: AddPlaceSource }`
- *   - `paywall`   → `{ source?: "2nd-place" | "export" | ... }`
- *
- * When `addPlace` is opened with `source: "onboarding"` we wire an
- * `onSaved` callback that marks onboarding complete and routes to the
- * tabs — this is the only side-effect the sheet host injects on behalf
- * of the onboarding flow.
+ * The paywall is no longer a sheet — it's presented natively by
+ * `RevenueCatUI.presentPaywall()` via `openPaywall()`, which also owns
+ * the post-purchase AddPlace re-open dance.
  */
 export function SheetHost() {
   const router = useRouter();
   const active = useSheetStore((s) => s.active);
   const payload = useSheetStore((s) => s.payload);
   const close = useSheetStore((s) => s.closeSheet);
-  const openSheet = useSheetStore((s) => s.openSheet);
-  const pendingPlaceForm = useSheetStore((s) => s.pendingPlaceForm);
   const { markComplete } = useOnboardingGate();
-  const { isPro } = usePro();
 
   const entryId =
     active === "entryEdit" && payload && "entryId" in payload ? payload.entryId : null;
@@ -60,26 +45,8 @@ export function SheetHost() {
     }
   }, [addPlaceSource, markComplete, router]);
 
-  /**
-   * Paywall close handler — if we came from an interrupted AddPlace flow
-   * (pendingPlaceForm is set) AND the user is now Pro (purchase succeeded),
-   * reopen AddPlaceSheet so they can complete the save. Otherwise just
-   * dismiss the paywall.
-   */
-  const handlePaywallClose = useCallback(() => {
-    if (pendingPlaceForm && isPro) {
-      openSheet("addPlace", {
-        placeId: pendingPlaceForm.placeId,
-        source: pendingPlaceForm.source,
-      });
-      return;
-    }
-    close();
-  }, [pendingPlaceForm, isPro, openSheet, close]);
-
   return (
     <>
-      <PaywallScreen visible={active === "paywall"} onClose={handlePaywallClose} />
       <EntryEditSheet visible={active === "entryEdit"} entryId={entryId} onClose={close} />
       <AddPlaceSheet
         visible={active === "addPlace"}

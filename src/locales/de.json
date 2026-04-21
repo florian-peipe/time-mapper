@@ -31,6 +31,7 @@
   "common.close": "Schließen",
   "common.ok": "OK",
   "common.done": "Fertig",
+  "common.retry": "Erneut versuchen",
   "timeline.emptyNoPlaces.title": "Füge einen Ort hinzu, um loszulegen",
   "timeline.emptyNoPlaces.body": "Wähle einen Ort, den du oft besuchst. Time Mapper erledigt den Rest automatisch.",
   "timeline.emptyNoPlaces.cta": "Ort hinzufügen",
@@ -298,5 +299,8 @@
   "errorBoundary.title": "Etwas ist schiefgelaufen",
   "errorBoundary.body": "Time Mapper hat einen unerwarteten Fehler. Tippe auf „Neu starten“, um fortzufahren — deine Daten bleiben sicher auf deinem Gerät.",
   "errorBoundary.restart": "Neu starten",
+  "widgetError.title": "Dieser Bereich konnte nicht geladen werden",
+  "widgetError.body": "Der Rest des Bildschirms funktioniert weiter. Tippe auf „Erneut versuchen“, um diesen Teil neu zu laden.",
+  "paywall.mockMode": "RevenueCat ist im Mock-Modus — schalte Pro über Einstellungen → Entwickler um.",
   "legal.back": "Zurück zu Einstellungen"
 }

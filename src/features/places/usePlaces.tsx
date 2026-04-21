@@ -4,6 +4,7 @@ import { PlacesRepo, type CreatePlaceInput } from "@/db/repository/places";
 import type { Place } from "@/db/schema";
 import { reconcileAfterPlaceChange } from "@/features/tracking/bootstrap";
 import { useDataVersionStore } from "@/state/dataVersionStore";
+import { bumpFirstSafely } from "@/features/diagnostics/counters";
 
 /**
  * Context for injecting a `PlacesRepo` instance. Tests wrap `renderHook` with
@@ -79,6 +80,7 @@ export function usePlaces(): UsePlacesResult {
     (input: CreatePlaceInput) => {
       const p = repo.create(input);
       bumpPlaces();
+      bumpFirstSafely("first_place");
       // Fire-and-forget: geofence registration is eventual, the UI shouldn't
       // block on a native bridge hop. Errors are swallowed inside.
       void reconcileAfterPlaceChange();

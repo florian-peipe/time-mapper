@@ -9,6 +9,7 @@ import { i18n } from "@/lib/i18n";
 import { formatDurationCompact } from "@/lib/time";
 import { useSnackbarStore } from "@/state/snackbarStore";
 import { useDataVersionStore } from "@/state/dataVersionStore";
+import { bumpFirstSafely } from "@/features/diagnostics/counters";
 import type { Entry, Place } from "@/db/schema";
 
 export type EntryEditSheetProps = {
@@ -139,6 +140,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           note: note || undefined,
           pauseS,
         });
+        bumpFirstSafely("first_entry");
       } else if (entryId) {
         entriesRepo.update(entryId, {
           placeId,

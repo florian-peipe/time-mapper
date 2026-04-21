@@ -8,6 +8,7 @@ import { PlacesRepo } from "@/db/repository/places";
 import { KvRepo } from "@/db/repository/kv";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
+import * as openPaywallModule from "@/features/billing/openPaywall";
 import { grantProMock, resetProMock } from "@/features/billing/useProMock";
 import { AddPlaceSheet } from "./AddPlaceSheet";
 
@@ -451,19 +452,20 @@ describe("AddPlaceSheet — Pro gate", () => {
     expect(screen.queryByText("Unlock more places with Pro")).toBeNull();
   });
 
-  it("tapping the Pro-gated CTA opens the paywall sheet and does NOT create a place", async () => {
+  it("tapping the Pro-gated CTA calls openPaywall and does NOT create a place", async () => {
+    const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
     const onClose = jest.fn();
     const { placesRepo } = setup({ onClose, preSeeded: [{ name: "Home" }] });
     await gotoPhase2();
     fireEvent.press(screen.getByTestId("add-place-save"));
 
-    // Paywall opened.
-    expect(useSheetStore.getState().active).toBe("paywall");
+    expect(spy).toHaveBeenCalledWith({ source: "2nd-place" });
     // Only the pre-seeded place remains — no new one created.
     expect(placesRepo.list()).toHaveLength(1);
-    // Caller's onClose is NOT fired — the AddPlaceSheet defers to the paywall
-    // transition and lets the host close later.
+    // Caller's onClose is NOT fired — the AddPlaceSheet stashes the form
+    // into sheetStore and lets openPaywall drive the next step.
     expect(onClose).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 });
 

@@ -1,0 +1,44 @@
+appId: com.timemapper.app
+name: Onboarding → first place → Timeline smoke
+tags:
+  - smoke
+---
+# End-to-end smoke test. Validates that a cold-booted user can walk the
+# v1.1 5-slide onboarding (Welcome → How it works → Goals and Stats →
+# Privacy → Permissions → First place) and land on the Timeline. Proves
+# build linking works, navigation flows, and the DB migrations apply
+# before the first user action.
+#
+# Prereqs: freshly installed app with no prior data. `clearState` below
+# makes re-runs safe.
+
+- launchApp:
+    clearState: true
+
+# Welcome
+- assertVisible: "Time Mapper"
+- tapOn: "Get started"
+
+# How it works
+- assertVisible: "How it works"
+- tapOn: "Continue"
+
+# Goals and stats
+- assertVisible: "Goals and stats"
+- tapOn: "Continue"
+
+# Privacy
+- assertVisible: "Private by default"
+- tapOn: "Continue"
+
+# Permissions — stub: skip without granting, the app should let us through
+# so we can see the First place screen.
+- assertVisible: "Always location"
+- tapOn: "Not now"
+
+# First place
+- assertVisible: "Your first place"
+- tapOn: "Skip for now"
+
+# Landed on the Timeline tab.
+- assertVisible: "Timeline"

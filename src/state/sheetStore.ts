@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type SheetName = "paywall" | "entryEdit" | "addPlace";
+export type SheetName = "entryEdit" | "addPlace";
 
 /**
  * `addPlace` accepts an optional `source` discriminator so the onboarding flow
@@ -11,7 +11,6 @@ export type SheetName = "paywall" | "entryEdit" | "addPlace";
 export type AddPlaceSource = "onboarding" | "places-tab";
 
 export type SheetPayload =
-  | { source: "2nd-place" | "export" | "history" | "settings" }
   | { entryId: string | null }
   | { placeId: string | null; source?: AddPlaceSource };
 
@@ -21,9 +20,9 @@ export type SheetPayload =
  * place description + coordinates, the currently-picked name/color/icon/
  * radius/buffers, plus the source tag so post-save behavior is preserved.
  *
- * Populated by `AddPlaceSheet` before it opens the paywall. Consumed by the
- * same sheet on the next mount when `useSheetStore.pendingPlaceForm` is
- * non-null. Cleared by `clearPendingPlaceForm()` after restoration.
+ * Populated by `AddPlaceSheet` before it opens the paywall. Consumed by
+ * `openPaywall` on a successful purchase to re-open the sheet with the same
+ * form data. Cleared by `AddPlaceSheet` on mount after rehydration.
  */
 export type PendingPlaceForm = {
   placeId: string | null;
@@ -49,9 +48,9 @@ type SheetState = {
   payload: SheetPayload | null;
   /**
    * When an AddPlace flow opens the paywall, it stores its form here. After
-   * a successful purchase, the caller restores from `pendingPlaceForm` and
-   * clears the slot. Cleared automatically when the AddPlace sheet is
-   * dismissed without a paywall handoff.
+   * a successful purchase, `openPaywall` re-opens `addPlace` with the saved
+   * `placeId` + `source`; `AddPlaceSheet` hydrates from this slot and clears
+   * it. Left untouched on cancel so the user's work isn't lost.
    */
   pendingPlaceForm: PendingPlaceForm | null;
   openSheet: (name: SheetName, payload?: SheetPayload | null) => void;

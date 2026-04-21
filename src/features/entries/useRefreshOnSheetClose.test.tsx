@@ -27,7 +27,7 @@ describe("useRefreshOnSheetClose", () => {
   it("does not call refresh when an unrelated sheet closes", () => {
     const refresh = jest.fn();
     renderHook(() => useRefreshOnSheetClose(["entryEdit"], refresh));
-    act(() => useSheetStore.getState().openSheet("paywall", { source: "settings" }));
+    act(() => useSheetStore.getState().openSheet("addPlace"));
     act(() => useSheetStore.getState().closeSheet());
     expect(refresh).not.toHaveBeenCalled();
   });
@@ -54,12 +54,12 @@ describe("useRefreshOnSheetClose", () => {
   });
 
   it("switching directly between two sheets (open → open different) does not fire refresh", () => {
-    // This matches real UX where tapping e.g. a paywall link from entryEdit
-    // replaces the active sheet without transitioning through null.
+    // This matches real UX where one sheet replaces another without
+    // transitioning through null.
     const refresh = jest.fn();
     renderHook(() => useRefreshOnSheetClose(["entryEdit"], refresh));
     act(() => useSheetStore.getState().openSheet("entryEdit", { entryId: null }));
-    act(() => useSheetStore.getState().openSheet("paywall", { source: "settings" }));
+    act(() => useSheetStore.getState().openSheet("addPlace"));
     expect(refresh).not.toHaveBeenCalled();
   });
 
