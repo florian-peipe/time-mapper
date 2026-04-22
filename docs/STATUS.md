@@ -1,6 +1,8 @@
 # Time Mapper — v1.1 status + handoff
 
-_Updated ahead of TestFlight distribution via an invited collaborator._
+_Updated 2026-04-22 after the mock-Pro removal + diagnostic-log removal +
+large-screen decomposition pass. See `docs/V1_LAUNCH_PLAN.md` for the
+submission checklist._
 
 ## Release metadata
 
@@ -8,10 +10,12 @@ _Updated ahead of TestFlight distribution via an invited collaborator._
 | ------------- | -------------------------------------------------------- |
 | `package.json` version | `1.1.0`                                        |
 | `app.json` version     | `1.1.0` (in sync)                              |
-| Test count    | 630 passing across 83 suites                             |
+| Test count    | 623 passing across 85 suites                             |
 | Typecheck     | Clean (`tsc --noEmit`)                                   |
 | Lint          | Clean (0 warnings, 0 errors)                             |
 | `build:check` | Clean (`expo export --platform ios`)                     |
+| Largest file  | 384 lines (`AddPlaceSheet.tsx` — orchestrator)           |
+| Mock mode     | **Removed.** Dev builds require real RC keys — see `.env.example` |
 
 ## Release tags (chronological)
 
@@ -64,7 +68,6 @@ file and rebuild.
 | Google Maps Android SDK key | `app.json → android.config.googleMaps.apiKey` — free 28.5k loads/mo; GCP billing account required |
 | Sentry DSN (optional)       | `EXPO_PUBLIC_SENTRY_DSN` — disables gracefully when missing                                       |
 | Impressum contact details   | `src/screens/Legal/contact.local.ts` (gitignored, copy from `.example.ts`)                        |
-| Support email               | Replace `support@timemapper.app` placeholder in `SettingsScreen.tsx` + `app.json`                 |
 | Privacy policy hosted URL   | Host `docs/legal/privacy-{en,de}.md` and paste URL into ASC App Privacy                           |
 | App Store screenshots       | Capture via `store/screenshots/README.md` commands once dev build installed                       |
 | Play Store screenshots      | Same commands, Android simulator                                                                  |
@@ -122,17 +125,17 @@ The codebase is ready. Only the Apple-Developer-account tasks remain
    internal testers or process it through beta review for external
    testers.
 
-The checklist items above (RevenueCat keys, Google Maps Android key,
-Impressum contact details, support email, screenshots) are NOT
-blockers for TestFlight internal testing. They are needed before a
-public App Store / Play Store release — the app falls back gracefully
-without them (mock purchases, Android map warning Banner, neutral
-Impressum variant) so the TestFlight flow does not require any of them.
+The Impressum contact is now filled (`src/screens/Legal/contact.local.ts`
+— Florian Peipe, Lindenalee 46, 50968 Köln, info@peipe.org). The Android
+map preview still degrades to a warning Banner without a Google Maps SDK
+key. **RevenueCat keys are now required** even for internal TestFlight —
+the mock-mode fallback was removed in the v1.1 cleanup pass. Paywall +
+purchase paths throw at runtime without keys.
 
 ## Verdict
 
-Shippable to TestFlight today. No known bugs, no skipped tests, no
-TODOs in the source tree. 630 tests across 83 suites, typecheck clean,
-lint clean, iOS bundle cleanly (`expo export --platform ios` green in
-CI). UI, domain logic, persistence, billing, goals, and places-tab
-paths are all feature-complete.
+Shippable to TestFlight once the Apple IDs land in `eas.json` and RC
+keys are in the build environment. 623 tests across 85 suites,
+typecheck clean, lint clean, iOS bundle cleanly (`expo export --platform
+ios` green in CI). UI, domain logic, persistence, billing, goals, and
+places-tab paths are all feature-complete.

@@ -1,30 +1,30 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Alert, Linking, Platform, ScrollView, Text, View } from "react-native";
+import { Linking, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as StoreReview from "expo-store-review";
 import { useTheme } from "@/theme/useTheme";
-import { ListRow, Section } from "@/components";
 import { usePlacesRepo } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { useLocationPermission, useNotificationPermission } from "@/features/permissions/hooks";
 import { readGlobalBuffers, BuffersSheet } from "./BuffersSheet";
 import { usePro } from "@/features/billing/usePro";
 import { openPaywall, type PaywallSource } from "@/features/billing/openPaywall";
-import { isMockMode, presentCustomerCenter } from "@/features/billing/revenuecat";
-import { useUiStore, type ThemeOverride } from "@/state/uiStore";
-import { useSnackbarStore } from "@/state/snackbarStore";
+import { presentCustomerCenter } from "@/features/billing/revenuecat";
+import { useUiStore } from "@/state/uiStore";
 import { i18n, setLocale } from "@/lib/i18n";
 import { legalRoute } from "@/lib/routes";
 import { ProUpsellCard } from "./ProUpsellCard";
-import { exportDiagnosticLog } from "@/features/diagnostics/exportLog";
-import { exportEntriesCsv } from "@/features/diagnostics/exportEntries";
 import { useKvRepo, useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
-import { getTelemetryEnabled, setTelemetryEnabled } from "@/features/diagnostics/telemetryConsent";
-import { resetAllData } from "@/features/diagnostics/resetAllData";
-import { buildBackupPayload, exportBackupJson } from "@/features/diagnostics/backup";
-import { PendingTransitionsRepo } from "@/db/repository/pending";
 import { NotificationsSheet } from "./NotificationsSheet";
+import { SettingsDataSection } from "./SettingsDataSection";
+import { SettingsTrackingSection } from "./SettingsTrackingSection";
+import { SettingsAppearanceSection } from "./SettingsAppearanceSection";
+import { SettingsSubscriptionSection } from "./SettingsSubscriptionSection";
+import { SettingsAboutSection } from "./SettingsAboutSection";
+import { ProChip } from "./ProChip";
+import { nextTheme, nextLocale } from "./SettingsLabels";
+import { useSettingsDataHandlers } from "./useSettingsDataHandlers";
 
 /**
  * Deep-link to the platform-specific subscription management page. iOS
@@ -47,8 +47,7 @@ const STORE_REVIEW_FALLBACK_URL =
     ? "itms-apps://itunes.apple.com/app/id000000000?action=write-review"
     : "https://play.google.com/store/apps/details?id=com.timemapper.app";
 
-// Placeholder — developer replaces before ship (tracked in README).
-const SUPPORT_MAILTO_URL = "mailto:support@timemapper.app?subject=Time%20Mapper%20support";
+const SUPPORT_MAILTO_URL = "mailto:info@peipe.org?subject=Time%20Mapper%20support";
 
 export function SettingsScreen() {
   const t = useTheme();
@@ -60,7 +59,6 @@ export function SettingsScreen() {
   const placesRepo = usePlacesRepo();
   const entriesRepo = useEntriesRepo();
   const kv = useKvRepo();
-  const [telemetryEnabled, setTelemetryEnabledLocal] = useState(() => getTelemetryEnabled(kv));
   const { reset: resetOnboardingFlag } = useOnboardingGate();
   const themeOverride = useUiStore((s) => s.themeOverride);
   const setThemeOverride = useUiStore((s) => s.setThemeOverride);
@@ -76,6 +74,29 @@ export function SettingsScreen() {
   const handleOpenPaywall = useCallback((source: PaywallSource) => {
     openPaywall({ source });
   }, []);
+
+  const handleOpenExportPaywall = useCallback(() => {
+    handleOpenPaywall("export");
+  }, [handleOpenPaywall]);
+
+  const {
+    retentionLabel,
+    telemetryEnabled,
+    handleCycleRetention,
+    handleExport,
+    handleExportBackup,
+    handleToggleTelemetry,
+    handleShowOnboarding,
+    handleResetAllData,
+  } = useSettingsDataHandlers({
+    kv,
+    placesRepo,
+    entriesRepo,
+    router,
+    resetOnboardingFlag,
+    isPro,
+    onOpenExportPaywall: handleOpenExportPaywall,
+  });
 
   const handleCycleTheme = useCallback(() => {
     setThemeOverride(nextTheme(themeOverride));
@@ -105,128 +126,6 @@ export function SettingsScreen() {
     router.push(legalRoute("/legal/impressum"));
   }, [router]);
 
-  const handleExportDiagnostics = useCallback(() => {
-    void exportDiagnosticLog().catch((err) => {
-      console.warn("Failed to export diagnostic log", err);
-    });
-  }, []);
-
-  const handleExportBackup = useCallback(() => {
-    (async () => {
-      try {
-        // Lazy require — keep the raw `db` off the test import graph.
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { db } = require("@/db/client");
-        const pending = new PendingTransitionsRepo(db);
-        const payload = buildBackupPayload(
-          placesRepo.list(),
-          entriesRepo.listAll(),
-          pending.listAll(),
-        );
-        const shared = await exportBackupJson(payload);
-        if (!shared) {
-          useSnackbarStore
-            .getState()
-            .show({ message: i18n.t("settings.data.export.unavailable"), ttlMs: 4000 });
-        }
-      } catch (err) {
-        console.warn("backup export failed", err);
-        useSnackbarStore
-          .getState()
-          .show({ message: i18n.t("settings.data.export.failed"), ttlMs: 4000 });
-      }
-    })();
-  }, [placesRepo, entriesRepo]);
-
-  const handleExport = useCallback(() => {
-    if (!isPro) {
-      handleOpenPaywall("export");
-      return;
-    }
-    (async () => {
-      try {
-        const entries = entriesRepo.listAll();
-        const placesById = new Map(placesRepo.list().map((p) => [p.id, p]));
-        const shared = await exportEntriesCsv(entries, placesById);
-        if (!shared) {
-          useSnackbarStore
-            .getState()
-            .show({ message: i18n.t("settings.data.export.unavailable"), ttlMs: 4000 });
-        }
-      } catch (err) {
-        console.warn("CSV export failed", err);
-        useSnackbarStore
-          .getState()
-          .show({ message: i18n.t("settings.data.export.failed"), ttlMs: 4000 });
-      }
-    })();
-  }, [isPro, handleOpenPaywall, entriesRepo, placesRepo]);
-
-  const handleShowOnboarding = useCallback(() => {
-    router.push("/(onboarding)/welcome");
-  }, [router]);
-
-  const handleResetAllData = useCallback(() => {
-    Alert.alert(
-      i18n.t("settings.data.reset.confirmTitle"),
-      i18n.t("settings.data.reset.confirmBody"),
-      [
-        { text: i18n.t("common.cancel"), style: "cancel" },
-        {
-          text: i18n.t("settings.data.reset.confirmCta"),
-          style: "destructive",
-          onPress: () => {
-            // Second-level confirmation — destructive + irreversible.
-            Alert.alert(
-              i18n.t("settings.data.reset.doubleTitle"),
-              i18n.t("settings.data.reset.doubleBody"),
-              [
-                { text: i18n.t("common.cancel"), style: "cancel" },
-                {
-                  text: i18n.t("settings.data.reset.doubleCta"),
-                  style: "destructive",
-                  onPress: () => {
-                    void (async () => {
-                      try {
-                        // Lazy require — keeps expo-sqlite off the test import
-                        // graph; SettingsScreen renders in jest-expo with no
-                        // native binding available.
-                        // eslint-disable-next-line @typescript-eslint/no-require-imports
-                        const { db } = require("@/db/client");
-                        await resetAllData(db);
-                        resetOnboardingFlag();
-                        // Route back to onboarding so the UX exits from the
-                        // same place the user first entered.
-                        router.replace("/(onboarding)/welcome");
-                      } catch (err) {
-                        console.warn("resetAllData failed", err);
-                      }
-                    })();
-                  },
-                },
-              ],
-            );
-          },
-        },
-      ],
-    );
-  }, [resetOnboardingFlag, router]);
-
-  const handleToggleTelemetry = useCallback(() => {
-    const next = !telemetryEnabled;
-    setTelemetryEnabled(kv, next);
-    setTelemetryEnabledLocal(next);
-    // The live Sentry instance keeps running for this session if we just
-    // flipped off (Sentry has no public teardown). Explain that to the
-    // user via a short snackbar so they aren't confused by the delay.
-    useSnackbarStore.getState().show({
-      message: i18n.t(
-        next ? "settings.data.telemetry.enabledNote" : "settings.data.telemetry.disabledNote",
-      ),
-      ttlMs: 4000,
-    });
-  }, [telemetryEnabled, kv]);
-
   const handleOpenLocationSettings = useCallback(() => {
     void Linking.openSettings().catch((err) => {
       console.warn("Failed to open OS settings", err);
@@ -241,7 +140,6 @@ export function SettingsScreen() {
   const notifPerm = useNotificationPermission();
   const notificationsDenied = notifPerm.status === "denied";
   const locPerm = useLocationPermission();
-  const locationDetailKey = locationDetailKeyFor(locPerm.status);
   const bufferDetail = useMemo(() => {
     const { entryBufferS, exitBufferS } = readGlobalBuffers(kv);
     return i18n.t("settings.tracking.buffers.detailValue", {
@@ -289,12 +187,6 @@ export function SettingsScreen() {
   }, []);
 
   const handleManageSubscription = useCallback(() => {
-    if (isMockMode()) {
-      // No RC customer center without keys — fall through to the native
-      // platform subscription management URL.
-      void Linking.openURL(SUBSCRIPTION_MANAGEMENT_URL);
-      return;
-    }
     void presentCustomerCenter().catch((err) => {
       console.warn("Customer Center failed, falling back to OS deep-link", err);
       void Linking.openURL(SUBSCRIPTION_MANAGEMENT_URL);
@@ -349,178 +241,51 @@ export function SettingsScreen() {
           />
         ) : null}
 
-        <Section title={i18n.t("settings.section.tracking")} testID="settings-section-tracking">
-          <ListRow
-            icon="map-pin"
-            iconBg={
-              locPerm.status === "granted"
-                ? t.color("color.success.soft")
-                : t.color("color.warning.soft")
-            }
-            iconColor={
-              locPerm.status === "granted" ? t.color("color.success") : t.color("color.warning")
-            }
-            title={i18n.t("settings.tracking.location")}
-            detail={i18n.t(locationDetailKey)}
-            onPress={handleOpenLocationSettings}
-            testID="settings-row-location"
-          />
-          <ListRow
-            icon="bell"
-            iconBg={
-              notificationsDenied ? t.color("color.warning.soft") : t.color("color.accent.soft")
-            }
-            iconColor={notificationsDenied ? t.color("color.warning") : t.color("color.accent")}
-            title={i18n.t("settings.tracking.notifications")}
-            detail={
-              notificationsDenied
-                ? i18n.t("settings.tracking.notifications.detailDenied")
-                : i18n.t("settings.tracking.notifications.detail")
-            }
-            onPress={handleOpenNotifications}
-            testID="settings-row-notifications"
-          />
-          <ListRow
-            icon="clock"
-            title={i18n.t("settings.tracking.buffers")}
-            detail={bufferDetail}
-            onPress={handleOpenBuffers}
-            last
-            testID="settings-row-buffers"
-          />
-        </Section>
+        <SettingsTrackingSection
+          locationStatus={locPerm.status}
+          notificationsDenied={notificationsDenied}
+          bufferDetail={bufferDetail}
+          onOpenLocationSettings={handleOpenLocationSettings}
+          onOpenNotificationsSheet={handleOpenNotifications}
+          onOpenBuffersSheet={handleOpenBuffers}
+        />
 
-        <Section title={i18n.t("settings.section.appearance")} testID="settings-section-appearance">
-          <ListRow
-            icon="moon"
-            title={i18n.t("settings.appearance.theme")}
-            detail={themeLabel(themeOverride)}
-            onPress={handleCycleTheme}
-            testID="settings-row-theme"
-          />
-          <ListRow
-            icon="globe"
-            title={i18n.t("settings.appearance.language")}
-            detail={languageLabel(localeOverride)}
-            onPress={handleCycleLanguage}
-            last
-            testID="settings-row-language"
-          />
-        </Section>
+        <SettingsAppearanceSection
+          themeOverride={themeOverride}
+          localeOverride={localeOverride}
+          onCycleTheme={handleCycleTheme}
+          onCycleLanguage={handleCycleLanguage}
+        />
 
-        <Section
-          title={i18n.t("settings.section.subscription")}
-          testID="settings-section-subscription"
-        >
-          {isPro ? (
-            <ListRow
-              icon="star"
-              iconBg={t.color("color.accent.soft")}
-              iconColor={t.color("color.accent")}
-              title={i18n.t("settings.subscription.active")}
-              detail={i18n.t("settings.subscription.active.detail")}
-              onPress={handleManageSubscription}
-              testID="settings-row-pro-active"
-            />
-          ) : null}
-          <ListRow
-            icon="repeat"
-            title={i18n.t("settings.subscription.restore")}
-            detail={restoreLabel(restoreState)}
-            onPress={handleRestore}
-            last
-            testID="settings-row-restore"
-            accessibilityState={{ busy: restoreState === "busy" }}
-          />
-        </Section>
+        <SettingsSubscriptionSection
+          isPro={isPro}
+          restoreState={restoreState}
+          onManageSubscription={handleManageSubscription}
+          onRestore={handleRestore}
+        />
 
-        <Section title={i18n.t("settings.section.data")} testID="settings-section-data">
-          <ListRow
-            icon="download"
-            iconBg={isPro ? t.color("color.accent.soft") : t.color("color.surface2")}
-            iconColor={isPro ? t.color("color.accent") : t.color("color.fg3")}
-            title={i18n.t("settings.data.export")}
-            detail={!isPro ? <ProChip /> : undefined}
-            onPress={handleExport}
-            testID="settings-row-export"
-          />
-          <ListRow
-            icon="download"
-            title={i18n.t("settings.data.backup")}
-            detail={i18n.t("settings.data.backup.detail")}
-            onPress={handleExportBackup}
-            testID="settings-row-backup"
-          />
-          <ListRow
-            icon="download"
-            title={i18n.t("settings.data.diagnostics")}
-            detail={i18n.t("settings.data.diagnostics.detail")}
-            onPress={handleExportDiagnostics}
-            testID="settings-row-diagnostics"
-          />
-          <ListRow
-            icon="lock"
-            title={i18n.t("settings.data.telemetry")}
-            detail={i18n.t(
-              telemetryEnabled ? "settings.data.telemetry.on" : "settings.data.telemetry.off",
-            )}
-            onPress={handleToggleTelemetry}
-            testID="settings-row-telemetry"
-            accessibilityState={{ checked: telemetryEnabled }}
-          />
-          <ListRow
-            icon="repeat"
-            title={i18n.t("settings.data.showOnboarding")}
-            detail={i18n.t("settings.data.showOnboarding.detail")}
-            onPress={handleShowOnboarding}
-            testID="settings-row-show-onboarding"
-          />
-          <ListRow
-            icon="x"
-            iconBg={t.color("color.danger.soft")}
-            iconColor={t.color("color.danger")}
-            title={i18n.t("settings.data.reset")}
-            detail={i18n.t("settings.data.reset.detail")}
-            onPress={handleResetAllData}
-            last
-            testID="settings-row-reset"
-          />
-        </Section>
+        <SettingsDataSection
+          isPro={isPro}
+          ProChip={ProChip}
+          placesRepo={placesRepo}
+          entriesRepo={entriesRepo}
+          retentionLabel={retentionLabel}
+          telemetryEnabled={telemetryEnabled}
+          onExport={handleExport}
+          onExportBackup={handleExportBackup}
+          onCycleRetention={handleCycleRetention}
+          onToggleTelemetry={handleToggleTelemetry}
+          onShowOnboarding={handleShowOnboarding}
+          onResetAllData={handleResetAllData}
+        />
 
-        <Section title={i18n.t("settings.section.about")} testID="settings-section-about">
-          <ListRow
-            icon="heart"
-            title={i18n.t("settings.about.privacy")}
-            onPress={handleOpenPrivacy}
-            testID="settings-row-privacy"
-          />
-          <ListRow
-            icon="book-open"
-            title={i18n.t("settings.about.terms")}
-            onPress={handleOpenTerms}
-            testID="settings-row-terms"
-          />
-          <ListRow
-            icon="info"
-            title={i18n.t("settings.about.impressum")}
-            onPress={handleOpenImpressum}
-            testID="settings-row-impressum"
-          />
-          <ListRow
-            icon="bell"
-            title={i18n.t("settings.about.support")}
-            detail={i18n.t("settings.about.support.detail")}
-            onPress={handleSupport}
-            testID="settings-row-support"
-          />
-          <ListRow
-            icon="star"
-            title={i18n.t("settings.about.rate")}
-            onPress={handleRateApp}
-            last
-            testID="settings-row-rate"
-          />
-        </Section>
+        <SettingsAboutSection
+          onOpenPrivacy={handleOpenPrivacy}
+          onOpenTerms={handleOpenTerms}
+          onOpenImpressum={handleOpenImpressum}
+          onSupport={handleSupport}
+          onRate={handleRateApp}
+        />
       </ScrollView>
 
       {/* Settings-local sheets — not routed through sheetStore. */}
@@ -534,69 +299,10 @@ export function SettingsScreen() {
 }
 
 /**
- * Right-side label for the Restore purchases row. Reflects the in-flight
- * + post-completion state so the user knows their tap was acknowledged.
- */
-function restoreLabel(state: "idle" | "busy" | "done" | "error"): string | undefined {
-  if (state === "busy") return i18n.t("settings.subscription.restore.busy");
-  if (state === "done") return i18n.t("settings.subscription.restore.done");
-  if (state === "error") return i18n.t("settings.subscription.restore.error");
-  return undefined;
-}
-
-/** Cycle order: System (null) → Light → Dark → System. */
-function nextTheme(current: ThemeOverride): ThemeOverride {
-  if (current === null) return "light";
-  if (current === "light") return "dark";
-  return null;
-}
-
-/** Human label for the Theme row's right-side detail string. */
-function themeLabel(current: ThemeOverride): string {
-  if (current === null) return i18n.t("settings.appearance.theme.system");
-  if (current === "light") return i18n.t("settings.appearance.theme.light");
-  return i18n.t("settings.appearance.theme.dark");
-}
-
-/**
- * Locale-cycle order: system (null) → English → German → system.
- */
-function nextLocale(current: string | null): string | null {
-  if (current === null) return "en";
-  if (current === "en") return "de";
-  return null;
-}
-
-/**
- * Human label for the current language selection. `null` means "follow
- * system locale"; we still surface the active language so the user sees
- * what the app will actually render.
- */
-function languageLabel(override: string | null): string {
-  if (override === null) return i18n.t("settings.appearance.language.system");
-  if (override.startsWith("de")) return i18n.t("settings.appearance.language.de");
-  return i18n.t("settings.appearance.language.en");
-}
-
-/**
  * Default OS locale — only used when clearing an override. Imported lazily
  * because `expo-localization` pulls a native module we don't want to touch
  * in Jest unless we have to.
  */
-/**
- * Pick the right i18n key for the Location row detail based on live OS
- * permission state. Keeps the row honest — if the user flipped Always
- * → When in use in iOS Settings, the row immediately reflects that.
- */
-function locationDetailKeyFor(
-  status: "granted" | "foreground-only" | "denied" | "undetermined",
-): string {
-  if (status === "granted") return "settings.tracking.location.detail";
-  if (status === "foreground-only") return "settings.tracking.location.detailForeground";
-  if (status === "denied") return "settings.tracking.location.detailDenied";
-  return "settings.tracking.location.detailUndetermined";
-}
-
 function pickSystemLocale(): string {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -607,40 +313,4 @@ function pickSystemLocale(): string {
   } catch {
     return "en";
   }
-}
-
-/**
- * Small "Pro" badge rendered in the Export CSV row's detail slot when the
- * user is on the free plan. Looks like a `Chip` (accent palette) but stays
- * inline-typed inside `ListRow.detail`, so we render it as a flat View+Text
- * rather than reaching for the heavier `Chip` primitive (which has its own
- * Pressable + accessibility role and would be incorrect inside a row's
- * trailing accessory area).
- */
-function ProChip() {
-  const t = useTheme();
-  return (
-    <View
-      accessibilityRole="text"
-      accessibilityLabel={i18n.t("settings.proChip")}
-      style={{
-        // design-source: padding '2px 7px', radius 9999, accent bg
-        paddingVertical: 2,
-        paddingHorizontal: t.space[2] - 1,
-        backgroundColor: t.color("color.accent.soft"),
-        borderRadius: t.radius.pill,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: t.type.size.xs,
-          fontWeight: t.type.weight.bold,
-          color: t.color("color.accent"),
-          fontFamily: t.type.family.sans,
-        }}
-      >
-        {i18n.t("settings.proChip")}
-      </Text>
-    </View>
-  );
 }

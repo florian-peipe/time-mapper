@@ -87,7 +87,6 @@ v1.0.0 was tagged.
 | Google Maps for Android SDK key | `app.json → android.config.googleMaps.apiKey`                 | [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) — free tier (28.5k loads/mo), GCP billing account required |
 | Sentry DSN (optional)           | `EXPO_PUBLIC_SENTRY_DSN`                                      | [sentry.io](https://sentry.io)                                                |
 | Impressum contact details       | `src/screens/Legal/contact.local.ts` (gitignored)             | See § 5 TMG                                                                   |
-| Support email                   | `src/screens/Settings/SettingsScreen.tsx` (mailto) + app.json | Placeholder `support@timemapper.app`                                          |
 | Privacy policy public URL       | App Store Connect → App Privacy                               | Host `docs/legal/privacy-en.md`                                               |
 | Apple ID + ASC App ID + Team ID | `eas.json` submit.production.ios                              | ASC → App Information                                                         |
 | Play service account JSON       | `play-service-account.json` (gitignored)                      | Play Console → Setup → API access                                             |
