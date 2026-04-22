@@ -86,6 +86,33 @@ export function TimelineScreen() {
     handleRefresh();
   }, [ongoingState, handleRefresh]);
 
+  // Memoized so the RunningTimerCard's 1Hz tick doesn't rebuild rows; EntryRow
+  // is already React.memo-wrapped but skipping the .map() avoids the JSX cost.
+  const entryRows = useMemo(
+    () =>
+      entriesState.entries.map((entry, index) => {
+        const place = placesById.get(entry.placeId);
+        if (!place) return null;
+        return (
+          <EntryRow
+            key={entry.id}
+            entryId={entry.id}
+            placeName={place.name}
+            placeIcon={place.icon as IconName}
+            placeColor={place.color}
+            source={entry.source}
+            startedAt={entry.startedAt}
+            endedAt={entry.endedAt}
+            netMinutes={netMinutes(entry)}
+            onPress={handleOpenEntry}
+            last={index === entriesState.entries.length - 1}
+            testID={`entry-row-${entry.id}`}
+          />
+        );
+      }),
+    [entriesState.entries, placesById, handleOpenEntry],
+  );
+
   const noPlaces = placesState.places.length === 0;
   const noEntries = entriesState.entries.length === 0 && !showRunning;
 
@@ -157,26 +184,7 @@ export function TimelineScreen() {
         ) : noEntries ? (
           <NoEntriesEmptyState onAddAnotherPlace={handleAddPlace} />
         ) : (
-          entriesState.entries.map((entry, index) => {
-            const place = placesById.get(entry.placeId);
-            if (!place) return null;
-            return (
-              <EntryRow
-                key={entry.id}
-                entryId={entry.id}
-                placeName={place.name}
-                placeIcon={place.icon as IconName}
-                placeColor={place.color}
-                source={entry.source}
-                startedAt={entry.startedAt}
-                endedAt={entry.endedAt}
-                netMinutes={netMinutes(entry)}
-                onPress={handleOpenEntry}
-                last={index === entriesState.entries.length - 1}
-                testID={`entry-row-${entry.id}`}
-              />
-            );
-          })
+          entryRows
         )}
       </ScrollView>
 
