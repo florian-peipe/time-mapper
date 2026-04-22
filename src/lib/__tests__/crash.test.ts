@@ -1,11 +1,4 @@
-import {
-  initCrashReporting,
-  captureException,
-  scrubLocation,
-  isCrashReportingEnabled,
-  identifyAnonUser,
-  __resetForTests,
-} from "../crash";
+import { initCrashReporting, captureException, scrubLocation, __resetForTests } from "../crash";
 
 describe("crash reporting", () => {
   const DSN_KEY = "EXPO_PUBLIC_SENTRY_DSN";
@@ -27,16 +20,12 @@ describe("crash reporting", () => {
     initCrashReporting(); // second call should not double-log
     expect(info).toHaveBeenCalledTimes(1);
     expect(info.mock.calls[0]![0]).toMatch(/DSN not set/);
-    expect(isCrashReportingEnabled()).toBe(false);
     info.mockRestore();
   });
 
-  it("initializes Sentry when DSN + module are present", () => {
+  it("initializes Sentry when DSN + module are present (no-throw)", () => {
     process.env[DSN_KEY] = "https://fake-dsn@sentry.io/123";
-    // The jest.setup.ts @sentry/react-native stub exposes `init` as a
-    // spyable mock; after initCrashReporting runs, the flag flips true.
-    initCrashReporting();
-    expect(isCrashReportingEnabled()).toBe(true);
+    expect(() => initCrashReporting()).not.toThrow();
   });
 
   it("captureException falls back to console.error when Sentry is disabled", () => {
@@ -46,11 +35,6 @@ describe("crash reporting", () => {
       context: "test",
     });
     err.mockRestore();
-  });
-
-  it("identifyAnonUser is a no-op without Sentry", () => {
-    expect(() => identifyAnonUser("anon-abc")).not.toThrow();
-    expect(() => identifyAnonUser(null)).not.toThrow();
   });
 
   describe("scrubLocation", () => {

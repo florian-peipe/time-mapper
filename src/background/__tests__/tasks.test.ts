@@ -1,4 +1,5 @@
 import { createTestDb } from "@/db/testClient";
+import { __resetDeviceDbForTests } from "@/db/deviceDb";
 import { PlacesRepo } from "@/db/repository/places";
 import { EntriesRepo } from "@/db/repository/entries";
 import { PendingTransitionsRepo } from "@/db/repository/pending";
@@ -35,6 +36,7 @@ const defineTaskCalls = (TaskManager.defineTask as jest.Mock).mock.calls.slice()
 describe("background/tasks", () => {
   beforeEach(() => {
     currentDb = createTestDb();
+    __resetDeviceDbForTests();
     jest.clearAllMocks();
   });
 

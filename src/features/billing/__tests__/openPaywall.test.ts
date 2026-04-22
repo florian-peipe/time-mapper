@@ -1,7 +1,6 @@
 import { act } from "@testing-library/react-native";
 import RevenueCatUI from "react-native-purchases-ui";
 import { openPaywall } from "../openPaywall";
-import * as revenuecat from "../revenuecat";
 import { PAYWALL_RESULT } from "../revenuecat";
 import { useSheetStore } from "@/state/sheetStore";
 import { useSnackbarStore } from "@/state/snackbarStore";
@@ -18,15 +17,7 @@ describe("openPaywall", () => {
     });
   });
 
-  test("mock mode shows a snackbar pointing at the Dev toggle", () => {
-    jest.spyOn(revenuecat, "isMockMode").mockReturnValue(true);
-    openPaywall({ source: "settings" });
-    expect(useSnackbarStore.getState().current?.message).toBeTruthy();
-    expect(presentPaywallMock).not.toHaveBeenCalled();
-  });
-
-  test("real mode presents the RC paywall", async () => {
-    jest.spyOn(revenuecat, "isMockMode").mockReturnValue(false);
+  test("presents the RC paywall", async () => {
     presentPaywallMock.mockResolvedValueOnce(PAYWALL_RESULT.CANCELLED);
     openPaywall({ source: "settings" });
     await Promise.resolve();
@@ -34,8 +25,7 @@ describe("openPaywall", () => {
     expect(presentPaywallMock).toHaveBeenCalledTimes(1);
   });
 
-  test("real-mode PURCHASED with pendingPlaceForm reopens AddPlace", async () => {
-    jest.spyOn(revenuecat, "isMockMode").mockReturnValue(false);
+  test("PURCHASED with pendingPlaceForm reopens AddPlace", async () => {
     presentPaywallMock.mockResolvedValueOnce(PAYWALL_RESULT.PURCHASED);
     act(() => {
       useSheetStore.getState().setPendingPlaceForm({
@@ -61,8 +51,7 @@ describe("openPaywall", () => {
     expect(useSheetStore.getState().active).toBe("addPlace");
   });
 
-  test("real-mode CANCELLED leaves AddPlace closed even with pendingPlaceForm", async () => {
-    jest.spyOn(revenuecat, "isMockMode").mockReturnValue(false);
+  test("CANCELLED leaves AddPlace closed even with pendingPlaceForm", async () => {
     presentPaywallMock.mockResolvedValueOnce(PAYWALL_RESULT.CANCELLED);
     act(() => {
       useSheetStore.getState().setPendingPlaceForm({

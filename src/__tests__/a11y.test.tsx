@@ -481,3 +481,69 @@ describe("a11y — adjustable control (slider in AddPlaceSheet)", () => {
     }
   });
 });
+
+describe("a11y — large-text compatibility", () => {
+  /**
+   * Snapshot the primary shared primitives under a simulated 1.3× dynamic
+   * type scale. We can't re-route RN's `allowFontScaling` from a test, but
+   * we CAN verify that every `<Text>` the primitive renders does NOT set
+   * `allowFontScaling={false}` (which would opt out of large-text support).
+   *
+   * Extend this list when adding a new primitive — the regression would
+   * otherwise only surface via iOS reviewer VoiceOver + large-text checks.
+   */
+  function allTextNodes(tree: unknown): { allowFontScaling?: boolean }[] {
+    const out: { allowFontScaling?: boolean }[] = [];
+    function walk(node: unknown) {
+      if (!node || typeof node !== "object") return;
+      const n = node as {
+        type?: { displayName?: string; name?: string };
+        props?: { children?: unknown; allowFontScaling?: boolean };
+      };
+      const type = n.type;
+      if (type) {
+        const name = typeof type === "string" ? type : (type.displayName ?? type.name);
+        if (name === "Text" && n.props) {
+          out.push({ allowFontScaling: n.props.allowFontScaling });
+        }
+      }
+      if (n.props && Array.isArray(n.props.children)) {
+        for (const c of n.props.children) walk(c);
+      } else if (n.props && n.props.children) {
+        walk(n.props.children);
+      }
+    }
+    walk(tree);
+    return out;
+  }
+
+  it("Button text allows font scaling (never opts out of Dynamic Type)", () => {
+    const { toJSON } = render(wrap(<Button onPress={() => {}}>Save place</Button>));
+    for (const n of allTextNodes(toJSON())) {
+      expect(n.allowFontScaling).not.toBe(false);
+    }
+  });
+
+  it("Banner text allows font scaling", () => {
+    const { toJSON } = render(wrap(<Banner tone="info" title="Offline" />));
+    for (const n of allTextNodes(toJSON())) {
+      expect(n.allowFontScaling).not.toBe(false);
+    }
+  });
+
+  it("Chip text allows font scaling", () => {
+    const { toJSON } = render(wrap(<Chip label="Draft" onPress={() => {}} />));
+    for (const n of allTextNodes(toJSON())) {
+      expect(n.allowFontScaling).not.toBe(false);
+    }
+  });
+
+  it("ListRow title + detail allow font scaling", () => {
+    const { toJSON } = render(
+      wrap(<ListRow icon="home" title="Home" detail="2 / 1 min" onPress={() => {}} />),
+    );
+    for (const n of allTextNodes(toJSON())) {
+      expect(n.allowFontScaling).not.toBe(false);
+    }
+  });
+});

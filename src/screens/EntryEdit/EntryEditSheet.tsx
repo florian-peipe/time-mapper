@@ -1,16 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Platform, Pressable, ScrollView, Text, View } from "react-native";
-import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { Alert, Pressable, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
-import { Button, Chip, Icon, PlaceBubble, Sheet, TextArea, type IconName } from "@/components";
+import { Button, Sheet } from "@/components";
 import { usePlaces } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { i18n } from "@/lib/i18n";
 import { formatDurationCompact } from "@/lib/time";
 import { useSnackbarStore } from "@/state/snackbarStore";
 import { useDataVersionStore } from "@/state/dataVersionStore";
-import { bumpFirstSafely } from "@/features/diagnostics/counters";
 import type { Entry, Place } from "@/db/schema";
+import { PlacePickerSection } from "./PlacePickerSection";
+import { TimePickersSection } from "./TimePickersSection";
+import { NoteSection } from "./NoteSection";
+import { defaultEnd, defaultStart, pauseDateToMinutes, pauseMinutesToDate } from "./entryEditUtils";
 
 export type EntryEditSheetProps = {
   visible: boolean;
@@ -18,34 +20,6 @@ export type EntryEditSheetProps = {
   entryId: string | null;
   onClose: () => void;
 };
-
-/** Default start — 09:00 local on the anchor date. */
-function defaultStart(anchor: Date): Date {
-  const d = new Date(anchor);
-  d.setHours(9, 0, 0, 0);
-  return d;
-}
-/** Default end — 10:00 local on the anchor date. */
-function defaultEnd(anchor: Date): Date {
-  const d = new Date(anchor);
-  d.setHours(10, 0, 0, 0);
-  return d;
-}
-/**
- * Encode a pause duration (in minutes) as a `Date` whose hours +
- * minutes carry the value. Used as the `value` of the pause picker so
- * the native time wheel can edit it. Seconds/date portions are fixed
- * so the chip always reads "HH:MM".
- */
-function pauseMinutesToDate(minutes: number): Date {
-  const d = new Date(0);
-  const clamped = Math.max(0, Math.min(minutes, 23 * 60 + 59));
-  d.setHours(Math.floor(clamped / 60), clamped % 60, 0, 0);
-  return d;
-}
-function pauseDateToMinutes(d: Date): number {
-  return d.getHours() * 60 + d.getMinutes();
-}
 
 export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProps) {
   const t = useTheme();
@@ -63,7 +37,6 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
   const [pauseDate, setPauseDate] = useState<Date>(() => pauseMinutesToDate(0));
   const [note, setNote] = useState<string>("");
   const [entrySource, setEntrySource] = useState<"auto" | "manual" | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Hydrate from the selected entry (Edit mode) or apply defaults (New mode).
   useEffect(() => {
@@ -87,7 +60,6 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
       setPauseDate(pauseMinutesToDate(0));
       setNote("");
       setEntrySource(null);
-      setPickerOpen(false);
     }
   }, [entryId, entriesRepo]);
 
@@ -140,7 +112,6 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           note: note || undefined,
           pauseS,
         });
-        bumpFirstSafely("first_entry");
       } else if (entryId) {
         entriesRepo.update(entryId, {
           placeId,
@@ -218,11 +189,6 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
     onClose();
   }, [entryId, entriesRepo, bumpEntries, onClose]);
 
-  const handlePickPlace = useCallback((p: Place) => {
-    setPlaceId(p.id);
-    setPickerOpen(false);
-  }, []);
-
   return (
     <Sheet
       visible={visible}
@@ -238,7 +204,6 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
           accessibilityLabel={i18n.t("entryEdit.label.saveEntry")}
           hitSlop={8}
           style={{
-            // design-source: padding 7/14, accent bg, pill, 13/600
             paddingVertical: 7,
             paddingHorizontal: t.space[4] - 2,
             backgroundColor: t.color("color.accent"),
@@ -275,7 +240,6 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
         <Text
           testID="entry-edit-net"
           style={{
-            // design-source: 44px display, -1 letterSpacing
             fontSize: 44,
             fontWeight: t.type.weight.bold,
             letterSpacing: -1,
@@ -303,202 +267,24 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
         </Text>
       </View>
 
-      {/* Place picker card — collapsed row expands to chip list. */}
-      <View
-        style={{
-          backgroundColor: t.color("color.surface"),
-          borderWidth: 1,
-          borderColor: t.color("color.border"),
-          borderRadius: t.radius.md,
-          marginBottom: t.space[4],
-          overflow: "hidden",
-        }}
-      >
-        <Pressable
-          testID="entry-edit-place-row"
-          onPress={() => setPickerOpen((o) => !o)}
-          accessibilityRole="button"
-          accessibilityLabel={i18n.t("entryEdit.label.selectPlace")}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            // design-source: row padding 14/16
-            paddingVertical: 14,
-            paddingHorizontal: t.space[4],
-            borderBottomWidth: pickerOpen ? 1 : 0,
-            borderBottomColor: t.color("color.border"),
-          }}
-        >
-          <Text
-            style={{
-              fontSize: t.type.size.s,
-              color: t.color("color.fg3"),
-              fontFamily: t.type.family.sans,
-              fontWeight: t.type.weight.medium,
-              // design-source: label column fixed to 78px
-              width: 78,
-            }}
-          >
-            {i18n.t("entryEdit.label.place")}
-          </Text>
-          <View
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              gap: t.space[2] + 2, // design-source: gap 10
-            }}
-          >
-            {selectedPlace ? (
-              <>
-                <PlaceBubble
-                  icon={(selectedPlace.icon as IconName) ?? "map-pin"}
-                  color={selectedPlace.color}
-                  size={28}
-                />
-                <Text
-                  style={{
-                    fontSize: t.type.size.body,
-                    fontWeight: t.type.weight.medium,
-                    color: t.color("color.fg"),
-                    fontFamily: t.type.family.sans,
-                  }}
-                >
-                  {selectedPlace.name}
-                </Text>
-              </>
-            ) : (
-              <Text
-                style={{
-                  fontSize: t.type.size.body,
-                  color: t.color("color.fg3"),
-                  fontFamily: t.type.family.sans,
-                }}
-              >
-                {i18n.t("entryEdit.label.placeNone")}
-              </Text>
-            )}
-          </View>
-          <Icon name="chevron-right" size={16} color={t.color("color.fg3")} />
-        </Pressable>
-        {pickerOpen ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              gap: t.space[2],
-              padding: t.space[3] - 2, // design-source: padding 10
-            }}
-          >
-            {places.map((p) => (
-              <Chip
-                key={p.id}
-                label={p.name}
-                selected={p.id === placeId}
-                onPress={() => handlePickPlace(p)}
-              />
-            ))}
-          </ScrollView>
-        ) : null}
-      </View>
+      <PlacePickerSection places={places} selectedPlace={selectedPlace} onSelect={setPlaceId} />
 
-      {/* Time + pause fields card. */}
-      <View
-        style={{
-          backgroundColor: t.color("color.surface"),
-          borderWidth: 1,
-          borderColor: t.color("color.border"),
-          borderRadius: t.radius.md,
-          marginBottom: t.space[4],
-          overflow: "hidden",
-        }}
-      >
-        <PickerRow
-          label={i18n.t("entryEdit.label.date")}
-          testID="entry-edit-date"
-          mode="date"
-          value={startDate}
-          maximumDate={new Date()}
-          onChange={(d) => {
-            // Keep the existing clock time — only change the date.
-            const newStart = new Date(startDate);
-            newStart.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
-            const newEnd = new Date(endDate);
-            newEnd.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
-            setStartDate(newStart);
-            setEndDate(newEnd);
-          }}
-        />
-        <PickerRow
-          label={i18n.t("entryEdit.label.start")}
-          testID="entry-edit-start"
-          mode="time"
-          value={startDate}
-          onChange={setStartDate}
-        />
-        <PickerRow
-          label={i18n.t("entryEdit.label.end")}
-          testID="entry-edit-end"
-          mode="time"
-          value={endDate}
-          onChange={setEndDate}
-        />
-        <PickerRow
-          label={i18n.t("entryEdit.label.pause")}
-          testID="entry-edit-pause"
-          mode="time"
-          value={pauseDate}
-          onChange={setPauseDate}
-        />
-      </View>
+      <TimePickersSection
+        startDate={startDate}
+        endDate={endDate}
+        pauseDate={pauseDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onPauseDateChange={setPauseDate}
+      />
 
-      {/* Note card. */}
-      <View
-        style={{
-          backgroundColor: t.color("color.surface"),
-          borderWidth: 1,
-          borderColor: t.color("color.border"),
-          borderRadius: t.radius.md,
-          marginBottom: t.space[4],
-          paddingVertical: 14, // design-source: note card padding 14/16
-          paddingHorizontal: t.space[4],
-        }}
-      >
-        <Text
-          style={{
-            fontSize: t.type.size.s,
-            color: t.color("color.fg3"),
-            fontFamily: t.type.family.sans,
-            fontWeight: t.type.weight.medium,
-            marginBottom: t.space[1] + 2, // design-source: marginBottom 6
-            textTransform: "uppercase",
-            letterSpacing: 0.4,
-          }}
-        >
-          {i18n.t("entryEdit.label.note")}
-        </Text>
-        <TextArea
-          testID="entry-edit-note"
-          value={note}
-          onChangeText={setNote}
-          placeholder={i18n.t("entryEdit.label.notePlaceholder")}
-          style={{
-            borderWidth: 0,
-            paddingHorizontal: 0,
-            paddingVertical: 0,
-            backgroundColor: "transparent",
-            minHeight: 60,
-          }}
-        />
-      </View>
+      <NoteSection value={note} onChangeText={setNote} />
 
       {/* Source chip — centered neutral pill when an entry source exists. */}
       {entrySource ? (
         <View style={{ alignItems: "center", marginBottom: t.space[3] }}>
           <View
             style={{
-              // design-source: 4/10 padding, pill, border, surface2 bg.
               paddingVertical: t.space[1],
               paddingHorizontal: t.space[3] - 2,
               borderRadius: t.radius.pill,
@@ -525,7 +311,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
         </View>
       ) : null}
 
-      {/* Delete — only in Edit mode. */}
+      {/* Delete — only in Edit mode. Trivially thin (one Button), so inline. */}
       {!isNew ? (
         <View style={{ marginTop: t.space[1], marginBottom: t.space[6] }}>
           <Button variant="destructive" size="md" full onPress={handleDelete}>
@@ -534,74 +320,5 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
         </View>
       ) : null}
     </Sheet>
-  );
-}
-
-/**
- * Row that hosts a native `DateTimePicker` inline — `display="compact"`
- * on iOS renders a tappable chip with the current value that opens the
- * native wheel picker in a popover when pressed; Android shows the
- * value as text and opens the system picker dialog on tap. Either way
- * the user never sees a keyboard or a custom parser — the OS controls
- * time entry.
- */
-function PickerRow({
-  label,
-  value,
-  mode,
-  onChange,
-  maximumDate,
-  testID,
-}: {
-  label: string;
-  value: Date;
-  mode: "date" | "time";
-  onChange: (d: Date) => void;
-  maximumDate?: Date;
-  testID?: string;
-}) {
-  const t = useTheme();
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 8,
-        paddingHorizontal: t.space[4],
-        borderBottomWidth: 1,
-        borderBottomColor: t.color("color.border"),
-        minHeight: t.minTouchTarget,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: t.type.size.s,
-          color: t.color("color.fg3"),
-          fontFamily: t.type.family.sans,
-          fontWeight: t.type.weight.medium,
-          width: 78,
-        }}
-      >
-        {label}
-      </Text>
-      <View style={{ flex: 1, alignItems: "flex-end" }}>
-        <DateTimePicker
-          testID={testID}
-          mode={mode}
-          display={Platform.OS === "ios" ? "compact" : "default"}
-          value={value}
-          maximumDate={maximumDate}
-          onChange={(event: DateTimePickerEvent, selected?: Date) => {
-            // Android's picker fires once and dismisses; iOS fires on
-            // every scroll of the wheel. Only commit when a value came
-            // through — `type` is `"set"` on both platforms when the
-            // user has chosen a value (vs `"dismissed"` for cancel).
-            if (event.type === "set" && selected) {
-              onChange(selected);
-            }
-          }}
-        />
-      </View>
-    </View>
   );
 }

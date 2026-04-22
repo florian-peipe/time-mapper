@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, isNull, lte } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, lt, lte } from "drizzle-orm";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
 import { entries, type Entry } from "../schema";
@@ -189,6 +189,47 @@ export class EntriesRepo {
   softDelete(id: string): void {
     const now = this.clock.now();
     this.db.update(entries).set({ deletedAt: now, updatedAt: now }).where(eq(entries.id, id)).run();
+  }
+
+  /**
+   * Hard-delete soft-deleted rows whose tombstone is older than
+   * `cutoffS` unix-seconds. Frees space; rows past the cutoff can no
+   * longer be restored via the Undo affordance. Returns the count of
+   * purged rows for telemetry.
+   *
+   * Called opportunistically from `bootstrapTracking` (best-effort; a
+   * thrown DB error bubbles to the caller's catch).
+   */
+  purgeSoftDeletedBefore(cutoffS: number): number {
+    const victims = this.db
+      .select()
+      .from(entries)
+      .where(and(isNotNull(entries.deletedAt), lt(entries.deletedAt, cutoffS)))
+      .all() as Entry[];
+    if (victims.length === 0) return 0;
+    for (const v of victims) {
+      this.db.delete(entries).where(eq(entries.id, v.id)).run();
+    }
+    return victims.length;
+  }
+
+  /**
+   * Hard-delete entries whose `startedAt` is older than `cutoffS`. Used by
+   * the optional long-retention sweep (off by default — must be opted in
+   * via a KV flag). Does NOT prune the currently-ongoing entry (endedAt
+   * null) to avoid breaking in-flight tracking.
+   */
+  purgeOlderThan(cutoffS: number): number {
+    const victims = this.db
+      .select()
+      .from(entries)
+      .where(and(lt(entries.startedAt, cutoffS), isNotNull(entries.endedAt)))
+      .all() as Entry[];
+    if (victims.length === 0) return 0;
+    for (const v of victims) {
+      this.db.delete(entries).where(eq(entries.id, v.id)).run();
+    }
+    return victims.length;
   }
 
   /**

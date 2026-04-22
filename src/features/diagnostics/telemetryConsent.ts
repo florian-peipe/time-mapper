@@ -1,8 +1,9 @@
 import type * as KvModule from "@/db/repository/kv";
+import { KV_KEYS } from "@/db/kvKeys";
 
 type KvRepo = InstanceType<typeof KvModule.KvRepo>;
 
-const KV_TELEMETRY_ENABLED = "settings.telemetry_enabled";
+const KV_TELEMETRY_ENABLED = KV_KEYS.TELEMETRY_ENABLED;
 
 /**
  * GDPR opt-in flag for crash-reporting (Sentry). Default: **disabled**. The

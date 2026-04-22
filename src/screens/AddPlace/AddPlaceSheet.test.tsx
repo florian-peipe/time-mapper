@@ -9,7 +9,7 @@ import { KvRepo } from "@/db/repository/kv";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import * as openPaywallModule from "@/features/billing/openPaywall";
-import { grantProMock, resetProMock } from "@/features/billing/useProMock";
+import { __setProForTests } from "@/features/billing/usePro";
 import { AddPlaceSheet } from "./AddPlaceSheet";
 
 // `autocomplete` hits Photon in production; under Jest we give it
@@ -138,7 +138,7 @@ async function gotoPhase2() {
 beforeEach(() => {
   jest.useFakeTimers();
   useSheetStore.setState({ active: null, payload: null });
-  resetProMock();
+  __setProForTests(null);
 });
 
 afterEach(() => {
@@ -445,7 +445,7 @@ describe("AddPlaceSheet — Pro gate", () => {
   });
 
   it("CTA remains 'Save place' for a Pro user even with a pre-seeded place", async () => {
-    grantProMock();
+    __setProForTests(true);
     setup({ preSeeded: [{ name: "Home" }] });
     await gotoPhase2();
     expect(screen.getByText("Save place")).toBeTruthy();
@@ -471,7 +471,7 @@ describe("AddPlaceSheet — Pro gate", () => {
 
 describe("AddPlaceSheet — 20-place soft cap (iOS geofence limit)", () => {
   it("blocks creating a 21st place with an Alert and does NOT create", async () => {
-    grantProMock(); // bypass the 2nd-place paywall
+    __setProForTests(true); // bypass the 2nd-place paywall
     const preSeeded = Array.from({ length: 20 }, (_, i) => ({ name: `Place-${i}` }));
     const onClose = jest.fn();
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
@@ -490,7 +490,7 @@ describe("AddPlaceSheet — 20-place soft cap (iOS geofence limit)", () => {
   });
 
   it("allows editing the 20th place (edit mode is not gated)", () => {
-    grantProMock();
+    __setProForTests(true);
     const preSeeded = Array.from({ length: 20 }, (_, i) => ({ name: `Place-${i}` }));
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     setup({ preSeeded, editingIndex: 0 });

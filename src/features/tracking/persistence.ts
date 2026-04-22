@@ -2,6 +2,8 @@ import type { EntriesRepo } from "@/db/repository/entries";
 import type { PendingTransitionsRepo } from "@/db/repository/pending";
 import type { Effect, MachineState } from "./stateMachine";
 import { IDLE } from "./stateMachine";
+import { nowS as getNowS } from "@/lib/time";
+import { addBreadcrumb } from "@/lib/crash";
 
 /**
  * Hydrates the state machine's current state from DB-persisted rows. Given a
@@ -61,7 +63,7 @@ export function loadState(
   // Inconsistent state. Favor the ongoing entry (source of truth — pending
   // rows are transient) and resolve the stray pending as cancelled.
   if (pending && ongoing) {
-    pendingRepo.resolve(pending.id, "cancelled", Math.floor(Date.now() / 1000));
+    pendingRepo.resolve(pending.id, "cancelled", getNowS());
     return {
       kind: "ACTIVE",
       placeId: ongoing.placeId,
@@ -73,7 +75,7 @@ export function loadState(
   // pending exit but no ongoing entry — the entry was deleted or the row is
   // stale. Drop the pending row and fall back to IDLE.
   if (pending && !ongoing) {
-    pendingRepo.resolve(pending.id, "cancelled", Math.floor(Date.now() / 1000));
+    pendingRepo.resolve(pending.id, "cancelled", getNowS());
   }
   return IDLE;
 }
@@ -100,7 +102,7 @@ export function applyEffects(
   nextState: MachineState,
   entriesRepo: EntriesRepo,
   pendingRepo: PendingTransitionsRepo,
-  nowS: number = Math.floor(Date.now() / 1000),
+  nowS: number = getNowS(),
 ): MachineState {
   let resolved: MachineState = nextState;
 
@@ -128,6 +130,12 @@ export function applyEffects(
           source: "auto",
           startedAt: eff.atS,
         });
+        addBreadcrumb({
+          category: "entry",
+          message: "entry-open",
+          level: "info",
+          data: { placeId: eff.placeId, entryId: entry.id, atS: eff.atS },
+        });
         // Replace the reducer's `pending:<tid>` placeholder with the real id.
         // Only PENDING_ENTER → ACTIVE emits open_entry, so `resolved.kind`
         // is always "ACTIVE" when we get here.
@@ -141,6 +149,12 @@ export function applyEffects(
         // endedAt matches the geofence exit time recorded by the state
         // machine. The reducer passes the exit event's atS for this reason.
         entriesRepo.closeAt(eff.entryId, eff.atS);
+        addBreadcrumb({
+          category: "entry",
+          message: "entry-close",
+          level: "info",
+          data: { entryId: eff.entryId, atS: eff.atS },
+        });
         break;
       }
     }

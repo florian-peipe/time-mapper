@@ -30,6 +30,44 @@ export type AutocompleteResult = {
 const PHOTON_URL = "https://photon.komoot.io/api/";
 
 /**
+ * In-memory cache for recent Photon queries. Typing "wo, wor, worl, world"
+ * without the cache hits the network four times; with it, the prefix runs
+ * once and the rest hit cache. TTL is short (30s) so a real location change
+ * still refreshes, and capacity is small (16) so memory stays bounded.
+ */
+const CACHE_TTL_MS = 30_000;
+const CACHE_MAX_ENTRIES = 16;
+
+type CacheEntry = { at: number; suggestions: PlaceSuggestion[] };
+const cache = new Map<string, CacheEntry>();
+
+function cacheGet(key: string, nowMs: number): PlaceSuggestion[] | null {
+  const hit = cache.get(key);
+  if (!hit) return null;
+  if (nowMs - hit.at > CACHE_TTL_MS) {
+    cache.delete(key);
+    return null;
+  }
+  return hit.suggestions;
+}
+
+function cacheSet(key: string, suggestions: PlaceSuggestion[], nowMs: number): void {
+  cache.set(key, { at: nowMs, suggestions });
+  // LRU trim — oldest first. `Map` iteration preserves insertion order, so
+  // re-inserting on hit keeps the MRU at the tail.
+  while (cache.size > CACHE_MAX_ENTRIES) {
+    const oldest = cache.keys().next().value;
+    if (oldest === undefined) break;
+    cache.delete(oldest);
+  }
+}
+
+/** Test-only — wipes the autocomplete cache so each test starts clean. */
+export function __resetAutocompleteCacheForTests(): void {
+  cache.clear();
+}
+
+/**
  * Fetch autocomplete suggestions. AddPlaceSheet debounces keystrokes
  * before calling this. `signal` aborts the in-flight fetch when a
  * newer keystroke arrives; AbortError is propagated so the caller can
@@ -37,6 +75,9 @@ const PHOTON_URL = "https://photon.komoot.io/api/";
  *
  * Short queries (`< 2` chars) return `{ suggestions: [], failed: false }`.
  * Network failure returns `{ suggestions: [], failed: true }`.
+ *
+ * Successful responses are cached for 30s — a subsequent keystroke that
+ * produces the same query string skips the network round-trip entirely.
  */
 export async function autocomplete(
   query: string,
@@ -45,8 +86,13 @@ export async function autocomplete(
   const trimmed = query.trim();
   if (trimmed.length < 2) return { suggestions: [], failed: false };
 
+  const now = Date.now();
+  const cached = cacheGet(trimmed, now);
+  if (cached) return { suggestions: cached, failed: false };
+
   try {
     const suggestions = await photonAutocomplete(trimmed, signal);
+    cacheSet(trimmed, suggestions, now);
     return { suggestions, failed: false };
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") throw err;

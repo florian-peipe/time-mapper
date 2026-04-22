@@ -1,0 +1,35 @@
+appId: com.timemapper.app
+name: Settings → Language cycle (System → English → Deutsch)
+tags:
+  - i18n
+  - settings
+---
+# Verifies the Language row cycles the in-app locale and the Settings
+# header re-renders in the new locale on each tap. Exercises the
+# `uiStore.setLocaleOverride` + `setLocale()` side-effect.
+
+- launchApp
+
+- tapOn: "Settings"
+
+# Initial state — should read "System" (unless a prior run left an override).
+- assertVisible:
+    id: "settings-row-language"
+
+- tapOn:
+    id: "settings-row-language"
+
+# After first tap we're on English; the section heading should be in EN.
+- assertVisible: "Settings"
+
+- tapOn:
+    id: "settings-row-language"
+
+# Second tap → Deutsch. Heading flips to "Einstellungen".
+- assertVisible: "Einstellungen"
+
+# Reset to System.
+- tapOn:
+    id: "settings-row-language"
+
+- assertVisible: "Settings"

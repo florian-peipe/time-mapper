@@ -22,7 +22,7 @@ import { KvRepo } from "@/db/repository/kv";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore } from "@/state/uiStore";
-import { resetProMock } from "@/features/billing/useProMock";
+import { __setProForTests } from "@/features/billing/usePro";
 import { TimelineScreen } from "@/screens/Timeline/TimelineScreen";
 import { StatsScreen } from "@/screens/Stats/StatsScreen";
 import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
@@ -126,7 +126,7 @@ beforeEach(() => {
     localeOverride: null,
     onboardingComplete: true,
   });
-  resetProMock();
+  __setProForTests(null);
 });
 
 describe("snapshots — main screens", () => {

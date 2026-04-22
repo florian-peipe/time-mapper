@@ -1,0 +1,34 @@
+appId: com.timemapper.app
+name: Tap entry row → EntryEditSheet → save
+tags:
+  - entry
+  - edit
+---
+# Verifies the Timeline entry row tap opens the EntryEditSheet, the
+# pickers hydrate from the entry's stored times, and saving closes the
+# sheet without error.
+#
+# Prereqs: at least one tracked entry on Timeline. Use the Developer
+# submenu's "Simulate visit" if running on a sideload build.
+
+- launchApp
+
+# Make sure we're on the Timeline tab.
+- tapOn: "Timeline"
+
+# Tap the first entry row (any match).
+- tapOn:
+    idRegex: "^entry-row-"
+
+# Sheet title comes up.
+- assertVisible: "Edit entry"
+
+# Pickers should be mounted — check the net minutes readout.
+- assertVisible:
+    id: "entry-edit-net"
+
+# Save, return to Timeline, assert no crash.
+- tapOn:
+    id: "entry-edit-save"
+
+- assertNotVisible: "Edit entry"

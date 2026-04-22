@@ -1,5 +1,7 @@
 import * as Location from "expo-location";
 import type { Place } from "@/db/schema";
+import { haversineMeters } from "@/lib/geo";
+import { captureException } from "@/lib/crash";
 
 /**
  * Canonical TaskManager identifier. Must match the one registered in
@@ -57,9 +59,34 @@ export async function unregisterAllGeofences(): Promise<void> {
  * Always replaces — we can't introspect what the OS currently holds, and the
  * cost of replacement is cheap. The OS will silently drop regions after
  * reboot; this is how we recover.
+ *
+ * Retries up to 3× with exponential backoff (0.5s, 1s, 2s) — iOS occasionally
+ * rejects `startGeofencingAsync` when Location Services are briefly paused
+ * (app-switcher swipe, Low Power Mode transitions). The retry covers those
+ * transient windows. A final failure bubbles to Sentry via `captureException`
+ * so the owner can spot a real regression instead of a silent drop.
  */
 export async function reconcileGeofences(places: Place[]): Promise<void> {
-  await registerPlaceGeofences(places);
+  await withRetry(() => registerPlaceGeofences(places), { maxAttempts: 3, baseDelayMs: 500 });
+}
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  opts: { maxAttempts: number; baseDelayMs: number },
+): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < opts.maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt === opts.maxAttempts - 1) break;
+      const delay = opts.baseDelayMs * 2 ** attempt;
+      await new Promise<void>((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  captureException(lastErr, { scope: "geofenceReconcile", maxAttempts: opts.maxAttempts });
+  throw lastErr;
 }
 
 /**
@@ -110,22 +137,3 @@ export async function getCurrentPlaceId(places: Place[]): Promise<string | null>
     return null;
   }
 }
-
-/**
- * Great-circle distance in meters. Standard haversine formula.
- * Lifted into module scope so it's unit-testable and the geofence check
- * loop doesn't re-declare it on every iteration.
- */
-function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6_371_000;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
-}
-
-// Exported for tests.
-export const __internals = { haversineMeters, toRegions };

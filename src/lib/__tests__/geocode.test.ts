@@ -1,4 +1,8 @@
-import { autocomplete, geocodePlace } from "../geocode";
+import { autocomplete, geocodePlace, __resetAutocompleteCacheForTests } from "../geocode";
+
+beforeEach(() => {
+  __resetAutocompleteCacheForTests();
+});
 
 describe("geocode — short query handling", () => {
   let originalFetch: typeof fetch | undefined;
@@ -106,6 +110,53 @@ describe("geocode — Photon live API (mocked fetch)", () => {
     const { suggestions } = await autocomplete("Mainz");
     expect(suggestions).toHaveLength(1);
     expect(suggestions[0]!.placeId).toMatch(/^osm:/);
+  });
+
+  it("caches autocomplete hits for 30s — a repeat call skips the network", async () => {
+    const mockFetch = jest.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            features: [
+              {
+                properties: { osm_id: 1, name: "Berlin", country: "DE" },
+                geometry: { coordinates: [13.405, 52.52] },
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
+    );
+    globalThis.fetch = mockFetch as unknown as typeof fetch;
+
+    const first = await autocomplete("Berlin");
+    const second = await autocomplete("Berlin");
+    expect(first.suggestions).toHaveLength(1);
+    expect(second.suggestions).toHaveLength(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("cache misses a different query string — each prefix triggers its own fetch", async () => {
+    const mockFetch = jest.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            features: [
+              {
+                properties: { osm_id: 1 },
+                geometry: { coordinates: [13.405, 52.52] },
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
+    );
+    globalThis.fetch = mockFetch as unknown as typeof fetch;
+
+    await autocomplete("Ber");
+    await autocomplete("Berl");
+    await autocomplete("Berlin");
+    expect(mockFetch).toHaveBeenCalledTimes(3);
   });
 });
 

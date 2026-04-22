@@ -18,7 +18,6 @@ beforeEach(() => {
     themeOverride: null,
     localeOverride: null,
     onboardingComplete: false,
-    hydrated: false,
   });
   setKvRepoForTests(null);
 });
@@ -81,7 +80,6 @@ describe("uiStore persistence", () => {
 
     expect(result.current.themeOverride).toBe("dark");
     expect(result.current.localeOverride).toBe("de");
-    expect(result.current.hydrated).toBe(true);
   });
 
   it("survives a simulated remount — persisted value rehydrates", () => {
@@ -105,7 +103,6 @@ describe("uiStore persistence", () => {
       themeOverride: null,
       localeOverride: null,
       onboardingComplete: false,
-      hydrated: false,
     });
 
     // Second mount — the persisted value should be restored from KV.

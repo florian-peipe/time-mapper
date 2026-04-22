@@ -18,7 +18,13 @@ type Props = {
  * geofence radius). Used as background art on empty states and the
  * onboarding hero.
  */
-export function Rings({ size = 180, opacity = 0.08, color, style, testID }: Props) {
+export const Rings = React.memo(function Rings({
+  size = 180,
+  opacity = 0.08,
+  color,
+  style,
+  testID,
+}: Props) {
   const t = useTheme();
   const stroke = color ?? t.color("color.accent");
   return (
@@ -33,4 +39,4 @@ export function Rings({ size = 180, opacity = 0.08, color, style, testID }: Prop
       </Svg>
     </View>
   );
-}
+});

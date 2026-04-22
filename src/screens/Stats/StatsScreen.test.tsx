@@ -9,8 +9,8 @@ import { EntriesRepo } from "@/db/repository/entries";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import * as openPaywallModule from "@/features/billing/openPaywall";
-import { _resetRateLimit } from "@/screens/Timeline/dayNavGuard";
-import { grantProMock, resetProMock } from "@/features/billing/useProMock";
+import { _resetRateLimit } from "@/screens/shared/dayNavGuard";
+import { __setProForTests } from "@/features/billing/usePro";
 import { StatsScreen } from "./StatsScreen";
 
 type SeedEntry = {
@@ -79,7 +79,7 @@ function setup(opts: {
 
 beforeEach(() => {
   useSheetStore.setState({ active: null, payload: null });
-  resetProMock();
+  __setProForTests(null);
 });
 
 afterEach(() => {
@@ -119,7 +119,7 @@ describe("StatsScreen", () => {
   });
 
   it("hides the Pro upsell card when the user is Pro", () => {
-    grantProMock();
+    __setProForTests(true);
     const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
     setup({ nowMs });
     expect(screen.queryByTestId("stats-pro-upsell")).toBeNull();

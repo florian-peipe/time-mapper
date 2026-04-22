@@ -10,13 +10,12 @@ import { useRefreshOnSheetClose } from "@/features/entries/useRefreshOnSheetClos
 import { useClosestPlace } from "@/features/places/useClosestPlace";
 import { usePlaces } from "@/features/places/usePlaces";
 import { rangeForMode, type RangeMode } from "@/lib/range";
-import { netMinutes } from "@/lib/entries";
+import { indexPlacesById, netMinutes } from "@/lib/entries";
 import { usePro } from "@/features/billing/usePro";
 import { useSheetStore } from "@/state/sheetStore";
-import type { Place } from "@/db/schema";
-import type { IconName, SourceKind } from "@/components";
-import { DayNavHeader } from "./DayNavHeader";
-import { EntryRow } from "./EntryRow";
+import type { IconName } from "@/components";
+import { DayNavHeader } from "@/screens/shared/DayNavHeader";
+import { EntryRow } from "@/screens/shared/EntryRow";
 import { NearbyPlacesBanner } from "./NearbyPlacesBanner";
 import { RunningTimerCard } from "./RunningTimerCard";
 import { TrackingBanner } from "./TrackingBanner";
@@ -40,7 +39,7 @@ export function TimelineScreen() {
   }, [entriesState, ongoingState]);
   useRefreshOnSheetClose(["entryEdit", "addPlace"], handleRefresh);
 
-  const placesById = useMemo(() => indexPlaces(placesState.places), [placesState.places]);
+  const placesById = useMemo(() => indexPlacesById(placesState.places), [placesState.places]);
 
   const totalMin = useMemo(
     () => entriesState.entries.reduce((sum, e) => sum + netMinutes(e), 0),
@@ -166,7 +165,7 @@ export function TimelineScreen() {
                 placeName={place.name}
                 placeIcon={place.icon as IconName}
                 placeColor={place.color}
-                source={entry.source as SourceKind}
+                source={entry.source}
                 startedAt={entry.startedAt}
                 endedAt={entry.endedAt}
                 netMinutes={netMinutes(entry)}
@@ -330,10 +329,4 @@ function NoEntriesEmptyState({ onAddAnotherPlace }: { onAddAnotherPlace: () => v
       </View>
     </View>
   );
-}
-
-function indexPlaces(places: Place[]): Map<string, Place> {
-  const map = new Map<string, Place>();
-  for (const p of places) map.set(p.id, p);
-  return map;
 }

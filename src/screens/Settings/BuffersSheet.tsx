@@ -5,6 +5,7 @@ import { useTheme } from "@/theme/useTheme";
 import { Button, Sheet } from "@/components";
 import { useKvRepo } from "@/features/onboarding/useOnboardingGate";
 import { i18n } from "@/lib/i18n";
+import { KV_KEYS } from "@/db/kvKeys";
 
 export type BuffersSheetProps = {
   visible: boolean;
@@ -16,8 +17,8 @@ export type BuffersSheetProps = {
  * so `AddPlaceSheet` can read the same values when pre-filling its per-place
  * buffer sliders.
  */
-export const KV_GLOBAL_ENTRY_BUFFER = "global.buffers.entry_s";
-export const KV_GLOBAL_EXIT_BUFFER = "global.buffers.exit_s";
+export const KV_GLOBAL_ENTRY_BUFFER = KV_KEYS.GLOBAL_ENTRY_BUFFER_S;
+export const KV_GLOBAL_EXIT_BUFFER = KV_KEYS.GLOBAL_EXIT_BUFFER_S;
 
 /** Defaults (seconds) when the user hasn't picked custom values yet. */
 export const DEFAULT_ENTRY_BUFFER_S = 120;

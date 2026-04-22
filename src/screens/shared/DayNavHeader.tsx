@@ -5,7 +5,7 @@ import { Icon } from "@/components";
 import { i18n } from "@/lib/i18n";
 import { localeForDateApis } from "@/lib/time";
 import { MODES, PERIOD_DAYS, type RangeMode } from "@/lib/range";
-import { openSheet as openPaywallIfGated } from "@/screens/Timeline/dayNavGuard";
+import { openSheet as openPaywallIfGated } from "./dayNavGuard";
 
 type Props = {
   mode: RangeMode;

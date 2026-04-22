@@ -13,7 +13,8 @@
     "test:watch": "jest --watch",
     "build:check": "expo export --platform ios --output-dir .expo/build-check",
     "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "check:submit": "node scripts/check-submission-ready.js"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

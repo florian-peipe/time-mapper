@@ -37,7 +37,6 @@ export function StepIndicator({ current, total, testID }: StepIndicatorProps) {
             key={n}
             testID={testID ? `${testID}-dot-${n}` : undefined}
             style={{
-              // design-source: 6pt dot, expand to 20pt pill when active
               height: 6,
               width: active ? 20 : 6,
               borderRadius: t.radius.pill,

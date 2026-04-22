@@ -1,10 +1,9 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type * as DbClientModule from "@/db/client";
 import { PlacesRepo, type CreatePlaceInput } from "@/db/repository/places";
 import type { Place } from "@/db/schema";
+import { createDeviceRepo } from "@/db/deviceDb";
 import { reconcileAfterPlaceChange } from "@/features/tracking/bootstrap";
 import { useDataVersionStore } from "@/state/dataVersionStore";
-import { bumpFirstSafely } from "@/features/diagnostics/counters";
 
 /**
  * Context for injecting a `PlacesRepo` instance. Tests wrap `renderHook` with
@@ -25,16 +24,7 @@ export function PlacesRepoProvider({
   return <PlacesRepoContext.Provider value={value}>{children}</PlacesRepoContext.Provider>;
 }
 
-let cachedDeviceRepo: PlacesRepo | null = null;
-function getDeviceRepo(): PlacesRepo {
-  if (!cachedDeviceRepo) {
-    // Deferred require keeps the `expo-sqlite` device binding off the test import graph.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { db } = require("@/db/client") as typeof DbClientModule;
-    cachedDeviceRepo = new PlacesRepo(db);
-  }
-  return cachedDeviceRepo;
-}
+const getDeviceRepo = createDeviceRepo((db) => new PlacesRepo(db));
 
 /**
  * Resolve a `PlacesRepo` from context, falling back to a device-bound repo.
@@ -80,7 +70,6 @@ export function usePlaces(): UsePlacesResult {
     (input: CreatePlaceInput) => {
       const p = repo.create(input);
       bumpPlaces();
-      bumpFirstSafely("first_place");
       // Fire-and-forget: geofence registration is eventual, the UI shouldn't
       // block on a native bridge hop. Errors are swallowed inside.
       void reconcileAfterPlaceChange();

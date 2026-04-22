@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Button, Card, TrackingDot } from "@/components";
 import { i18n } from "@/lib/i18n";
-import { formatElapsed } from "@/lib/time";
+import { formatElapsed, nowS } from "@/lib/time";
 
 type Props = {
   /** Place display name, shown inline after "Tracking". */
@@ -91,7 +91,7 @@ export function RunningTimerCard({ placeName, startedAt, onStop, testID }: Props
  * shows even if the interval fires late.
  */
 function useElapsed(startedAt: number): string {
-  const compute = () => Math.max(0, Math.floor(Date.now() / 1000) - startedAt);
+  const compute = () => Math.max(0, nowS() - startedAt);
   const [seconds, setSeconds] = useState<number>(compute);
   useEffect(() => {
     // Recompute immediately so a re-mount with a new `startedAt` re-syncs.

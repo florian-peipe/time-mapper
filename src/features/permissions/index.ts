@@ -24,13 +24,18 @@ function getNotifications(): typeof ExpoNotifications {
  * Fetches the current location permission status without prompting. Used
  * when the app starts to decide whether to show the Timeline "needs
  * permissions" banner.
+ *
+ * The foreground + background reads are independent, so fetch them in
+ * parallel — halves the latency on the boot path.
  */
 export async function getLocationStatus(): Promise<LocationPermissionStatus> {
-  const fg = await Location.getForegroundPermissionsAsync();
+  const [fg, bg] = await Promise.all([
+    Location.getForegroundPermissionsAsync(),
+    Location.getBackgroundPermissionsAsync(),
+  ]);
   if (fg.status !== "granted") {
     return fg.status === "undetermined" ? "undetermined" : "denied";
   }
-  const bg = await Location.getBackgroundPermissionsAsync();
   if (bg.status === "granted") return "granted";
   return "foreground-only";
 }

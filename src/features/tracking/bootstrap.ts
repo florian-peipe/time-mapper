@@ -1,12 +1,15 @@
 import { AppState, type AppStateStatus } from "react-native";
-import type * as DbClientModule from "@/db/client";
 import { PlacesRepo } from "@/db/repository/places";
+import { EntriesRepo } from "@/db/repository/entries";
 import { KvRepo } from "@/db/repository/kv";
+import { getDeviceDb } from "@/db/deviceDb";
 import { getCurrentPlaceId, reconcileGeofences } from "./geofenceService";
 import { getLocationStatus } from "@/features/permissions";
 import { configureNotificationChannels } from "@/features/notifications/notifier";
 import { dispatchSyntheticEnter, runOpportunisticResolve } from "@/background/tasks";
 import { useDataVersionStore } from "@/state/dataVersionStore";
+import { runRetentionSweep } from "@/features/diagnostics/retention";
+import { nowS } from "@/lib/time";
 
 /**
  * Initialize the tracking engine. Called once from `app/_layout.tsx` after
@@ -23,14 +26,16 @@ import { useDataVersionStore } from "@/state/dataVersionStore";
  */
 export async function bootstrapTracking(): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { db } = require("@/db/client") as typeof DbClientModule;
+    const db = getDeviceDb();
     const places = new PlacesRepo(db);
     const kv = new KvRepo(db);
 
-    await configureNotificationChannels(kv);
+    // Notification-channel setup + permission read are independent I/O.
+    const [, locStatus] = await Promise.all([
+      configureNotificationChannels(kv),
+      getLocationStatus(),
+    ]);
 
-    const locStatus = await getLocationStatus();
     if (locStatus === "granted") {
       const list = places.list();
       await reconcileGeofences(list);
@@ -44,6 +49,15 @@ export async function bootstrapTracking(): Promise<void> {
     // Always run opportunistic resolve — it's cheap and catches up any
     // pending transition left behind from a previous session.
     await runOpportunisticResolve();
+
+    // Best-effort retention sweep. Throttled inside to once/day via KV,
+    // so re-running cheaply on every boot is fine.
+    try {
+      runRetentionSweep(new EntriesRepo(db), kv, nowS());
+    } catch (err) {
+      console.warn("[bootstrapTracking] retention sweep failed:", err);
+    }
+
     // Any entries the background task wrote (or that the synthetic-enter
     // path just opened) need to surface on the UI. A single bump pokes
     // all `useEntries` / `useOngoingEntry` consumers to re-query.
@@ -60,9 +74,7 @@ export async function bootstrapTracking(): Promise<void> {
  */
 export async function reconcileAfterPlaceChange(): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { db } = require("@/db/client") as typeof DbClientModule;
-    const places = new PlacesRepo(db);
+    const places = new PlacesRepo(getDeviceDb());
     const locStatus = await getLocationStatus();
     if (locStatus !== "granted") return;
     const list = places.list();

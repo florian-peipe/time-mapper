@@ -1,9 +1,14 @@
+// Force the contact loader to see "no file" regardless of the local clone
+// state — otherwise a developer who has filled contact.local.ts will see
+// the configured Impressum and this test (which asserts the fallback) fails.
 import React from "react";
 import { fireEvent, render } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { LegalScreen } from "./LegalScreen";
 import { LEGAL_DOCS } from "./documents";
+
+jest.mock("./contact.local", () => ({ __esModule: true, default: null }), { virtual: true });
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();

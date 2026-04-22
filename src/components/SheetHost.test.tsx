@@ -9,7 +9,7 @@ import { EntriesRepo } from "@/db/repository/entries";
 import { KvRepo } from "@/db/repository/kv";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
-import { resetProMock } from "@/features/billing/useProMock";
+import { __setProForTests } from "@/features/billing/usePro";
 import { SheetHost } from "./SheetHost";
 
 const mockRouterReplace = jest.fn();
@@ -40,7 +40,7 @@ function mount() {
 
 beforeEach(() => {
   useSheetStore.setState({ active: null, payload: null });
-  resetProMock();
+  __setProForTests(null);
   mockRouterReplace.mockReset();
   mockRouterPush.mockReset();
 });

@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { i18n } from "@/lib/i18n";
 import { useTheme } from "@/theme/useTheme";
-import { Chip } from "./Chip";
+import { Chip } from "@/components";
 
 /**
  * ISO day numbers for the chip row (1 = Mon … 7 = Sun). Matches the

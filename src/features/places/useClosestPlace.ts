@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { AppState } from "react-native";
 import * as Location from "expo-location";
 import { usePlaces } from "./usePlaces";
-import { __internals } from "@/features/tracking/geofenceService";
+import { haversineMeters } from "@/lib/geo";
 import type { Place } from "@/db/schema";
 
 export type ClosestPlace = {
@@ -18,8 +19,10 @@ export type ClosestPlace = {
  * one within 2× its radius. `null` means "no fix yet" or "far from every
  * place".
  *
- * Shared by the Timeline's positional banner and quick-add FAB so both
- * always reflect the same "am I near something tracked?" judgment.
+ * Polling pauses while the app is backgrounded — `AppState` listener tears
+ * down the interval on `background` and re-establishes it on `active`. Tab
+ * focus isn't enough on its own (the tab view keeps mounted tabs in memory),
+ * so AppState is the right gate for a battery-sensitive poll.
  */
 export function useClosestPlace(): ClosestPlace | null {
   const { places } = usePlaces();
@@ -30,7 +33,9 @@ export function useClosestPlace(): ClosestPlace | null {
       setClosest(null);
       return;
     }
+
     let cancelled = false;
+    let handle: ReturnType<typeof setInterval> | null = null;
 
     async function poll() {
       try {
@@ -43,11 +48,32 @@ export function useClosestPlace(): ClosestPlace | null {
       }
     }
 
-    void poll();
-    const handle = setInterval(() => void poll(), 60_000);
+    function start() {
+      if (handle) return;
+      void poll();
+      handle = setInterval(() => void poll(), 60_000);
+    }
+    function stop() {
+      if (handle) {
+        clearInterval(handle);
+        handle = null;
+      }
+    }
+
+    // Start immediately — jest/Expo Go both report `AppState.currentState`
+    // as something other than "active" on first eval; gating here would
+    // defer the first poll until the user tapped the screen. Backgrounding
+    // still stops it below.
+    start();
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") start();
+      else stop();
+    });
+
     return () => {
       cancelled = true;
-      clearInterval(handle);
+      stop();
+      sub.remove();
     };
   }, [places]);
 
@@ -60,12 +86,7 @@ function pickClosest(
 ): ClosestPlace | null {
   let best: ClosestPlace | null = null;
   for (const p of places) {
-    const d = __internals.haversineMeters(
-      fix.coords.latitude,
-      fix.coords.longitude,
-      p.latitude,
-      p.longitude,
-    );
+    const d = haversineMeters(fix.coords.latitude, fix.coords.longitude, p.latitude, p.longitude);
     if (d > p.radiusM * 2) continue;
     const candidate: ClosestPlace = {
       place: p,

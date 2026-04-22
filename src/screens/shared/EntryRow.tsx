@@ -4,7 +4,7 @@ import { useTheme } from "@/theme/useTheme";
 import { Icon, PlaceBubble, SourceChip } from "@/components";
 import type { IconName, SourceKind } from "@/components";
 import { i18n } from "@/lib/i18n";
-import { formatClock } from "@/lib/time";
+import { formatClock, formatDurationFixed } from "@/lib/time";
 
 type Props = {
   /** Entry id forwarded to onPress — callers usually open the edit sheet with it. */
@@ -32,8 +32,11 @@ type Props = {
  * The entire row is tappable — opens the EntryEditSheet. We reuse `PlaceBubble`
  * (40px default) and the shared `SourceChip`; the hairline-below pattern is
  * implemented as `borderBottom`.
+ *
+ * Memoized because month/year views render hundreds of rows and the parent
+ * re-renders every second while the running-timer card ticks.
  */
-export function EntryRow({
+export const EntryRow = React.memo(function EntryRow({
   entryId,
   placeName,
   placeIcon,
@@ -50,8 +53,7 @@ export function EntryRow({
 
   const startLabel = formatClock(startedAt);
   const endLabel = endedAt == null ? i18n.t("entryRow.ongoing") : formatClock(endedAt);
-  const hours = Math.floor(netMinutes / 60);
-  const minutes = netMinutes % 60;
+  const durationLabel = formatDurationFixed(netMinutes * 60);
 
   return (
     <Pressable
@@ -113,7 +115,7 @@ export function EntryRow({
           fontVariant: ["tabular-nums"],
         }}
       >
-        {hours}h {String(minutes).padStart(2, "0")}m
+        {durationLabel}
       </Text>
       {/*
         chevron-right trailing accessory signals "this row is tappable →
@@ -123,4 +125,4 @@ export function EntryRow({
       <Icon name="chevron-right" size={18} color={t.color("color.fg3")} />
     </Pressable>
   );
-}
+});

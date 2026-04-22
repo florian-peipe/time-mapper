@@ -1,36 +1,22 @@
 /**
- * Tests for the production `usePro` hook.
- *
- * The hook delegates to two distinct backends:
- *   1. `useProMock` when the RevenueCat wrapper reports `isMockMode()`.
- *   2. The real RevenueCat wrapper otherwise: configures the SDK on mount,
- *      subscribes to customer-info updates, derives `isPro` from
- *      `entitlements.active.pro`, and exposes a `purchase(pkg)` method.
- *
- * We mock `./revenuecat` for both arms and use the existing `useProMock`
- * unmodified for the mock-mode arm.
+ * Tests for the production `usePro` hook. `usePro` is a single-path
+ * RevenueCat-backed implementation: configure on mount, fetch customer info
+ * + offerings, subscribe to live updates. `__setProForTests` provides a
+ * synchronous test override that bypasses the SDK.
  */
 import React from "react";
 import { Text, View } from "react-native";
 import { act, render, renderHook, waitFor } from "@testing-library/react-native";
 import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from "react-native-purchases";
 
-import { resetProMock, useProMock } from "./useProMock";
-// Import the mocked module up-top (not after `jest.mock`) so eslint's
-// `import/first` is happy. Jest hoists `jest.mock(...)` above all imports
-// at compile time, so the order on disk doesn't affect the runtime mock.
 import {
   configureRevenueCat as mockConfigure,
   purchasePackage as mockPurchasePackage,
   restorePurchases as mockRestorePurchases,
 } from "./revenuecat";
-import { usePro } from "./usePro";
+import { __setProForTests, usePro } from "./usePro";
 
-// We control the RevenueCat wrapper entirely. Each test toggles `isMockMode`
-// + the resolved customer info / offerings to drive the hook through its
-// branches.
 const mockState: {
-  mockMode: boolean;
   configureCalls: { args: unknown[] }[];
   customerInfo: CustomerInfo;
   offering: PurchasesOffering | null;
@@ -38,7 +24,6 @@ const mockState: {
   restoreResult: CustomerInfo | Error;
   listeners: ((info: CustomerInfo) => void)[];
 } = {
-  mockMode: false,
   configureCalls: [],
   customerInfo: makeInfo({}),
   offering: null,
@@ -53,15 +38,10 @@ function makeInfo(active: Record<string, unknown>): CustomerInfo {
   } as unknown as CustomerInfo;
 }
 
-// Mock the appUserId resolver too — the real one reaches into the device
-// KV repo (via @/db/client) which we don't want to spin up in unit tests.
-// usePro should still pass the resolved id through to configureRevenueCat,
-// which we assert below via the configureCalls log.
 jest.mock("./appUserId", () => ({
   REVENUECAT_USER_ID_KEY: "revenuecat.user_id",
   getOrCreateRevenueCatUserId: jest.fn(() => "test-user-uuid"),
   getOrCreateRevenueCatUserIdFromDevice: jest.fn(() => "test-user-uuid"),
-  _resetDeviceKvCacheForTest: jest.fn(),
 }));
 
 jest.mock("./revenuecat", () => ({
@@ -69,7 +49,6 @@ jest.mock("./revenuecat", () => ({
   configureRevenueCat: jest.fn((userId?: string) => {
     mockState.configureCalls.push({ args: userId === undefined ? [] : [userId] });
   }),
-  isMockMode: jest.fn(() => mockState.mockMode),
   getCustomerInfo: jest.fn(async () => mockState.customerInfo),
   getOfferings: jest.fn(async () => mockState.offering),
   purchasePackage: jest.fn(async (_: PurchasesPackage) => {
@@ -92,7 +71,6 @@ jest.mock("./revenuecat", () => ({
 }));
 
 beforeEach(() => {
-  mockState.mockMode = false;
   mockState.configureCalls = [];
   mockState.customerInfo = makeInfo({});
   mockState.offering = null;
@@ -100,10 +78,10 @@ beforeEach(() => {
   mockState.restoreResult = makeInfo({});
   mockState.listeners = [];
   jest.clearAllMocks();
-  resetProMock();
+  __setProForTests(null);
 });
 
-describe("usePro — real mode (SDK keys present)", () => {
+describe("usePro", () => {
   it("calls configureRevenueCat() once on mount", async () => {
     renderHook(() => usePro());
     await waitFor(() => expect(mockConfigure).toHaveBeenCalledTimes(1));
@@ -182,64 +160,26 @@ describe("usePro — real mode (SDK keys present)", () => {
     });
     expect(result.current.isPro).toBe(true);
   });
-
-  it("grant() and revoke() are no-ops in real mode (warns)", async () => {
-    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
-    const { result } = renderHook(() => usePro());
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    act(() => result.current.grant());
-    expect(result.current.isPro).toBe(false);
-    expect(warn).toHaveBeenCalled();
-    warn.mockRestore();
-  });
 });
 
-describe("usePro — mock mode (SDK keys missing)", () => {
-  beforeEach(() => {
-    mockState.mockMode = true;
-  });
-
-  it("returns the same shape as useProMock with isPro=false initially", () => {
+describe("usePro — test override", () => {
+  it("__setProForTests(true) forces isPro=true regardless of SDK state", async () => {
     const { result } = renderHook(() => usePro());
+    await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.isPro).toBe(false);
-    expect(typeof result.current.grant).toBe("function");
-    expect(typeof result.current.revoke).toBe("function");
-    expect(typeof result.current.purchase).toBe("function");
-    expect(typeof result.current.restore).toBe("function");
-    expect(result.current.offerings).toBeNull();
-    expect(result.current.loading).toBe(false);
-  });
 
-  it("grant() flips isPro to true (delegates to useProMock store)", () => {
-    const { result } = renderHook(() => usePro());
-    act(() => result.current.grant());
+    act(() => __setProForTests(true));
     expect(result.current.isPro).toBe(true);
-  });
 
-  it("revoke() flips isPro back to false", () => {
-    const { result } = renderHook(() => usePro());
-    act(() => result.current.grant());
-    expect(result.current.isPro).toBe(true);
-    act(() => result.current.revoke());
+    act(() => __setProForTests(null));
     expect(result.current.isPro).toBe(false);
   });
 
-  it("shares state with useProMock hook calls (so test helpers still work)", () => {
-    const { result: pro } = renderHook(() => usePro());
-    const { result: mock } = renderHook(() => useProMock());
-    act(() => mock.current.grant());
-    expect(pro.current.isPro).toBe(true);
-  });
-
-  it("purchase() rejects in mock mode (no SDK to drive it)", async () => {
+  it("__setProForTests(false) forces isPro=false even after purchase", async () => {
+    mockState.customerInfo = makeInfo({ pro: { isActive: true } });
     const { result } = renderHook(() => usePro());
-    const pkg = { identifier: "$rc_monthly" } as unknown as PurchasesPackage;
-    await expect(result.current.purchase(pkg)).rejects.toThrow(/mock mode/i);
-  });
-
-  it("restore() resolves to the no-op free stub in mock mode", async () => {
-    const { result } = renderHook(() => usePro());
-    await expect(result.current.restore()).resolves.toBeUndefined();
+    await waitFor(() => expect(result.current.isPro).toBe(true));
+    act(() => __setProForTests(false));
     expect(result.current.isPro).toBe(false);
   });
 });

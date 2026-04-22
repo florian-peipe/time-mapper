@@ -10,6 +10,13 @@
 // module, and production builds that want Sentry can `npm install
 // @sentry/react-native` alongside setting the DSN.
 
+type SentryBreadcrumb = {
+  category?: string;
+  message?: string;
+  level?: "info" | "warning" | "error";
+  data?: Record<string, unknown>;
+};
+
 type SentryLike = {
   init: (opts: {
     dsn: string;
@@ -17,7 +24,7 @@ type SentryLike = {
     beforeSend?: (event: unknown) => unknown;
   }) => void;
   captureException: (err: unknown, opts?: { extra?: Record<string, unknown> }) => void;
-  setUser: (user: { id: string } | null) => void;
+  addBreadcrumb?: (crumb: SentryBreadcrumb) => void;
 };
 
 let sentry: SentryLike | null = null;
@@ -26,10 +33,6 @@ let warnedNoDsn = false;
 
 function getDsn(): string {
   return process.env.EXPO_PUBLIC_SENTRY_DSN ?? "";
-}
-
-export function isCrashReportingEnabled(): boolean {
-  return initialized && sentry != null;
 }
 
 /**
@@ -80,15 +83,6 @@ export function initCrashReporting(options?: { consent?: boolean }): void {
 }
 
 /**
- * Tag the current session with the anonymous RevenueCat user-id. Used so
- * Sentry groups crashes by install without ever learning the user's name.
- */
-export function identifyAnonUser(anonId: string | null): void {
-  if (!sentry) return;
-  sentry.setUser(anonId ? { id: anonId } : null);
-}
-
-/**
  * Report a caught error. Works even when Sentry is disabled — in that case
  * we just console.error so the error still shows in the dev log.
  */
@@ -98,6 +92,27 @@ export function captureException(err: unknown, context?: Record<string, unknown>
     return;
   }
   sentry.captureException(err, context ? { extra: context } : undefined);
+}
+
+/**
+ * Record a breadcrumb that attaches to the next error. Categories used:
+ *   - "geofence"  OS-driven region enter/exit events
+ *   - "entry"     entry open/close through the state machine
+ *   - "paywall"   paywall presented / outcome
+ *   - "nav"       route changes (manual call sites)
+ *
+ * No-ops when Sentry isn't initialized. `scrubLocation` strips lat/lon
+ * from breadcrumbs before send, so the `data` field CAN include raw
+ * coordinates — Sentry won't see them.
+ */
+export function addBreadcrumb(crumb: SentryBreadcrumb): void {
+  if (!sentry || typeof sentry.addBreadcrumb !== "function") return;
+  try {
+    sentry.addBreadcrumb(crumb);
+  } catch {
+    // Breadcrumbs are best-effort; a Sentry bug must not poison
+    // the happy path.
+  }
 }
 
 /**

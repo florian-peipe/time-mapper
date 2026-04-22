@@ -4,9 +4,16 @@ Smoke-level flows covering the golden path end-to-end. Unit tests cover
 domain logic; Maestro covers "does the app link, migrate, and navigate
 on a real device / simulator."
 
-We intentionally keep this small — one onboarding flow. E2E tests are
-slow, flaky, and expensive to maintain. Unit + integration tests in
-`src/**/__tests__/` are the primary suite.
+Keep this small. E2E tests are slow, flaky, and expensive to maintain.
+Unit + integration tests in `src/**/__tests__/` are the primary suite;
+Maestro is the pre-release sanity pass.
+
+## Flows
+
+- `onboarding-smoke.yaml` — fresh install → complete onboarding → Timeline
+- `second-place-paywall.yaml` — free-tier gate fires on 2nd place add
+- `edit-entry.yaml` — tap entry row → edit sheet → save
+- `language-cycle.yaml` — Settings language row cycles and re-renders
 
 ## Install
 

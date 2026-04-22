@@ -17,7 +17,7 @@ pricing:
 
 localizations:
   en-US:
-    subtitle: "Automatic place-based time tracking"
+    subtitle: "Place-based time tracking"
     description: |
       Time Mapper quietly tracks how long you spend at the places that
       matter — home, the office, the gym, your favorite coffee shop.
@@ -42,12 +42,12 @@ localizations:
       • Full history beyond 14 days
       • Weekly reports for past weeks
       • CSV export for your own records
-      • Categories for grouping places
+      • Per-place daily + weekly goals with reminders
 
       Auto-renewable subscription: monthly or yearly. Cancel anytime in
       the App Store settings.
 
-    keywords: "time tracker,geofence,location,hours,productivity,automatic,work,home,office,gym,places,visits,privacy,offline"
+    keywords: "time tracker,geofence,location,hours,automatic,work,home,office,gym,places,privacy,offline"
     promotionalText: "Automatic time tracking for the places that matter. Private, on-device, no taps required."
     supportUrl: "https://timemapper.app/support"
     marketingUrl: "https://timemapper.app"
@@ -55,7 +55,7 @@ localizations:
     whatsNew: "Time Mapper 1.0 — first public release. Add places, track time automatically, stay private."
 
   de-DE:
-    subtitle: "Automatisches ort-basiertes Zeittracking"
+    subtitle: "Ort-basiertes Zeittracking"
     description: |
       Time Mapper verfolgt im Hintergrund, wie viel Zeit du an den Orten
       verbringst, die dir wichtig sind — zuhause, im Büro, im Gym, in
@@ -82,12 +82,12 @@ localizations:
       • Vollständiger Verlauf über 14 Tage hinaus
       • Wochenberichte für vergangene Wochen
       • CSV-Export für deine eigenen Aufzeichnungen
-      • Kategorien zum Gruppieren von Orten
+      • Tages- und Wochenziele pro Ort mit Erinnerungen
 
       Automatisch verlängerndes Abonnement: monatlich oder jährlich.
       Jederzeit in den App-Store-Einstellungen kündbar.
 
-    keywords: "Zeittracking,Geofence,Standort,Stunden,Produktivität,automatisch,Arbeit,zuhause,Büro,Gym,Orte,Besuche,Datenschutz,offline"
+    keywords: "Zeittracking,Geofence,Standort,Stunden,automatisch,Arbeit,zuhause,Büro,Gym,Orte,Datenschutz"
     promotionalText: "Automatisches Zeittracking für die Orte, die zählen. Privat, auf dem Gerät, ohne Antippen."
     supportUrl: "https://timemapper.app/support"
     marketingUrl: "https://timemapper.app"
@@ -107,10 +107,10 @@ privacyLabels:
 
 contact:
   # ASC requires a contact for review rejections.
-  firstName: "YOUR_FIRST_NAME"
-  lastName: "YOUR_LAST_NAME"
-  email: "support@timemapper.app"
-  phone: "+49_XXX_XXXXXXX"
+  firstName: "Florian"
+  lastName: "Peipe"
+  email: "info@peipe.org"
+  phone: "info@peipe.org"
 
 reviewNotes: |
   Time Mapper is a location-based time tracker. To test the full flow:

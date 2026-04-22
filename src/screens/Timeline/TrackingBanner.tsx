@@ -6,6 +6,7 @@ import { useLocationPermission } from "@/features/permissions/hooks";
 import { useKvRepo } from "@/features/onboarding/useOnboardingGate";
 import { usePlaces } from "@/features/places/usePlaces";
 import { classifyTrackingHealth, readLastBgFire } from "@/features/tracking/trackingHealth";
+import { nowS } from "@/lib/time";
 
 /**
  * Surfaces the auto-tracking status on Timeline. Cases:
@@ -34,7 +35,7 @@ export function TrackingBanner() {
       classifyTrackingHealth({
         locationStatus: status === "undetermined" ? "unknown" : status,
         lastBgFireAtS: readLastBgFire(kv),
-        nowS: Math.floor(Date.now() / 1000),
+        nowS: nowS(),
         placesCount: places.length,
       }),
     [status, kv, places.length],

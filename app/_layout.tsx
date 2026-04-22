@@ -29,8 +29,7 @@ import { runMigrations, db } from "@/db/client";
 import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
 import { KvRepo } from "@/db/repository/kv";
 import { getTelemetryEnabled } from "@/features/diagnostics/telemetryConsent";
-import { bumpCounter } from "@/features/diagnostics/counters";
-import { SheetHost } from "@/screens/SheetHost";
+import { SheetHost } from "@/components/SheetHost";
 // Side-effect import: registers the geofence task at module-eval time, which
 // is a hard requirement of expo-task-manager (OS cold-wakes run only JS
 // module init, not React render). Must come before bootstrapTracking().
@@ -87,8 +86,6 @@ export default function RootLayout() {
         const kv = new KvRepo(db);
         const consent = getTelemetryEnabled(kv);
         initCrashReporting({ consent });
-        // Local-only launch counter — no network, surfaces in diagnostic export.
-        bumpCounter(kv, "app_launch");
       } catch {
         // Reading KV failed — default to no-Sentry to be safe.
       }

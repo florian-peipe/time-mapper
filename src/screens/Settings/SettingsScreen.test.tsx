@@ -12,7 +12,7 @@ import { KvRepoProvider } from "@/features/onboarding/useOnboardingGate";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore } from "@/state/uiStore";
-import { grantProMock, resetProMock } from "@/features/billing/useProMock";
+import { __setProForTests } from "@/features/billing/usePro";
 import * as openPaywallModule from "@/features/billing/openPaywall";
 import { SettingsScreen } from "./SettingsScreen";
 
@@ -72,7 +72,7 @@ beforeEach(() => {
     localeOverride: null,
     onboardingComplete: false,
   });
-  resetProMock();
+  __setProForTests(null);
 });
 
 describe("SettingsScreen", () => {
@@ -111,7 +111,7 @@ describe("SettingsScreen", () => {
   });
 
   it("hides the Pro upsell card when the user is Pro", () => {
-    grantProMock();
+    __setProForTests(true);
     render(wrap(<SettingsScreen />));
     expect(screen.queryByTestId("settings-pro-upsell")).toBeNull();
   });
@@ -164,7 +164,7 @@ describe("SettingsScreen", () => {
 
   it("tapping Export CSV while Pro does NOT open the paywall", () => {
     const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
-    grantProMock();
+    __setProForTests(true);
     render(wrap(<SettingsScreen />));
     fireEvent.press(screen.getByTestId("settings-row-export"));
     expect(spy).not.toHaveBeenCalled();
@@ -205,24 +205,24 @@ describe("SettingsScreen", () => {
   });
 
   it("Subscription section shows the Pro-active row when isPro is true", () => {
-    grantProMock();
+    __setProForTests(true);
     render(wrap(<SettingsScreen />));
     expect(screen.getByTestId("settings-row-pro-active")).toBeTruthy();
     expect(screen.getByText("Time Mapper Pro")).toBeTruthy();
     expect(screen.getByText("Active")).toBeTruthy();
   });
 
-  it("tapping the Pro-active row deep-links to the platform subscription page", () => {
-    grantProMock();
-    const spy = jest.spyOn(Linking, "openURL").mockResolvedValueOnce(undefined as unknown as never);
+  it("tapping the Pro-active row opens the RevenueCat Customer Center", async () => {
+    __setProForTests(true);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const RevenueCatUI = require("react-native-purchases-ui").default as {
+      presentCustomerCenter: jest.Mock;
+    };
+    RevenueCatUI.presentCustomerCenter.mockClear();
     render(wrap(<SettingsScreen />));
     fireEvent.press(screen.getByTestId("settings-row-pro-active"));
-    expect(spy).toHaveBeenCalled();
-    const url = spy.mock.calls[0]![0];
-    // iOS scheme or Android web URL — both are valid depending on jest's
-    // platform mock. Check substring "subscriptions" to stay platform-agnostic.
-    expect(url).toMatch(/subscriptions/);
-    spy.mockRestore();
+    await Promise.resolve();
+    expect(RevenueCatUI.presentCustomerCenter).toHaveBeenCalled();
   });
 
   it("tapping Restore purchases shows 'Restoring…' then 'Restored' on success", async () => {
@@ -287,9 +287,46 @@ describe("SettingsScreen", () => {
     spy.mockRestore();
   });
 
-  it("Export diagnostic log row is visible in both dev and prod (moved out of __DEV__)", () => {
+  it("History row defaults to 'Forever' and cycles Forever → 6 months → 1 year → 2 years", () => {
     render(wrap(<SettingsScreen />));
-    expect(screen.getByTestId("settings-row-diagnostics")).toBeTruthy();
-    expect(screen.getByText("Export diagnostic log")).toBeTruthy();
+    const historyRow = () => screen.getByTestId("settings-row-history");
+    expect(within(historyRow()).getByText("Forever")).toBeTruthy();
+    fireEvent.press(historyRow());
+    expect(within(historyRow()).getByText(/6 months/)).toBeTruthy();
+    fireEvent.press(historyRow());
+    expect(within(historyRow()).getByText(/1 years/)).toBeTruthy();
+    fireEvent.press(historyRow());
+    expect(within(historyRow()).getByText(/2 years/)).toBeTruthy();
+    fireEvent.press(historyRow());
+    // Back to Forever.
+    expect(within(historyRow()).getByText("Forever")).toBeTruthy();
+  });
+
+  it("History row persists the cap to KV", () => {
+    const env = makeEnv();
+    render(wrap(<SettingsScreen />, env));
+    fireEvent.press(screen.getByTestId("settings-row-history"));
+    expect(env.kv.get("retention.hard_cap_days")).toBe("180");
+    fireEvent.press(screen.getByTestId("settings-row-history"));
+    expect(env.kv.get("retention.hard_cap_days")).toBe("365");
+  });
+
+  it("Storage row renders the place + entry count from the repos", () => {
+    const env = makeEnv([{ name: "Home" }, { name: "Office" }]);
+    // Seed two entries.
+    const placeIds = env.repo.list().map((p) => p.id);
+    env.entries.createManual({
+      placeId: placeIds[0]!,
+      startedAt: 1000,
+      endedAt: 2000,
+    });
+    env.entries.createManual({
+      placeId: placeIds[1]!,
+      startedAt: 3000,
+      endedAt: 4000,
+    });
+    render(wrap(<SettingsScreen />, env));
+    const sizeRow = screen.getByTestId("settings-row-size");
+    expect(within(sizeRow).getByText(/2 places · 2 entries/)).toBeTruthy();
   });
 });

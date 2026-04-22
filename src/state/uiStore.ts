@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { create } from "zustand";
-import type * as DbClientModule from "@/db/client";
 import { KvRepo } from "@/db/repository/kv";
+import { createDeviceRepo } from "@/db/deviceDb";
+import { KV_KEYS } from "@/db/kvKeys";
 
 export type ThemeOverride = "light" | "dark" | null;
 
@@ -9,8 +10,6 @@ type UiState = {
   themeOverride: ThemeOverride;
   localeOverride: string | null;
   onboardingComplete: boolean;
-  /** True once we've loaded the persisted theme/locale values from KV. */
-  hydrated: boolean;
   setThemeOverride: (v: ThemeOverride) => void;
   setLocaleOverride: (v: string | null) => void;
   completeOnboarding: () => void;
@@ -20,8 +19,8 @@ type UiState = {
  * KV keys the persistence layer writes through to. Kept as exported
  * constants so tests + the KvRepo inspector can reference them directly.
  */
-export const UI_STORE_THEME_KV_KEY = "ui.themeOverride";
-export const UI_STORE_LOCALE_KV_KEY = "ui.localeOverride";
+export const UI_STORE_THEME_KV_KEY = KV_KEYS.UI_THEME_OVERRIDE;
+export const UI_STORE_LOCALE_KV_KEY = KV_KEYS.UI_LOCALE_OVERRIDE;
 
 /**
  * Resolve a KvRepo for persistence. The repo is loaded lazily from the
@@ -29,16 +28,12 @@ export const UI_STORE_LOCALE_KV_KEY = "ui.localeOverride";
  * to avoid pulling in the expo-sqlite native binding.
  */
 let injectedKvRepo: KvRepo | null = null;
-let cachedDeviceRepo: KvRepo | null = null;
+const getDeviceKvRepo = createDeviceRepo((db) => new KvRepo(db));
 
 function getKvRepo(): KvRepo | null {
   if (injectedKvRepo) return injectedKvRepo;
   try {
-    if (cachedDeviceRepo) return cachedDeviceRepo;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { db } = require("@/db/client") as typeof DbClientModule;
-    cachedDeviceRepo = new KvRepo(db);
-    return cachedDeviceRepo;
+    return getDeviceKvRepo();
   } catch {
     return null;
   }
@@ -74,7 +69,6 @@ export const useUiStore = create<UiState>((set) => ({
   themeOverride: null,
   localeOverride: null,
   onboardingComplete: false,
-  hydrated: false,
   setThemeOverride: (v) => {
     set({ themeOverride: v });
     const repo = getKvRepo();
@@ -103,10 +97,9 @@ export const useUiStore = create<UiState>((set) => ({
 
 /**
  * Hydrate `themeOverride` + `localeOverride` from KV on mount. Safe to call
- * from RootLayout — runs exactly once per app session (we guard against a
- * second mount overwriting an in-session pick via `hydratedRef`). Kept as a
- * hook rather than a top-level module side-effect so Jest can run the store
- * tests without SQLite in the import graph.
+ * from RootLayout — runs exactly once per app session; re-mounts are a no-op
+ * via `hydratedRef`. Kept as a hook rather than a module side-effect so
+ * Jest can run the store tests without SQLite in the import graph.
  */
 export function useHydrateUiStoreFromKv(): void {
   const hydratedRef = useRef(false);
@@ -114,18 +107,13 @@ export function useHydrateUiStoreFromKv(): void {
     if (hydratedRef.current) return;
     hydratedRef.current = true;
     const repo = getKvRepo();
-    if (!repo) {
-      // No KV available (test env without an injected repo). Still mark
-      // hydrated so dependants don't wait forever.
-      useUiStore.setState({ hydrated: true });
-      return;
-    }
+    if (!repo) return;
     try {
       const themeOverride = readThemeOverride(repo);
       const localeOverride = readLocaleOverride(repo);
-      useUiStore.setState({ themeOverride, localeOverride, hydrated: true });
+      useUiStore.setState({ themeOverride, localeOverride });
     } catch {
-      useUiStore.setState({ hydrated: true });
+      // Best-effort hydration — KV absent means defaults stand.
     }
   }, []);
 }

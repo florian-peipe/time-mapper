@@ -1,16 +1,9 @@
 /**
- * Thin functional wrapper around `react-native-purchases` (RevenueCat). The
- * SDK is statically imported but never touched until `configureRevenueCat`
- * runs — we keep that behind a sync entry so callers don't accidentally fire
- * native methods before configure-time (which would throw at runtime).
- *
- * Two modes:
- *   1. **Real mode** — the matching `EXPO_PUBLIC_REVENUECAT_<PLATFORM>_KEY`
- *      env var is set. We forward to the SDK as-is.
- *   2. **Mock mode** — env var missing. We log once and short-circuit every
- *      method to a free-tier stub so the app stays runnable in dev without
- *      a configured RevenueCat dashboard. `usePro` flips to `useProMock`
- *      when this mode is detected.
+ * Thin functional wrapper around `react-native-purchases` (RevenueCat).
+ * The SDK is statically imported but never touched until
+ * `configureRevenueCat` runs — that single entry point means callers never
+ * accidentally fire native methods before configure-time (which would throw
+ * at runtime).
  *
  * No side-effects at module load. `configureRevenueCat` is idempotent so
  * `_layout.tsx` calling it on every mount is harmless.
@@ -21,7 +14,8 @@ import Purchases, {
   type PurchasesOffering,
   type PurchasesPackage,
 } from "react-native-purchases";
-import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import type { PAYWALL_RESULT } from "react-native-purchases-ui";
+import RevenueCatUI from "react-native-purchases-ui";
 
 export { PAYWALL_RESULT } from "react-native-purchases-ui";
 
@@ -41,9 +35,7 @@ export const PRO_ENTITLEMENT_ID = "Time Mapper Pro";
  */
 export const DEFAULT_OFFERING_ID = "default";
 
-type RcMode = "real" | "mock" | "uninitialized";
-
-let mode: RcMode = "uninitialized";
+let configured = false;
 
 function platformKey(): string | undefined {
   if (Platform.OS === "android") {
@@ -57,57 +49,34 @@ function platformKey(): string | undefined {
 
 /**
  * Initialise the SDK with the platform-appropriate API key. Idempotent:
- * subsequent calls are no-ops once a mode has been chosen, so wiring this
+ * subsequent calls are no-ops once the SDK is configured, so wiring this
  * into a React effect is safe.
  *
- * @param appUserID Optional — pass a stable anon UUID so entitlements survive
- *                  a reinstall on the same Apple/Google account. Without it,
- *                  RevenueCat assigns a fresh anon ID per install.
+ * Throws if the platform API key is missing — production builds require
+ * `EXPO_PUBLIC_REVENUECAT_IOS_KEY` / `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`
+ * to be set. Dev builds must set these locally (see `.env.example`).
  */
 export function configureRevenueCat(appUserID?: string): void {
-  if (mode !== "uninitialized") return;
+  if (configured) return;
 
   const apiKey = platformKey();
   if (!apiKey || apiKey.length === 0) {
-    console.warn(
-      "RevenueCat API key missing — billing disabled, falling back to mock mode. " +
-        "Set EXPO_PUBLIC_REVENUECAT_IOS_KEY / EXPO_PUBLIC_REVENUECAT_ANDROID_KEY to enable.",
+    throw new Error(
+      "RevenueCat API key missing. Set EXPO_PUBLIC_REVENUECAT_IOS_KEY / EXPO_PUBLIC_REVENUECAT_ANDROID_KEY.",
     );
-    mode = "mock";
-    return;
   }
 
-  // The SDK's Configuration type includes appUserID as optional. Only pass
-  // it through when the caller provides one — RC's "anonymous mode" assigns
-  // its own ID otherwise.
   Purchases.configure(appUserID ? { apiKey, appUserID } : { apiKey });
-  mode = "real";
+  configured = true;
 }
 
-/** Test-only — resets the cached mode so each test starts fresh. */
+/** Test-only — resets the cached configured flag so each test starts fresh. */
 export function _resetForTest(): void {
-  mode = "uninitialized";
-}
-
-/** Whether the SDK is in mock mode (no API keys present at boot). */
-export function isMockMode(): boolean {
-  return mode === "mock";
-}
-
-/**
- * Free-tier stub returned from every wrapper while in mock mode. The shape
- * matches the bits of `CustomerInfo` we actually read — entitlements only,
- * with no active entries.
- */
-function freeStubCustomerInfo(): CustomerInfo {
-  return {
-    entitlements: { all: {}, active: {}, verification: "NOT_REQUESTED" },
-  } as unknown as CustomerInfo;
+  configured = false;
 }
 
 /** Promise-returning getter for the current customer info. */
 export async function getCustomerInfo(): Promise<CustomerInfo> {
-  if (mode === "mock") return freeStubCustomerInfo();
   return Purchases.getCustomerInfo();
 }
 
@@ -117,29 +86,22 @@ export async function getCustomerInfo(): Promise<CustomerInfo> {
  * back to hardcoded prices when this is null.
  */
 export async function getOfferings() {
-  if (mode === "mock") return null;
   const all = await Purchases.getOfferings();
   return all.all[DEFAULT_OFFERING_ID] ?? all.current ?? null;
 }
 
 /**
  * Execute a purchase. Resolves with the updated customerInfo on success.
- * Rejects when:
- *   - the user cancels the system purchase sheet,
- *   - the store is unreachable / the device is offline,
- *   - mock mode is active (we explicitly throw because there's nothing to buy).
+ * Rejects when the user cancels the system purchase sheet, or the store is
+ * unreachable / the device is offline.
  */
 export async function purchasePackage(pkg: PurchasesPackage): Promise<CustomerInfo> {
-  if (mode === "mock") {
-    throw new Error("RevenueCat is in mock mode — purchase not available without API keys.");
-  }
   const result = await Purchases.purchasePackage(pkg);
   return result.customerInfo;
 }
 
 /** Restores prior purchases for the current Apple/Google account. */
 export async function restorePurchases(): Promise<CustomerInfo> {
-  if (mode === "mock") return freeStubCustomerInfo();
   return Purchases.restorePurchases();
 }
 
@@ -154,10 +116,6 @@ export function isProActive(info: CustomerInfo): boolean {
  * effect cleanup is ergonomic.
  */
 export function onCustomerInfoUpdate(cb: (info: CustomerInfo) => void): () => void {
-  if (mode === "mock") {
-    // No-op subscription — we still return a callable unsubscribe.
-    return () => undefined;
-  }
   Purchases.addCustomerInfoUpdateListener(cb);
   return () => {
     Purchases.removeCustomerInfoUpdateListener(cb);
@@ -169,12 +127,8 @@ export function onCustomerInfoUpdate(cb: (info: CustomerInfo) => void): () => vo
  * the RC dashboard ("Paywalls" tab → attach to an offering) and shown as a
  * native modal — Apple / Google styling on each platform, localized, and
  * A/B-testable without a rebuild.
- *
- * In mock mode this resolves to `NOT_PRESENTED` so callers can fall back
- * to the custom sheet paywall used for dev without keys.
  */
 export async function presentPaywall(offering?: PurchasesOffering): Promise<PAYWALL_RESULT> {
-  if (mode === "mock") return PAYWALL_RESULT.NOT_PRESENTED;
   return RevenueCatUI.presentPaywall(offering ? { offering } : undefined);
 }
 
@@ -186,7 +140,6 @@ export async function presentPaywall(offering?: PurchasesOffering): Promise<PAYW
 export async function presentPaywallIfNeeded(
   offering?: PurchasesOffering,
 ): Promise<PAYWALL_RESULT> {
-  if (mode === "mock") return PAYWALL_RESULT.NOT_PRESENTED;
   return RevenueCatUI.presentPaywallIfNeeded({
     requiredEntitlementIdentifier: PRO_ENTITLEMENT_ID,
     ...(offering ? { offering } : {}),
@@ -205,14 +158,8 @@ export type CustomerCenterCallbacks = NonNullable<
 /**
  * Present the RevenueCat Customer Center — self-service UI where users
  * cancel, restore, request a refund (iOS), change plans, and view
- * subscription status. Replaces the platform deep-link ("Manage
- * subscription" → itms-apps / Google Play subscriptions) with an in-app
- * flow that's consistent across platforms and surfaces RC-side changes
- * immediately.
- *
- * No-op in mock mode — callers should fall back to the OS deep-link.
+ * subscription status.
  */
 export async function presentCustomerCenter(callbacks?: CustomerCenterCallbacks): Promise<void> {
-  if (mode === "mock") return;
   await RevenueCatUI.presentCustomerCenter(callbacks ? { callbacks } : undefined);
 }

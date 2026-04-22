@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Entry, Place } from "@/db/schema";
+import type { Entry } from "@/db/schema";
 import { usePlacesRepo } from "@/features/places/usePlaces";
 import { useEntriesRepo } from "./useEntries";
 import { useDataVersionStore } from "@/state/dataVersionStore";
-import { netMinutes } from "@/lib/entries";
+import { indexPlacesById, netMinutes } from "@/lib/entries";
 
 export type PlaceWeekTotal = { name: string; color: string; totalMin: number };
 export type DayBuckets = Record<string, number>;
@@ -123,10 +123,4 @@ export function useWeekStats(weekOffset = 0): UseWeekStatsResult {
 
 function emptyWeek(): DayBuckets[] {
   return Array.from({ length: 7 }, () => ({}));
-}
-
-function indexPlacesById(places: Place[]): Map<string, Place> {
-  const map = new Map<string, Place>();
-  for (const p of places) map.set(p.id, p);
-  return map;
 }

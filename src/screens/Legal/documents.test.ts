@@ -1,4 +1,10 @@
+// The real `contact.local.ts` is only present once a developer has filled
+// their Impressum — locally, CI runners don't have it. We mock it to null
+// here so the test exercises the "unconfigured" path deterministically,
+// regardless of whether this clone has the file or not.
 import { getLegalDocument, UNCONFIGURED_IMPRESSUM, LEGAL_DOCS } from "./documents";
+
+jest.mock("./contact.local", () => ({ __esModule: true, default: null }), { virtual: true });
 
 describe("documents.getLegalDocument", () => {
   it("returns the Privacy policy verbatim for EN", () => {
@@ -14,8 +20,9 @@ describe("documents.getLegalDocument", () => {
   });
 
   it("returns the unconfigured Impressum when contact.local.ts is missing", () => {
-    // The sandbox has no contact.local.ts — the loader should gracefully
-    // fall back instead of leaking literal {{...}} tokens into the UI.
+    // With the mock above forcing contact=null, the loader should gracefully
+    // fall back to the "unconfigured" variant instead of leaking literal
+    // {{...}} tokens into the UI.
     const enDoc = getLegalDocument("impressum", "en");
     const deDoc = getLegalDocument("impressum", "de");
     expect(enDoc).toEqual(UNCONFIGURED_IMPRESSUM.en);

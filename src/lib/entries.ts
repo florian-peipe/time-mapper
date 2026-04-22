@@ -1,15 +1,26 @@
-import type { Entry } from "@/db/schema";
+import type { Entry, Place } from "@/db/schema";
 
 /**
- * Net minutes (gross − pause) for an entry, clamped to >= 0. Open
+ * Net seconds (gross − pause) for an entry, clamped to >= 0. Open
  * entries (no `endedAt`) contribute 0 — the Timeline + Stats treat
  * the running timer card as the source of truth for ongoing time.
  */
-export function netMinutes(entry: Entry): number {
+export function netSeconds(entry: Entry): number {
   if (entry.endedAt == null) return 0;
   const seconds = entry.endedAt - entry.startedAt - (entry.pauseS ?? 0);
-  if (seconds <= 0) return 0;
-  return Math.round(seconds / 60);
+  return seconds > 0 ? seconds : 0;
+}
+
+/** Net minutes — thin rounding wrapper around {@link netSeconds}. */
+export function netMinutes(entry: Entry): number {
+  return Math.round(netSeconds(entry) / 60);
+}
+
+/** Build a `Map<id, Place>` for O(1) lookup inside entry-rendering loops. */
+export function indexPlacesById(places: Place[]): Map<string, Place> {
+  const map = new Map<string, Place>();
+  for (const p of places) map.set(p.id, p);
+  return map;
 }
 
 /**

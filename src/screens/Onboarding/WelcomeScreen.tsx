@@ -5,8 +5,7 @@ import { useRouter } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
 import { onboardingRoute } from "@/lib/routes";
-import { Button, Rings } from "@/components";
-import { StepIndicator } from "./StepIndicator";
+import { Button, Rings, StepIndicator } from "@/components";
 
 /**
  * Onboarding 1 / 3 — big Rings hero, product name, one-line pitch, primary CTA.

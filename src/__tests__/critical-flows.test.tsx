@@ -20,8 +20,8 @@ import { KvRepo } from "@/db/repository/kv";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore } from "@/state/uiStore";
-import { grantProMock, resetProMock } from "@/features/billing/useProMock";
-import { SheetHost } from "@/screens/SheetHost";
+import { __setProForTests } from "@/features/billing/usePro";
+import { SheetHost } from "@/components/SheetHost";
 import { TimelineScreen } from "@/screens/Timeline/TimelineScreen";
 import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
 import { FirstPlaceScreen } from "@/screens/Onboarding/FirstPlaceScreen";
@@ -96,7 +96,7 @@ beforeEach(() => {
     localeOverride: null,
     onboardingComplete: false,
   });
-  resetProMock();
+  __setProForTests(null);
   mockPush.mockReset();
   mockReplace.mockReset();
 });
@@ -196,7 +196,7 @@ describe("critical flows — Settings", () => {
 
   it("Settings Export CSV row NO-OPs for Pro users (CSV logic lands later)", () => {
     const spy = jest.spyOn(openPaywallModule, "openPaywall").mockImplementation(() => undefined);
-    grantProMock();
+    __setProForTests(true);
     const fixture = makeFixture({ seedPlace: true });
     const { getByTestId } = render(
       <Wrap fixture={fixture}>
@@ -250,7 +250,7 @@ describe("critical flows — Paywall + Pro gate", () => {
   });
 
   it("Pro users do not see the upsell card", () => {
-    grantProMock();
+    __setProForTests(true);
     const fixture = makeFixture({ seedPlace: true });
     const { queryByTestId } = render(
       <Wrap fixture={fixture}>
@@ -260,7 +260,7 @@ describe("critical flows — Paywall + Pro gate", () => {
     expect(queryByTestId("settings-pro-upsell")).toBeNull();
   });
 
-  it("Pro-active row renders when grantProMock flips the mock store", async () => {
+  it("Pro-active row renders when the test override flips Pro on", async () => {
     const fixture = makeFixture();
     const { getByTestId, queryByTestId } = render(
       <Wrap fixture={fixture}>
@@ -269,7 +269,7 @@ describe("critical flows — Paywall + Pro gate", () => {
     );
     // Initially free — no "Time Mapper Pro Active" row.
     expect(queryByTestId("settings-row-pro-active")).toBeNull();
-    grantProMock();
+    __setProForTests(true);
     await waitFor(() => getByTestId("settings-row-pro-active"));
   });
 });

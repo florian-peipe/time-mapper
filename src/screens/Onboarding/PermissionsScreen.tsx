@@ -4,14 +4,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
-import { Button, Icon } from "@/components";
+import { BackButton, Button, Icon, StepIndicator } from "@/components";
 import {
   requestForegroundLocation,
   requestBackgroundLocation,
   requestNotifications,
 } from "@/features/permissions";
-import { BackButton } from "./BackButton";
-import { StepIndicator } from "./StepIndicator";
 
 /**
  * Onboarding 2 / 3 — real permission request flow. This is the "primer"

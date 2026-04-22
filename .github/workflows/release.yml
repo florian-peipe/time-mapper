@@ -1,0 +1,110 @@
+name: Release (TestFlight + Play Internal)
+
+# Triggered by tagging a version (e.g. `git tag v1.1.0 && git push --tags`).
+# Gates the tag on the same CI quality checks + check:submit, then kicks off
+# an EAS production build and submits to TestFlight / Play Internal.
+#
+# Prerequisites (repo secrets):
+#   EXPO_TOKEN                   — EAS CLI auth (generate via `eas token:create`)
+#   EXPO_PUBLIC_SENTRY_DSN       — optional, baked into the build
+#   EXPO_PUBLIC_REVENUECAT_IOS_KEY
+#   EXPO_PUBLIC_REVENUECAT_ANDROID_KEY
+#   PLAY_SERVICE_ACCOUNT_JSON    — base64-encoded Play Console service account
+#
+# Prerequisites in the repo:
+#   eas.json    — fill real appleId, ascAppId, appleTeamId
+#   contact.local.ts — committed only locally; injected at submit time if used
+#
+# On every tag push the workflow will fail if `npm run check:submit` surfaces
+# any blocker — that's intentional, don't bypass it.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: verify + check:submit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint -- --max-warnings 0
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test -- --ci --reporters=default
+
+      - name: Materialize play-service-account.json
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$PLAY_SERVICE_ACCOUNT_JSON" | base64 -d > play-service-account.json
+
+      - name: Materialize .env.local
+        run: |
+          cat > .env.local <<EOF
+          EXPO_PUBLIC_SENTRY_DSN=${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+          EXPO_PUBLIC_REVENUECAT_IOS_KEY=${{ secrets.EXPO_PUBLIC_REVENUECAT_IOS_KEY }}
+          EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=${{ secrets.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY }}
+          EOF
+
+      - name: Pre-submit check
+        run: npm run check:submit
+
+  ios:
+    name: EAS build + submit (iOS)
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: EAS build (iOS production)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli@latest build --profile production --platform ios --non-interactive --auto-submit
+
+  android:
+    name: EAS build + submit (Android)
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Materialize play-service-account.json
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$PLAY_SERVICE_ACCOUNT_JSON" | base64 -d > play-service-account.json
+      - name: EAS build (Android production)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli@latest build --profile production --platform android --non-interactive --auto-submit

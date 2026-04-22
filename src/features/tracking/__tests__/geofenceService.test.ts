@@ -8,7 +8,6 @@ import {
   getCurrentPlaceId,
   TASK_NAME,
   MAX_PLACES,
-  __internals,
 } from "../geofenceService";
 import { makePlace } from "@/features/places/testFixtures";
 
@@ -95,17 +94,6 @@ describe("tracking/geofenceService", () => {
     const coords = { latitude: 10, longitude: 10 } as unknown as LocationObjectCoords;
     const result = placeContaining({ coords }, [p]);
     expect(result).toBeNull();
-  });
-
-  test("haversineMeters is symmetric and zero for identical points", () => {
-    const d = __internals.haversineMeters(52.52, 13.405, 52.52, 13.405);
-    expect(d).toBeCloseTo(0, 5);
-    const ab = __internals.haversineMeters(52.52, 13.405, 48.137, 11.576);
-    const ba = __internals.haversineMeters(48.137, 11.576, 52.52, 13.405);
-    expect(ab).toBeCloseTo(ba, 3);
-    // Berlin-Munich is ~500km
-    expect(ab).toBeGreaterThan(400_000);
-    expect(ab).toBeLessThan(600_000);
   });
 
   test("getCurrentPlaceId returns null when location unavailable", async () => {

@@ -1,4 +1,5 @@
 import type * as KvModule from "@/db/repository/kv";
+import { KV_KEYS } from "@/db/kvKeys";
 
 type KvRepo = InstanceType<typeof KvModule.KvRepo>;
 
@@ -9,7 +10,7 @@ type KvRepo = InstanceType<typeof KvModule.KvRepo>;
  * decide if tracking is "alive" (the OS has been invoking us recently) or
  * "stopped" (the OS hasn't called in a long time).
  */
-export const KV_LAST_BG_FIRE = "tracking.last_bg_fire";
+export const KV_LAST_BG_FIRE = KV_KEYS.TRACKING_LAST_BG_FIRE;
 
 /**
  * Mark a background task fire. Idempotent write.

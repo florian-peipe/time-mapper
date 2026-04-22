@@ -3,20 +3,15 @@
  * the wrapper synchronously and assert on its calls without an actual native
  * module. The wrapper's job is to:
  *   - read API keys from EXPO_PUBLIC_REVENUECAT_* env vars (per platform);
- *   - log + short-circuit to "mock mode" when keys are missing (so dev still
- *     works without a RevenueCat account);
- *   - expose thin promise-returning helpers for getCustomerInfo, getOfferings,
- *     purchasePackage, restorePurchases;
- *   - read pro state from `customerInfo.entitlements.active.pro`;
+ *   - throw when keys are missing (fail loudly in dev + CI);
+ *   - expose thin promise-returning helpers for getCustomerInfo,
+ *     getOfferings, purchasePackage, restorePurchases;
+ *   - read pro state from `customerInfo.entitlements.active["Time Mapper Pro"]`;
  *   - subscribe + unsubscribe to customer-info update notifications.
  */
 import type { CustomerInfo, PurchasesPackage } from "react-native-purchases";
 import type * as RevenuecatModule from "./revenuecat";
 
-// `mock` prefix is required: jest hoists jest.mock() calls above all other
-// statements, so the factory can only reference variables that start with
-// `mock`. We export Platform via the mock factory and grab a typed handle
-// after the import so the per-test setter can flip OS at will.
 const mockPlatform: { OS: "ios" | "android" } = { OS: "ios" };
 
 jest.mock("react-native", () => ({
@@ -72,11 +67,10 @@ describe("revenuecat — configureRevenueCat", () => {
   it("reads the iOS key on iOS and calls Purchases.configure once", () => {
     mockPlatform.OS = "ios";
     process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY = "appl_TESTKEY";
-    const { configureRevenueCat, isMockMode } = loadModule();
+    const { configureRevenueCat } = loadModule();
     configureRevenueCat();
     expect(mockPurchases.configure).toHaveBeenCalledTimes(1);
     expect(mockPurchases.configure).toHaveBeenCalledWith({ apiKey: "appl_TESTKEY" });
-    expect(isMockMode()).toBe(false);
   });
 
   it("reads the Android key on Android", () => {
@@ -97,14 +91,10 @@ describe("revenuecat — configureRevenueCat", () => {
     });
   });
 
-  it("warns and enters mock mode when the key is missing", () => {
-    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
-    const { configureRevenueCat, isMockMode } = loadModule();
-    configureRevenueCat();
+  it("throws when the platform key is missing", () => {
+    const { configureRevenueCat } = loadModule();
+    expect(() => configureRevenueCat()).toThrow(/API key missing/);
     expect(mockPurchases.configure).not.toHaveBeenCalled();
-    expect(isMockMode()).toBe(true);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("RevenueCat API key missing"));
-    warn.mockRestore();
   });
 
   it("is idempotent — repeat configure calls only invoke Purchases.configure once", () => {
@@ -179,44 +169,5 @@ describe("revenuecat — wrappers", () => {
     expect(mockPurchases.addCustomerInfoUpdateListener).toHaveBeenCalledWith(cb);
     unsub();
     expect(mockPurchases.removeCustomerInfoUpdateListener).toHaveBeenCalledWith(cb);
-  });
-});
-
-describe("revenuecat — mock mode short-circuits", () => {
-  it("getCustomerInfo returns a free-tier stub", async () => {
-    const { getCustomerInfo, configureRevenueCat, isProActive } = loadModule();
-    configureRevenueCat();
-    const info = await getCustomerInfo();
-    expect(isProActive(info)).toBe(false);
-    expect(mockPurchases.getCustomerInfo).not.toHaveBeenCalled();
-  });
-
-  it("getOfferings returns null in mock mode", async () => {
-    const { getOfferings, configureRevenueCat } = loadModule();
-    configureRevenueCat();
-    await expect(getOfferings()).resolves.toBeNull();
-    expect(mockPurchases.getOfferings).not.toHaveBeenCalled();
-  });
-
-  it("purchasePackage rejects in mock mode (cannot purchase without keys)", async () => {
-    const { purchasePackage, configureRevenueCat } = loadModule();
-    configureRevenueCat();
-    await expect(purchasePackage({} as PurchasesPackage)).rejects.toThrow(/mock mode/i);
-  });
-
-  it("restorePurchases returns the same free-tier stub", async () => {
-    const { restorePurchases, configureRevenueCat, isProActive } = loadModule();
-    configureRevenueCat();
-    const info = await restorePurchases();
-    expect(isProActive(info)).toBe(false);
-  });
-
-  it("onCustomerInfoUpdate is a no-op subscriber in mock mode", () => {
-    const { onCustomerInfoUpdate, configureRevenueCat } = loadModule();
-    configureRevenueCat();
-    const unsub = onCustomerInfoUpdate(() => undefined);
-    expect(mockPurchases.addCustomerInfoUpdateListener).not.toHaveBeenCalled();
-    // Still returns a function we can call without throwing.
-    expect(() => unsub()).not.toThrow();
   });
 });

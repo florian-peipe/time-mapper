@@ -1,15 +1,17 @@
 import * as TaskManager from "expo-task-manager";
-import type * as DbClientModule from "@/db/client";
 import { uuid } from "@/lib/id";
 import { EntriesRepo } from "@/db/repository/entries";
 import { PlacesRepo } from "@/db/repository/places";
 import { PendingTransitionsRepo } from "@/db/repository/pending";
 import { KvRepo } from "@/db/repository/kv";
+import { getDeviceDb } from "@/db/deviceDb";
 import { step, type Event, type MachineState } from "@/features/tracking/stateMachine";
 import { loadState, applyEffects } from "@/features/tracking/persistence";
 import { TASK_NAME } from "@/features/tracking/geofenceService";
 import { maybeNotifyForEffects } from "@/features/notifications/notifier";
 import { recordBgFire } from "@/features/tracking/trackingHealth";
+import { nowS as getNowS } from "@/lib/time";
+import { addBreadcrumb } from "@/lib/crash";
 
 /** iOS event type → state machine event kind. */
 const EVENT_ENTER = 1;
@@ -27,17 +29,6 @@ export type GeofencingData = {
 };
 
 /**
- * Resolves a `db` reference without importing `@/db/client` (which drags in
- * `expo-sqlite` native) until we're truly running in RN. Jest never imports
- * this module's body because `defineTask` itself is mocked.
- */
-function getDb() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mod = require("@/db/client") as typeof DbClientModule;
-  return mod.db;
-}
-
-/**
  * Handle a single geofencing event. Extracted for unit testing — the real
  * TaskManager invocation just forwards to here.
  *
@@ -47,9 +38,9 @@ function getDb() {
  */
 export async function handleGeofencingEvent(
   data: GeofencingData | null,
-  nowS: number = Math.floor(Date.now() / 1000),
+  nowS: number = getNowS(),
 ): Promise<void> {
-  const db = getDb();
+  const db = getDeviceDb();
   // `places` + `kv` are read-mostly outside the transaction; the write-heavy
   // path (loadState → apply events → apply CONFIRMs) is wrapped in a single
   // db.transaction below using tx-scoped repos. Notifications fire after
@@ -81,6 +72,14 @@ export async function handleGeofencingEvent(
     // 1. Apply the incoming region event (if any).
     if (data) {
       const event = mapRegionEvent(data, places, nowS);
+      if (event && (event.kind === "REGION_ENTER" || event.kind === "REGION_EXIT")) {
+        addBreadcrumb({
+          category: "geofence",
+          message: event.kind === "REGION_ENTER" ? "region-enter" : "region-exit",
+          level: "info",
+          data: { placeId: event.placeId, atS: event.atS },
+        });
+      }
       if (event) {
         const r = step(state, event);
         state = applyEffects(r.effects, r.next, entries, pending, nowS);
@@ -165,11 +164,9 @@ export { TASK_NAME };
  * while the task was dormant. Also provides a `state` return value for the
  * UI (e.g. Timeline running-timer card).
  */
-export async function runOpportunisticResolve(
-  nowS: number = Math.floor(Date.now() / 1000),
-): Promise<MachineState> {
+export async function runOpportunisticResolve(nowS: number = getNowS()): Promise<MachineState> {
   await handleGeofencingEvent(null, nowS);
-  const db = getDb();
+  const db = getDeviceDb();
   return loadState(new EntriesRepo(db), new PendingTransitionsRepo(db));
 }
 
@@ -183,9 +180,9 @@ export async function runOpportunisticResolve(
  */
 export async function dispatchSyntheticEnter(
   placeId: string,
-  nowS: number = Math.floor(Date.now() / 1000),
+  nowS: number = getNowS(),
 ): Promise<void> {
-  const db = getDb();
+  const db = getDeviceDb();
   const placesOuter = new PlacesRepo(db);
   const kv = new KvRepo(db);
   recordBgFire(kv, nowS);
@@ -221,6 +218,3 @@ export async function dispatchSyntheticEnter(
 
   await maybeNotifyForEffects(allEffects, placesOuter, db, nowS);
 }
-
-// Exported for tests only.
-export const __internals = { mapRegionEvent };

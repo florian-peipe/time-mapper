@@ -12,12 +12,13 @@
  * `configureRevenueCat(userId)` on every subsequent boot — RC treats this
  * as an "anonymous-but-stable" ID (no PII attached, but persistent).
  */
-import type * as DbClientModule from "@/db/client";
 import { KvRepo } from "@/db/repository/kv";
+import { createDeviceRepo } from "@/db/deviceDb";
+import { KV_KEYS } from "@/db/kvKeys";
 import { uuid } from "@/lib/id";
 
 /** Canonical KV key. Don't rename — would orphan existing installs' IDs. */
-export const REVENUECAT_USER_ID_KEY = "revenuecat.user_id";
+export const REVENUECAT_USER_ID_KEY = KV_KEYS.REVENUECAT_USER_ID;
 
 /**
  * Read the persisted RevenueCat anon user-id, creating one if absent.
@@ -37,19 +38,7 @@ export function getOrCreateRevenueCatUserId(repo: KvRepo): string {
  * the RevenueCat user-id in one call. This is what `usePro` calls on boot;
  * unit tests mock this entire function so the device DB is never touched.
  */
-let cachedDeviceKv: KvRepo | null = null;
+const getDeviceKvRepo = createDeviceRepo((db) => new KvRepo(db));
 export function getOrCreateRevenueCatUserIdFromDevice(): string {
-  if (!cachedDeviceKv) {
-    // Deferred require so jest never tries to load expo-sqlite when this
-    // module is mocked at the boundary in screen / hook tests.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { db } = require("@/db/client") as typeof DbClientModule;
-    cachedDeviceKv = new KvRepo(db);
-  }
-  return getOrCreateRevenueCatUserId(cachedDeviceKv);
-}
-
-/** Test-only — wipes the cached repo so tests can swap the underlying DB. */
-export function _resetDeviceKvCacheForTest(): void {
-  cachedDeviceKv = null;
+  return getOrCreateRevenueCatUserId(getDeviceKvRepo());
 }

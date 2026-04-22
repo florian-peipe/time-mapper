@@ -5,9 +5,7 @@ import { useRouter } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
 import { onboardingRoute } from "@/lib/routes";
-import { Button, Icon } from "@/components";
-import { BackButton } from "./BackButton";
-import { StepIndicator } from "./StepIndicator";
+import { BackButton, Button, Icon, StepIndicator } from "@/components";
 
 /**
  * Onboarding 3 / 6 — introduces goals + stats. Uses a compact stack

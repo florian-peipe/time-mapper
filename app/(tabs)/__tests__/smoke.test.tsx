@@ -11,7 +11,7 @@ import { KvRepo } from "@/db/repository/kv";
 import { createTestDb } from "@/db/testClient";
 import { useSheetStore } from "@/state/sheetStore";
 import { useUiStore } from "@/state/uiStore";
-import { resetProMock } from "@/features/billing/useProMock";
+import { __setProForTests } from "@/features/billing/usePro";
 import TimelineRoute from "../index";
 import StatsRoute from "../stats";
 import SettingsRoute from "../settings";
@@ -46,7 +46,7 @@ beforeEach(() => {
     localeOverride: null,
     onboardingComplete: false,
   });
-  resetProMock();
+  __setProForTests(null);
 });
 
 describe("tab smoke", () => {

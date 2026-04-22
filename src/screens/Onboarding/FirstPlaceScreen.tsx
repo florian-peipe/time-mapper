@@ -4,11 +4,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
-import { Button, Rings } from "@/components";
+import { BackButton, Button, Rings, StepIndicator } from "@/components";
 import { useSheetStore } from "@/state/sheetStore";
 import { useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
-import { BackButton } from "./BackButton";
-import { StepIndicator } from "./StepIndicator";
 
 /**
  * Onboarding 3 / 3 — final screen, primary CTA opens the AddPlaceSheet with
