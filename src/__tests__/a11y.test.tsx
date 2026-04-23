@@ -536,6 +536,84 @@ function allTextNodes(tree: unknown): { allowFontScaling?: boolean }[] {
   return out;
 }
 
+// Self-test for the walker that the Dynamic-Type blocks below rely on. The
+// PR that extended those blocks also fixed a silent bug where the walker
+// only looked at `node.props.children` and missed `node.children` (react-
+// test-renderer's toJSON() shape), so four primitive audits were iterating
+// zero nodes and passing vacuously. Pin the invariants so that bug can't
+// silently return.
+describe("a11y — allTextNodes walker correctness", () => {
+  it("returns empty for null / undefined / non-object input", () => {
+    expect(allTextNodes(null)).toEqual([]);
+    expect(allTextNodes(undefined)).toEqual([]);
+    expect(allTextNodes("string")).toEqual([]);
+    expect(allTextNodes(42)).toEqual([]);
+  });
+
+  it("walks children at node.children (react-test-renderer toJSON shape)", () => {
+    const jsonShape = {
+      type: "View",
+      props: {},
+      children: [
+        { type: "Text", props: { allowFontScaling: true } },
+        {
+          type: "View",
+          props: {},
+          children: [{ type: "Text", props: { allowFontScaling: false } }],
+        },
+      ],
+    };
+    const found = allTextNodes(jsonShape);
+    expect(found).toHaveLength(2);
+    expect(found.map((n) => n.allowFontScaling)).toEqual([true, false]);
+  });
+
+  it("walks children at node.props.children (raw React element shape)", () => {
+    const elementShape = {
+      type: "View",
+      props: {
+        children: [
+          { type: "Text", props: { allowFontScaling: false } },
+          { type: "Text", props: {} },
+        ],
+      },
+    };
+    const found = allTextNodes(elementShape);
+    expect(found).toHaveLength(2);
+    expect(found[0]?.allowFontScaling).toBe(false);
+    expect(found[1]?.allowFontScaling).toBeUndefined();
+  });
+
+  it("matches component-type nodes by displayName or name, not just string tags", () => {
+    expect(
+      allTextNodes({ type: { displayName: "Text" }, props: { allowFontScaling: true } }),
+    ).toHaveLength(1);
+    expect(
+      allTextNodes({ type: { name: "Text" }, props: { allowFontScaling: false } }),
+    ).toHaveLength(1);
+  });
+
+  it("recurses through non-array single children under either shape", () => {
+    const scalarUnderChildren = {
+      type: "View",
+      props: {},
+      children: { type: "Text", props: { allowFontScaling: true } },
+    };
+    expect(allTextNodes(scalarUnderChildren)).toHaveLength(1);
+
+    const scalarUnderProps = {
+      type: "View",
+      props: { children: { type: "Text", props: { allowFontScaling: false } } },
+    };
+    expect(allTextNodes(scalarUnderProps)).toHaveLength(1);
+  });
+
+  it("finds Text inside a real rendered tree (integration with react-test-renderer)", () => {
+    const { toJSON } = render(wrap(<Text>Hello</Text>));
+    expect(allTextNodes(toJSON()).length).toBeGreaterThanOrEqual(1);
+  });
+});
+
 describe("a11y — large-text compatibility", () => {
   /**
    * Snapshot the primary shared primitives under a simulated 1.3× dynamic
