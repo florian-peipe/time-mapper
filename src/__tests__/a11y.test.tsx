@@ -14,6 +14,19 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import { Banner, Button, Chip, ListRow, Sheet } from "@/components";
 import { Text } from "react-native";
+// Imports for the "screens honor Dynamic Type" block below. Hoisted to file
+// scope so the describe block doesn't need require()s (which trip lint).
+import { createTestDb } from "@/db/testClient";
+import { PlacesRepo } from "@/db/repository/places";
+import { EntriesRepo } from "@/db/repository/entries";
+import { KvRepo } from "@/db/repository/kv";
+import { PlacesRepoProvider } from "@/features/places/usePlaces";
+import { EntriesRepoProvider } from "@/features/entries/useEntries";
+import { KvRepoProvider } from "@/features/onboarding/useOnboardingGate";
+import { __setProForTests } from "@/features/billing/usePro";
+import { TimelineScreen } from "@/screens/Timeline/TimelineScreen";
+import { StatsScreen } from "@/screens/Stats/StatsScreen";
+import { AddPlaceSheet } from "@/screens/AddPlace/AddPlaceSheet";
 
 // Mock expo-router so screens that use `useRouter` don't crash.
 jest.mock("expo-router", () => ({
@@ -482,6 +495,47 @@ describe("a11y — adjustable control (slider in AddPlaceSheet)", () => {
   });
 });
 
+/**
+ * Walk a rendered tree and collect every `<Text>` node's a11y-relevant props.
+ * Used by both the primitives block and the screens block below — hoisted to
+ * file scope so both describe blocks can reach it.
+ *
+ * Handles both shapes: react-test-renderer's JSON output puts children at the
+ * top level (`node.children`), while some component sources expose children
+ * via props (`node.props.children`). Walking both keeps this robust across
+ * RNTL upgrades and mixed node types.
+ */
+function allTextNodes(tree: unknown): { allowFontScaling?: boolean }[] {
+  const out: { allowFontScaling?: boolean }[] = [];
+  function walk(node: unknown) {
+    if (!node || typeof node !== "object") return;
+    const n = node as {
+      type?: { displayName?: string; name?: string } | string;
+      props?: { children?: unknown; allowFontScaling?: boolean };
+      children?: unknown;
+    };
+    const type = n.type;
+    if (type) {
+      const name = typeof type === "string" ? type : (type.displayName ?? type.name);
+      if (name === "Text" && n.props) {
+        out.push({ allowFontScaling: n.props.allowFontScaling });
+      }
+    }
+    if (Array.isArray(n.children)) {
+      for (const c of n.children) walk(c);
+    } else if (n.children) {
+      walk(n.children);
+    }
+    if (n.props && Array.isArray(n.props.children)) {
+      for (const c of n.props.children) walk(c);
+    } else if (n.props && n.props.children) {
+      walk(n.props.children);
+    }
+  }
+  walk(tree);
+  return out;
+}
+
 describe("a11y — large-text compatibility", () => {
   /**
    * Snapshot the primary shared primitives under a simulated 1.3× dynamic
@@ -492,30 +546,6 @@ describe("a11y — large-text compatibility", () => {
    * Extend this list when adding a new primitive — the regression would
    * otherwise only surface via iOS reviewer VoiceOver + large-text checks.
    */
-  function allTextNodes(tree: unknown): { allowFontScaling?: boolean }[] {
-    const out: { allowFontScaling?: boolean }[] = [];
-    function walk(node: unknown) {
-      if (!node || typeof node !== "object") return;
-      const n = node as {
-        type?: { displayName?: string; name?: string };
-        props?: { children?: unknown; allowFontScaling?: boolean };
-      };
-      const type = n.type;
-      if (type) {
-        const name = typeof type === "string" ? type : (type.displayName ?? type.name);
-        if (name === "Text" && n.props) {
-          out.push({ allowFontScaling: n.props.allowFontScaling });
-        }
-      }
-      if (n.props && Array.isArray(n.props.children)) {
-        for (const c of n.props.children) walk(c);
-      } else if (n.props && n.props.children) {
-        walk(n.props.children);
-      }
-    }
-    walk(tree);
-    return out;
-  }
 
   it("Button text allows font scaling (never opts out of Dynamic Type)", () => {
     const { toJSON } = render(wrap(<Button onPress={() => {}}>Save place</Button>));
@@ -545,5 +575,133 @@ describe("a11y — large-text compatibility", () => {
     for (const n of allTextNodes(toJSON())) {
       expect(n.allowFontScaling).not.toBe(false);
     }
+  });
+});
+
+// The original "item A" plan was a truncation-risk audit that flags any Text
+// with `numberOfLines` set on long user content. That turned out to be noise:
+// a grep of src/ shows six `numberOfLines={1}` occurrences, all on list-row
+// primitives (ListRow, PlacesListView, EntryRow, PlaceBar) where single-line
+// clipping is the design — dynamic type users see truncation in the row, but
+// the full content remains reachable via the row's detail view or a11y label.
+// Flagging that would fail the suite on correct-by-design behavior.
+//
+// What IS catchable: a new screen-level `<Text allowFontScaling={false}>`
+// slipping past review. The existing block above only covers shared
+// primitives (Button, Banner, Chip, ListRow). Below extends the same walker
+// to the three highest-traffic screens with seeded user-content fixtures, so
+// any raw Text added inside Timeline / Stats / AddPlace that opts out of
+// Dynamic Type fails fast.
+describe("a11y — screens honor Dynamic Type", () => {
+  const LONG_NAME = "The Very Long Coffee Shop Name Over Here";
+  const LONG_NOTE = "A note that goes on and on beyond any single-line width";
+
+  function assertAllTextScales(tree: unknown) {
+    const nodes = allTextNodes(tree);
+    // Sanity: at least some Text should render (guards against the screen
+    // short-circuiting into a loading state with no text).
+    expect(nodes.length).toBeGreaterThan(0);
+    for (const n of nodes) {
+      expect(n.allowFontScaling).not.toBe(false);
+    }
+  }
+
+  beforeEach(() => {
+    __setProForTests(null);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("TimelineScreen — every Text honors Dynamic Type (seeded with long place name + note)", () => {
+    const nowMs = new Date(2026, 3, 17, 12, 0, 0).getTime();
+    const nowSeconds = Math.floor(nowMs / 1000);
+    jest.useFakeTimers().setSystemTime(new Date(nowMs));
+
+    const db = createTestDb();
+    const placesRepo = new PlacesRepo(db, { now: () => nowSeconds });
+    const entriesRepo = new EntriesRepo(db, { now: () => nowSeconds });
+    const kvRepo = new KvRepo(db);
+    const place = placesRepo.create({
+      name: LONG_NAME,
+      address: "",
+      latitude: 0,
+      longitude: 0,
+    });
+    entriesRepo.createManual({
+      placeId: place.id,
+      startedAt: nowSeconds - 3600,
+      endedAt: nowSeconds - 1800,
+      note: LONG_NOTE,
+    });
+
+    const { toJSON } = render(
+      wrap(
+        <KvRepoProvider value={kvRepo}>
+          <PlacesRepoProvider value={placesRepo}>
+            <EntriesRepoProvider value={entriesRepo}>
+              <TimelineScreen />
+            </EntriesRepoProvider>
+          </PlacesRepoProvider>
+        </KvRepoProvider>,
+      ),
+    );
+    assertAllTextScales(toJSON());
+  });
+
+  it("StatsScreen — every Text honors Dynamic Type (seeded with long place name)", () => {
+    const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
+    const nowSeconds = Math.floor(nowMs / 1000);
+    jest.useFakeTimers().setSystemTime(new Date(nowMs));
+
+    const db = createTestDb();
+    const placesRepo = new PlacesRepo(db, { now: () => nowSeconds });
+    const entriesRepo = new EntriesRepo(db, { now: () => nowSeconds });
+    const place = placesRepo.create({
+      name: LONG_NAME,
+      address: "",
+      latitude: 0,
+      longitude: 0,
+    });
+    entriesRepo.createManual({
+      placeId: place.id,
+      startedAt: nowSeconds - 3600,
+      endedAt: nowSeconds - 1800,
+    });
+
+    const { toJSON } = render(
+      wrap(
+        <PlacesRepoProvider value={placesRepo}>
+          <EntriesRepoProvider value={entriesRepo}>
+            <StatsScreen />
+          </EntriesRepoProvider>
+        </PlacesRepoProvider>,
+      ),
+    );
+    assertAllTextScales(toJSON());
+  });
+
+  it("AddPlaceSheet (edit mode) — every Text honors Dynamic Type", () => {
+    const db = createTestDb();
+    const placesRepo = new PlacesRepo(db);
+    const kvRepo = new KvRepo(db);
+    const place = placesRepo.create({
+      name: LONG_NAME,
+      address: "Long Street 42, 50667 Köln, Germany",
+      latitude: 50.9,
+      longitude: 6.9,
+    });
+
+    const { toJSON } = render(
+      wrap(
+        <KvRepoProvider value={kvRepo}>
+          <PlacesRepoProvider value={placesRepo}>
+            <AddPlaceSheet visible placeId={place.id} onClose={() => {}} />
+          </PlacesRepoProvider>
+        </KvRepoProvider>,
+      ),
+    );
+    assertAllTextScales(toJSON());
   });
 });
