@@ -125,15 +125,24 @@ export function placeContaining(
  * Falls back to last-known if the fresh fix doesn't land in time.
  */
 export async function getCurrentPlaceId(places: Place[]): Promise<string | null> {
+  // Promise.race doesn't cancel the loser: when the position call wins, the
+  // fallback timer keeps a closure alive until it fires. Capture the handle
+  // so the finally can clear it — prevents a 5s timer leak per call.
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
+    const timeoutFallback = new Promise<null>((resolve) => {
+      timer = setTimeout(() => resolve(null), 5_000);
+    });
     const loc = await Promise.race([
       Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 5_000)),
+      timeoutFallback,
     ]);
     const fix = loc ?? (await Location.getLastKnownPositionAsync({ maxAge: 5 * 60_000 }));
     if (!fix) return null;
     return placeContaining(fix, places)?.id ?? null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
