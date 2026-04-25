@@ -1,8 +1,9 @@
 # Time Mapper — v1.1 status + handoff
 
-_Updated 2026-04-22 after the mock-Pro removal + diagnostic-log removal +
-large-screen decomposition pass. See `docs/V1_LAUNCH_PLAN.md` for the
-submission checklist._
+_Updated 2026-04-25: launch-hardening pass complete (Stages 0–2 of plan).
+See `CLAUDE.md` § "Ship paths" and the plan at
+`C:\Users\flori\.claude\plans\the-full-project-the-replicated-hammock.md`
+for the full submission checklist._
 
 ## Release metadata
 
@@ -10,7 +11,7 @@ submission checklist._
 | ------------- | -------------------------------------------------------- |
 | `package.json` version | `1.1.0`                                        |
 | `app.json` version     | `1.1.0` (in sync)                              |
-| Test count    | 623 passing across 85 suites                             |
+| Test count    | 695 passing across 97 suites                             |
 | Typecheck     | Clean (`tsc --noEmit`)                                   |
 | Lint          | Clean (0 warnings, 0 errors)                             |
 | `build:check` | Clean (`expo export --platform ios`)                     |
@@ -68,7 +69,7 @@ file and rebuild.
 | Google Maps Android SDK key | `app.json → android.config.googleMaps.apiKey` — free 28.5k loads/mo; GCP billing account required |
 | Sentry DSN (optional)       | `EXPO_PUBLIC_SENTRY_DSN` — disables gracefully when missing                                       |
 | Impressum contact details   | `src/screens/Legal/contact.local.ts` (gitignored, copy from `.example.ts`)                        |
-| Privacy policy hosted URL   | Host `docs/legal/privacy-{en,de}.md` and paste URL into ASC App Privacy                           |
+| Privacy policy hosted URL   | **Done** — GitHub Pages at `florian-peipe.github.io/opus-4.7-time-mapper/privacy-en.html` (see Stage 2 below) |
 | App Store screenshots       | Capture via `store/screenshots/README.md` commands once dev build installed                       |
 | Play Store screenshots      | Same commands, Android simulator                                                                  |
 
@@ -99,43 +100,67 @@ npx eas secret:create --name EXPO_PUBLIC_SENTRY_DSN             --value https://
 4. **Screenshots are not yet captured.** `store/screenshots/` ships the
    simctl/adb capture commands and a README but no actual images.
 
-## Next steps (for the collaborator)
+## Launch-hardening stages (as of 2026-04-25)
 
-The codebase is ready. Only the Apple-Developer-account tasks remain
-— none of these require editing source code.
+| Stage | Description | Status |
+|-------|-------------|--------|
+| 0 | Code polish: console.warn → captureException, app.json fixes (targetSdk 35, UIBackgroundModes, RECEIVE_BOOT_COMPLETED restored), metadata copy | ✅ Done |
+| 1 | Keystone artifacts verified: contact.local.ts filled, icon 1024×1024 opaque, expo-location foregroundServiceType confirmed | ✅ Done |
+| 2 | GitHub Pages site live at `florian-peipe.github.io/opus-4.7-time-mapper/` — privacy-en/de, terms-en/de, impressum, support/index | ✅ Done (needs activation — see below) |
+| 3 | External accounts: Apple Developer, Google Play, RevenueCat, EAS secrets | ⏳ User action required |
+| 4 | Store listing assets: screenshots (6 × 2 locales × 2 platforms), Android feature graphic, background-location demo video | ⏳ User action required |
+| 5 | iOS submission via EAS Build + Submit → TestFlight → App Store review | ⏳ User action required |
+| 6 | Android submission via EAS Build + Submit → Internal → Closed → Production | ⏳ User action required |
+| 7 | Post-launch monitoring | Future |
 
-1. **Clone + verify green:**
-   ```sh
-   git clone <repo-url>
-   cd opus-4.7-time-mapper
-   npm ci
-   npm test && npm run typecheck && npm run lint && npm run build:check
-   ```
-2. **Fill `eas.json → submit.production.ios`** with the three fields:
-   - `appleId`  — your Apple ID email
-   - `appleTeamId` — from Apple Developer → Membership
-   - `ascAppId` — from App Store Connect → My Apps → Time Mapper →
-     App Information → Apple ID
-3. **Build + submit:**
-   ```sh
-   npx eas build --profile production --platform ios
-   npx eas submit --profile production --platform ios
-   ```
-4. The build appears in TestFlight inside App Store Connect — invite
-   internal testers or process it through beta review for external
-   testers.
+## Next steps (for the user)
 
-The Impressum contact is now filled (`src/screens/Legal/contact.local.ts`
-— Florian Peipe, Lindenalee 46, 50968 Köln, info@peipe.org). The Android
-map preview still degrades to a warning Banner without a Google Maps SDK
-key. **RevenueCat keys are now required** even for internal TestFlight —
-the mock-mode fallback was removed in the v1.1 cleanup pass. Paywall +
-purchase paths throw at runtime without keys.
+### Activate GitHub Pages (5 minutes)
+Go to **github.com → your repo → Settings → Pages → Source: Deploy from branch →
+Branch: `main`, Folder: `/docs`** → Save.
+The site becomes live at `https://florian-peipe.github.io/opus-4.7-time-mapper/`.
+
+### Confirm green before building
+```sh
+npm test && npm run typecheck && npm run lint && npm run build:check
+node scripts/check-submission-ready.js
+```
+The preflight exits with 4 blockers (all credential-related — not code problems):
+eas.json Apple credentials + play-service-account.json.
+
+### EAS secrets (one-time)
+```sh
+npx eas login
+npx eas secret:create --name EXPO_PUBLIC_REVENUECAT_IOS_KEY     --value appl_...
+npx eas secret:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value goog_...
+```
+
+### Fill eas.json (3 fields)
+- `appleId` — your Apple ID email
+- `appleTeamId` — from developer.apple.com → Membership
+- `ascAppId` — from App Store Connect → My Apps → App Information → Apple ID
+
+### Build + submit iOS
+```sh
+npx eas build --profile production --platform ios
+npx eas submit --profile production --platform ios
+```
+
+### Build + submit Android
+```sh
+npx eas build --profile production --platform android
+npx eas submit --profile production --platform android
+```
+
+## Notes
+
+- Impressum contact filled: Florian Peipe, Lindenalee 46, 50968 Köln, info@peipe.org
+- **RevenueCat keys required** even for TestFlight — mock mode was removed in v1.1
+- Android map preview degrades gracefully to a warning Banner without a Google Maps SDK key
+- `expo-task-manager` plugin adds `'fetch'` to iOS UIBackgroundModes during prebuild (library behavior, not a bug)
 
 ## Verdict
 
-Shippable to TestFlight once the Apple IDs land in `eas.json` and RC
-keys are in the build environment. 623 tests across 85 suites,
-typecheck clean, lint clean, iOS bundle cleanly (`expo export --platform
-ios` green in CI). UI, domain logic, persistence, billing, goals, and
-places-tab paths are all feature-complete.
+Shippable. 695 tests across 97 suites, typecheck clean, lint clean, iOS bundle clean.
+UI, domain logic, persistence, billing, goals, places-tab paths are feature-complete.
+Only credentials and store assets (screenshots) remain before first submission.
