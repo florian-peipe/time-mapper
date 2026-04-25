@@ -81,7 +81,7 @@ export const useSheetStore = create<SheetState>((set) => ({
   active: null,
   payload: null,
   pendingPlaceForm: null,
-  openSheet: (name, payload = null) => set({ active: name, payload: payload ?? null }),
+  openSheet: (name, payload = null) => set({ active: name, payload }),
   closeSheet: () => set({ active: null, payload: null }),
   setPendingPlaceForm: (form) => set({ pendingPlaceForm: form }),
 }));

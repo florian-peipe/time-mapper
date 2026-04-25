@@ -1,6 +1,6 @@
 import type { Entry, Place } from "@/db/schema";
 import { i18n } from "@/lib/i18n";
-import { isDayInDailyGoal } from "@/lib/entries";
+import { isDayInDailyGoal, netSeconds } from "@/lib/entries";
 import type { RangeMode } from "@/lib/range";
 
 /**
@@ -18,9 +18,8 @@ export function aggregate(
   const totals = new Map<string, number>();
   let totalMin = 0;
   for (const e of entries) {
-    if (e.endedAt == null) continue;
-    const seconds = e.endedAt - e.startedAt - (e.pauseS ?? 0);
-    if (seconds <= 0) continue;
+    const seconds = netSeconds(e);
+    if (seconds === 0) continue;
     const mins = Math.round(seconds / 60);
     totalMin += mins;
     totals.set(e.placeId, (totals.get(e.placeId) ?? 0) + mins);

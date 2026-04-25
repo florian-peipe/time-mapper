@@ -22,10 +22,7 @@ type Props = {
  */
 export function PlaceBar({ place, minutes, max, mode, viewedDate }: Props) {
   const t = useTheme();
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  const label =
-    h === 0 ? i18n.t("stats.summary.rowMinutes", { m }) : i18n.t("stats.summary.rowHM", { h, m });
+  const label = formatGoalDelta(minutes);
 
   const goal = pickGoal(place, mode, viewedDate);
   const hasGoal = goal != null && goal > 0;
@@ -82,12 +79,7 @@ export function PlaceBar({ place, minutes, max, mode, viewedDate }: Props) {
             style={{
               marginTop: 1,
               fontSize: t.type.size.xs,
-              color:
-                over > 0
-                  ? t.color("color.success")
-                  : over === 0
-                    ? t.color("color.fg3")
-                    : t.color("color.fg3"),
+              color: over > 0 ? t.color("color.success") : t.color("color.fg3"),
               fontFamily: t.type.family.sans,
               fontVariant: ["tabular-nums"],
             }}
