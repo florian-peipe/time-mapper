@@ -13,10 +13,10 @@ pricing:
 
 localizations:
   en-US:
-    # Max 30 chars — shows in Play Store search results.
+    # Max 80 chars — shows in Play Store search results.
     shortDescription: "Private, automatic time tracking for the places you visit."
-    # Max 80 chars — store listing title.
-    title: "Time Mapper: Auto place tracker"
+    # Max 30 chars — store listing title.
+    title: "Time Mapper – Auto Tracker"
     # Max 4000 chars.
     fullDescription: |
       Time Mapper quietly tracks how long you spend at the places that
@@ -42,7 +42,7 @@ localizations:
       • Full history beyond 14 days
       • Weekly reports for past weeks
       • CSV export for your own records
-      • Categories for grouping places
+      • Per-place daily + weekly goals with reminders
 
       Auto-renewing subscription: monthly or yearly. Cancel anytime in
       Google Play account settings.
@@ -76,7 +76,7 @@ localizations:
       • Vollständiger Verlauf über 14 Tage hinaus
       • Wochenberichte für vergangene Wochen
       • CSV-Export für deine eigenen Aufzeichnungen
-      • Kategorien zum Gruppieren von Orten
+      • Tages- und Wochenziele pro Ort mit Erinnerungen
 
       Automatisch verlängerndes Abonnement: monatlich oder jährlich.
       Jederzeit in den Google Play-Kontoeinstellungen kündbar.
@@ -130,16 +130,19 @@ permissions:
   - id: "POST_NOTIFICATIONS"
     rationale: "Used to show optional 'arrived' / 'left' confirmations so users know tracking started."
   - id: "RECEIVE_BOOT_COMPLETED"
-    rationale: "Re-registers geofences after device reboot so auto-tracking survives restarts."
+    rationale: "Required by expo-task-manager to re-register background geofence tasks after device reboot, ensuring tracking resumes reliably without the user having to open the app."
+
 
 releaseNotes:
   en-US: |
-    Time Mapper 1.0 — first public release. Add places, track time
-    automatically, stay private.
+    Places tab with map + list view. Per-place goals (daily + weekly) with
+    goal-reached notifications. Day / Week / Month / Year navigator on
+    Timeline and Stats. RevenueCat-hosted paywall and Customer Center.
   de-DE: |
-    Time Mapper 1.0 — erste öffentliche Version. Orte hinzufügen, Zeit
-    automatisch verfolgen, privat bleiben.
+    Orte-Tab mit Karten- + Listenansicht. Tages- und Wochenziele pro Ort
+    mit Benachrichtigungen. Tag / Woche / Monat / Jahr-Navigation in
+    Verlauf und Statistik.
 
 contact:
   email: "info@peipe.org"
-  website: "https://timemapper.app"
+  website: "https://florian-peipe.github.io/time-mapper/"

@@ -13,6 +13,7 @@ import { openPaywall, type PaywallSource } from "@/features/billing/openPaywall"
 import { presentCustomerCenter } from "@/features/billing/revenuecat";
 import { useUiStore } from "@/state/uiStore";
 import { i18n, setLocale } from "@/lib/i18n";
+import { captureException } from "@/lib/crash";
 import { legalRoute } from "@/lib/routes";
 import { ProUpsellCard } from "./ProUpsellCard";
 import { useKvRepo, useOnboardingGate } from "@/features/onboarding/useOnboardingGate";
@@ -128,7 +129,7 @@ export function SettingsScreen() {
 
   const handleOpenLocationSettings = useCallback(() => {
     void Linking.openSettings().catch((err) => {
-      console.warn("Failed to open OS settings", err);
+      captureException(err, { scope: "openLocationSettings" });
     });
   }, []);
 
@@ -155,7 +156,7 @@ export function SettingsScreen() {
   const handleOpenNotifications = useCallback(() => {
     if (notificationsDenied) {
       void Linking.openSettings().catch((err) => {
-        console.warn("Failed to open OS settings", err);
+        captureException(err, { scope: "openNotificationSettings" });
       });
       return;
     }
@@ -174,21 +175,21 @@ export function SettingsScreen() {
           return;
         }
       } catch (err) {
-        console.warn("StoreReview failed, falling back to store URL", err);
+        captureException(err, { scope: "storeReview" });
       }
       await Linking.openURL(STORE_REVIEW_FALLBACK_URL);
-    })().catch((err) => console.warn("Rate app flow failed", err));
+    })().catch((err) => captureException(err, { scope: "rateApp" }));
   }, []);
 
   const handleSupport = useCallback(() => {
     void Linking.openURL(SUPPORT_MAILTO_URL).catch((err) => {
-      console.warn("Failed to open mailto:", err);
+      captureException(err, { scope: "support" });
     });
   }, []);
 
   const handleManageSubscription = useCallback(() => {
     void presentCustomerCenter().catch((err) => {
-      console.warn("Customer Center failed, falling back to OS deep-link", err);
+      captureException(err, { scope: "customerCenter" });
       void Linking.openURL(SUBSCRIPTION_MANAGEMENT_URL);
     });
   }, []);
@@ -199,7 +200,7 @@ export function SettingsScreen() {
       await restore();
       setRestoreState("done");
     } catch (err) {
-      console.warn("settings: restore failed", err);
+      captureException(err, { scope: "restore" });
       setRestoreState("error");
     }
   }, [restore]);

@@ -20,6 +20,7 @@ import {
   purchasePackage,
   restorePurchases,
 } from "./revenuecat";
+import { captureException } from "@/lib/crash";
 
 export type UseProResult = {
   /** Whether the user currently has an active Pro entitlement. */
@@ -89,7 +90,7 @@ export function usePro(): UseProResult {
     try {
       userId = getOrCreateRevenueCatUserIdFromDevice();
     } catch (err) {
-      console.warn("usePro: anon user-id resolve failed, using anonymous", err);
+      captureException(err, { scope: "usePro.userId" });
     }
 
     // Configure is idempotent — safe to call from every consumer's effect.
@@ -97,7 +98,7 @@ export function usePro(): UseProResult {
     try {
       configureRevenueCat(userId);
     } catch (err) {
-      console.warn("usePro: configureRevenueCat failed", err);
+      captureException(err, { scope: "usePro.configure" });
       if (mounted.current) setLoading(false);
       return () => {
         mounted.current = false;
@@ -114,9 +115,7 @@ export function usePro(): UseProResult {
         setIsPro(isProActive(info));
         setOfferings(off);
       } catch (err) {
-        // Swallow — the SDK may be momentarily unreachable. Subsequent
-        // listener events will reconcile state. We still log so dev sees it.
-        console.warn("usePro: initial fetch failed", err);
+        captureException(err, { scope: "usePro.initialFetch" });
       } finally {
         if (mounted.current) setLoading(false);
       }

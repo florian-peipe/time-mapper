@@ -109,7 +109,20 @@ if (!fs.existsSync(path.join(repoRoot, "play-service-account.json"))) {
   }
 }
 
-// 5. .env.local must exist with the keys we expect at build time.
+// 5. Store metadata URLs must not still point at the unregistered timemapper.app domain.
+{
+  const files = ["store/ios/metadata.yaml", "store/android/metadata.yaml"];
+  for (const rel of files) {
+    const contents = readFile(rel);
+    if (contents && /https?:\/\/timemapper\.app/.test(contents)) {
+      fail(
+        `${rel} still references timemapper.app (unregistered domain). Replace with the real hosted URL before submitting.`,
+      );
+    }
+  }
+}
+
+// 6. .env.local must exist with the keys we expect at build time.
 {
   const envPath = path.join(repoRoot, ".env.local");
   if (!fs.existsSync(envPath)) {
@@ -117,7 +130,7 @@ if (!fs.existsSync(path.join(repoRoot, "play-service-account.json"))) {
   }
 }
 
-// 6. Android Maps API key — optional, but we warn if absent on Android builds.
+// 7. Android Maps API key — optional, but we warn if absent on Android builds.
 {
   const appJson = readFile("app.json");
   if (appJson) {

@@ -1,4 +1,5 @@
 import { AppState, type AppStateStatus } from "react-native";
+import { captureException } from "@/lib/crash";
 import { PlacesRepo } from "@/db/repository/places";
 import { EntriesRepo } from "@/db/repository/entries";
 import { KvRepo } from "@/db/repository/kv";
@@ -55,7 +56,7 @@ export async function bootstrapTracking(): Promise<void> {
     try {
       runRetentionSweep(new EntriesRepo(db), kv, nowS());
     } catch (err) {
-      console.warn("[bootstrapTracking] retention sweep failed:", err);
+      captureException(err, { scope: "bootstrap.retention" });
     }
 
     // Any entries the background task wrote (or that the synthetic-enter
@@ -63,7 +64,7 @@ export async function bootstrapTracking(): Promise<void> {
     // all `useEntries` / `useOngoingEntry` consumers to re-query.
     useDataVersionStore.getState().bumpAll();
   } catch (err) {
-    console.warn("[bootstrapTracking] failed:", err);
+    captureException(err, { scope: "bootstrapTracking" });
   }
 }
 
@@ -87,7 +88,7 @@ export async function reconcileAfterPlaceChange(): Promise<void> {
       useDataVersionStore.getState().bumpEntries();
     }
   } catch (err) {
-    console.warn("[reconcileAfterPlaceChange] failed:", err);
+    captureException(err, { scope: "reconcileAfterPlaceChange" });
   }
 }
 

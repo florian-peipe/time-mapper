@@ -5,6 +5,7 @@
  */
 import type * as ExpoNotifications from "expo-notifications";
 import type { KvRepo } from "@/db/repository/kv";
+import { captureException } from "@/lib/crash";
 import { i18n } from "@/lib/i18n";
 import { KV_KEYS } from "@/db/kvKeys";
 import { IOS_CATEGORY_ID } from "./channels";
@@ -77,6 +78,6 @@ export async function setDailyDigestSchedule(
     });
     kv.set(KV_KEYS.NOTIFIER_DIGEST_ID, id);
   } catch (err) {
-    console.warn("[notifier] daily digest schedule failed:", err);
+    captureException(err, { scope: "notifications.digest" });
   }
 }
