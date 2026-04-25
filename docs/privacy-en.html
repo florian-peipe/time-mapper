@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy — Time Mapper</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ac:#FF6A3D;--bg:#FAFAF8;--fg:#1A1910;--su:#F0EFE8;--bd:#E0DED6;--mu:#6B6862;--lk:#C94F1E}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);line-height:1.65;min-height:100vh}
+header{border-bottom:1px solid var(--bd);padding:1rem 1.5rem;display:flex;align-items:center;gap:.75rem}
+.mark{width:30px;height:30px;background:var(--ac);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0}
+.sitename{font-weight:700;font-size:1.05rem;text-decoration:none;color:var(--fg)}
+.langs{margin-left:auto;display:flex;gap:.4rem}
+.langs a{font-size:.82rem;color:var(--mu);text-decoration:none;padding:.18rem .48rem;border-radius:4px}
+.langs a:hover{background:var(--su)}
+.langs a.on{color:var(--fg);font-weight:600}
+main{max-width:680px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+h1{font-size:1.7rem;font-weight:700;margin-bottom:.4rem;line-height:1.2}
+h2{font-size:1.1rem;font-weight:700;margin-top:2rem;margin-bottom:.65rem}
+p{margin-bottom:.85rem}
+.date{color:var(--mu);font-size:.88rem;margin-bottom:2rem;font-style:italic}
+a{color:var(--lk)}
+ul{padding-left:1.35rem;margin-bottom:.85rem}
+li{margin-bottom:.45rem}
+strong{font-weight:600}
+em{font-style:italic}
+code{font-family:ui-monospace,"Fira Code",Consolas,monospace;font-size:.88em;background:var(--su);padding:.1em .3em;border-radius:3px}
+footer{background:var(--su);border-top:1px solid var(--bd);padding:1.1rem 1.5rem;text-align:center;font-size:.82rem;color:var(--mu)}
+footer a{color:var(--mu);text-decoration:none}
+footer a:hover{color:var(--fg)}
+footer nav{margin-top:.4rem;display:flex;gap:.9rem;justify-content:center;flex-wrap:wrap}
+@media(max-width:480px){h1{font-size:1.4rem}main{padding:1.5rem 1rem 3rem}}
+</style>
+</head>
+<body>
+<header>
+  <div class="mark">T</div>
+  <a class="sitename" href="index.html">Time Mapper</a>
+  <div class="langs">
+    <a href="privacy-en.html" class="on">EN</a>
+    <a href="privacy-de.html">DE</a>
+  </div>
+</header>
+<main>
+  <h1>Privacy Policy</h1>
+  <p class="date">Last updated: 2026-04-17</p>
+
+  <p>Time Mapper is designed to keep your data on your device. This page describes exactly what we collect, what we store, and what (if anything) we share.</p>
+
+  <h2>What we collect</h2>
+  <p><strong>Location data.</strong> When you enable <em>Always location</em>, the app uses OS-level geofencing to detect entry and exit of places you've saved. Your coordinates are never transmitted off-device — all tracking happens locally via iOS Core Location and Android LocationManager.</p>
+  <p><strong>Time entries.</strong> The moments you enter and leave each place are stored in a SQLite database inside the app's sandbox. Uninstalling the app removes this database entirely.</p>
+  <p><strong>Goals and goal-reached notifications.</strong> Optional per-place daily and weekly time targets are stored on-device only. When you cross one, the app fires a local notification — generated and delivered entirely on your device, never transmitted to us.</p>
+  <p><strong>User-initiated exports.</strong> When you tap Export CSV, Export backup (JSON), or Export diagnostic log in Settings, the file is handed to the operating system's share sheet. Where it goes from there is your choice (Mail, Messages, Files, etc.). We receive nothing.</p>
+  <p><strong>Subscription entitlement.</strong> When you purchase Time Mapper Pro, Apple or Google handles the transaction. We receive only an anonymous entitlement token via RevenueCat — no personally identifiable data is shared with us.</p>
+  <p><strong>Crash reports (optional).</strong> If the developer has configured a Sentry project, uncaught exceptions are sent to Sentry. Before transmission, we strip <code>location</code>, <code>latitude</code>, and <code>longitude</code> from breadcrumbs and extras. No location data or PII ever reaches Sentry.</p>
+
+  <h2>What we share</h2>
+  <p>Nothing, aside from an anonymous RevenueCat user id generated at first install. That id is used only to verify your Pro entitlement across installs of the same app store account. It is never linked to your name, email, or device id by us.</p>
+
+  <h2>Third-party services</h2>
+  <ul>
+    <li><strong>Apple App Store / Google Play</strong> — subscription billing. Covered by their respective privacy policies.</li>
+    <li><strong>RevenueCat</strong> — subscription entitlement cross-referencing. See <a href="https://www.revenuecat.com/privacy" target="_blank" rel="noopener">revenuecat.com/privacy</a>.</li>
+    <li><strong>Photon (Komoot GmbH, Potsdam, Germany)</strong> — address autocomplete when you add a place. Typed queries are sent to Photon's EU servers. Your GPS coordinates are NOT included in those requests. Data is based on OpenStreetMap. See <a href="https://www.komoot.com/privacy" target="_blank" rel="noopener">komoot.com/privacy</a>.</li>
+    <li><strong>Apple Maps / Google Maps for Android</strong> — map tile rendering for the place preview. iOS uses Apple Maps (no account, no personal data); Android uses Google Maps for Android to render tiles (no account, no personal data, just the viewport request).</li>
+    <li><strong>Sentry (optional)</strong> — crash reporting if the developer has configured a DSN. See <a href="https://sentry.io/privacy/" target="_blank" rel="noopener">sentry.io/privacy</a>.</li>
+  </ul>
+  <p><em>Attribution: © OpenStreetMap contributors. Map tiles © Apple or © Google depending on your device platform.</em></p>
+
+  <h2>GDPR rights</h2>
+  <p>Because we store no identifying data on our side, there is nothing to export or delete. Uninstalling the app removes all local data from your device.</p>
+  <p>If you have questions, contact the developer — see the <a href="impressum.html">Impressum</a>.</p>
+</main>
+<footer>
+  <div>© 2026 Time Mapper &middot; <a href="mailto:info@peipe.org">info@peipe.org</a></div>
+  <nav>
+    <a href="index.html">Support</a>
+    <a href="privacy-de.html">Privacy (DE)</a>
+    <a href="terms-en.html">Terms (EN)</a>
+    <a href="terms-de.html">Terms (DE)</a>
+    <a href="impressum.html">Impressum</a>
+  </nav>
+</footer>
+</body>
+</html>
