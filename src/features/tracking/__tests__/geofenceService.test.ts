@@ -125,4 +125,29 @@ describe("tracking/geofenceService", () => {
     const result = await getCurrentPlaceId([makePlace("a")]);
     expect(result).toBeNull();
   });
+
+  test("getCurrentPlaceId clears its 5s timeout-fallback timer when the position call wins", async () => {
+    // Regression pin for the Promise.race timer leak surfaced by
+    // `jest --detectOpenHandles`. Without clearTimeout in the finally,
+    // every fast-path call left a dangling 5s timer in the event loop.
+    jest.useFakeTimers();
+    try {
+      mLoc.getCurrentPositionAsync.mockResolvedValue({
+        coords: {
+          latitude: 52.52,
+          longitude: 13.405,
+          altitude: null,
+          accuracy: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      });
+      await getCurrentPlaceId([makePlace("a")]);
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
