@@ -1,0 +1,62 @@
+appId: com.timemapper.app
+name: "[Sandbox] Upgrade monthly → yearly via change-plan row"
+tags:
+  - sandbox
+  - paywall
+  - pro-gate
+---
+# Pre-state: buy monthly via seed-pro-monthly, then open the change-plan
+# row which launches the paywall in change mode. Tapping buy upgrades the
+# subscription. After purchase the paywall closes and the plan detail label
+# in Settings changes from monthly to annual wording.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "../../flows/seed-one-place.yaml"
+
+- runFlow:
+    file: "./flows/seed-pro-monthly.yaml"
+
+# Go to Settings — monthly plan is active
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-pro-active"
+    timeout: 10000
+
+# The change-plan row should say "Upgrade to annual" (or with savings %)
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-change-plan"
+    timeout: 5000
+- tapOn:
+    id: "settings-row-change-plan"
+
+# Paywall opens in change mode — yearly package is pre-selected
+- extendedWaitUntil:
+    visible: "Time Mapper Pro"
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: "paywall-package-yearly"
+    timeout: 8000
+
+# Tap buy to upgrade
+- tapOn:
+    id: "paywall-buy"
+
+# Paywall closes after successful upgrade
+- extendedWaitUntil:
+    notVisible: "Time Mapper Pro"
+    timeout: 15000
+
+# Pro row still active (still subscribed)
+- assertVisible:
+    id: "settings-row-pro-active"
+
+# Change-plan row now says "Switch to monthly" (downgrade direction)
+- extendedWaitUntil:
+    visible: "Switch to monthly"
+    timeout: 8000

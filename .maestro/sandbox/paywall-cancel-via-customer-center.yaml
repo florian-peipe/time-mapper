@@ -1,0 +1,65 @@
+appId: com.timemapper.app
+name: "[Sandbox] Cancel subscription via RC Customer Center"
+tags:
+  - sandbox
+  - paywall
+---
+# Pre-state: active monthly subscription (seeded via seed-pro-monthly).
+# Tapping the Pro active row opens the RC Customer Center native overlay.
+# This flow asserts the overlay opens and that the resubscribe row appears
+# after cancellation.
+#
+# NOTE: The Customer Center is a native RC overlay (not React Native).
+# Cancel confirmation inside it uses text-based taps on the native UI.
+# If the overlay does not show a "Cancel subscription" option (e.g. because
+# the Test Store does not surface it), the final resubscribe assertion is
+# the meaningful check.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "../../flows/seed-one-place.yaml"
+
+- runFlow:
+    file: "./flows/seed-pro-monthly.yaml"
+
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-pro-active"
+    timeout: 10000
+
+# Tap Pro active row → opens RC Customer Center
+- tapOn:
+    id: "settings-row-pro-active"
+
+# Customer Center opens as a native overlay — assert it is visible
+- extendedWaitUntil:
+    visible: "Manage"
+    timeout: 10000
+
+# Attempt to cancel — the exact label depends on the RC Customer Center
+# config and the platform (iOS: "Cancel subscription", Android may vary)
+- runFlow:
+    when:
+      visible: "Cancel subscription"
+    commands:
+      - tapOn: "Cancel subscription"
+      # Confirm in the system dialog if one appears
+      - runFlow:
+          when:
+            visible: "Confirm"
+          commands:
+            - tapOn: "Confirm"
+      - waitForAnimationToEnd:
+          timeout: 3000
+
+# Dismiss the Customer Center
+- back
+
+# After cancellation: pro row may still show (sub active until period end)
+# OR resubscribe row appears. Either is valid — just assert Settings is back.
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 5000

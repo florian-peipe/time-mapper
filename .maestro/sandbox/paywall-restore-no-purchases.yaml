@@ -1,0 +1,135 @@
+appId: com.timemapper.app
+name: "[Sandbox] Restore with no prior purchases"
+tags:
+  - sandbox
+  - paywall
+---
+# Verifies restore flow when the Test Store account has no active purchases.
+# The restore button label should cycle idle → busy → done/error and the
+# Settings row remains visible throughout.
+#
+# Run this BEFORE paywall-buy-monthly so the test account is clean.
+
+- launchApp:
+    clearState: true
+
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- extendedWaitUntil:
+    visible: "Time Mapper"
+    timeout: 60000
+
+# Walk through onboarding to Settings via "Skip for now"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-welcome-continue"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-welcome-continue"
+- runFlow:
+    when:
+      notVisible: "How it works"
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - tapOn:
+          id: "onboarding-welcome-continue"
+
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Goals and stats"
+    timeout: 10000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Private by default"
+    timeout: 10000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Always location"
+    timeout: 10000
+- tapOn: "Not now"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-first-place-skip"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-first-place-skip"
+
+- extendedWaitUntil:
+    visible: "Timeline"
+    timeout: 10000
+- tapOn: "Settings"
+
+# Tap Restore from Settings row
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-restore"
+    timeout: 5000
+- tapOn:
+    id: "settings-row-restore"
+
+# Busy state must appear
+- extendedWaitUntil:
+    visible: "Restoring…"
+    timeout: 5000
+
+# Busy state clears to done or error
+- extendedWaitUntil:
+    notVisible: "Restoring…"
+    timeout: 15000
+
+# Row is still accessible after completion
+- assertVisible:
+    id: "settings-row-restore"
+
+# Pro row must NOT appear (no purchases were restored)
+- assertNotVisible:
+    id: "settings-row-pro-active"
+
+# Also verify via the paywall restore button
+- tapOn: "Places"
+- extendedWaitUntil:
+    visible:
+      id: "places-fab-add"
+    timeout: 5000
+- tapOn:
+    id: "places-fab-add"
+- extendedWaitUntil:
+    visible:
+      id: "add-place-search"
+    timeout: 5000
+- tapOn:
+    id: "add-place-search"
+- inputText: "Berlin"
+- extendedWaitUntil:
+    visible:
+      id: "add-place-suggestion-0"
+    timeout: 10000
+- tapOn:
+    id: "add-place-suggestion-0"
+- extendedWaitUntil:
+    visible:
+      id: "add-place-save"
+    timeout: 5000
+- tapOn:
+    id: "add-place-save"
+
+# Paywall opens because we have 0 places (no first place was added)
+- extendedWaitUntil:
+    visible:
+      id: "paywall-restore"
+    timeout: 10000
+- tapOn:
+    id: "paywall-restore"
+
+# Restore label cycles busy → done/error
+- extendedWaitUntil:
+    visible: "Restoring…"
+    timeout: 5000
+- extendedWaitUntil:
+    notVisible: "Restoring…"
+    timeout: 15000

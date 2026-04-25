@@ -1,0 +1,62 @@
+appId: com.timemapper.app
+---
+# Shared subflow: seed a monthly Pro subscription via the Test Store.
+# Leaves the app on the Timeline with isPro = true, plan = monthly.
+#
+# Prereqs: caller must have already done launchApp + full onboarding
+# (e.g. via ../../flows/seed-one-place.yaml). The paywall is triggered
+# by attempting to add a second place.
+
+# Navigate to Places tab and tap the FAB
+- tapOn: "Places"
+- extendedWaitUntil:
+    visible:
+      id: "places-fab-add"
+    timeout: 5000
+- tapOn:
+    id: "places-fab-add"
+
+# Search for a second address to trigger the paywall
+- extendedWaitUntil:
+    visible:
+      id: "add-place-search"
+    timeout: 5000
+- tapOn:
+    id: "add-place-search"
+- inputText: "Munich"
+- extendedWaitUntil:
+    visible:
+      id: "add-place-suggestion-0"
+    timeout: 10000
+- tapOn:
+    id: "add-place-suggestion-0"
+
+# Phase 2 save → paywall intercept
+- extendedWaitUntil:
+    visible:
+      id: "add-place-save"
+    timeout: 5000
+- tapOn:
+    id: "add-place-save"
+
+# Paywall must be visible
+- extendedWaitUntil:
+    visible: "Time Mapper Pro"
+    timeout: 10000
+
+# Select monthly package
+- extendedWaitUntil:
+    visible:
+      id: "paywall-package-monthly"
+    timeout: 8000
+- tapOn:
+    id: "paywall-package-monthly"
+
+# Tap buy — Test Store completes the purchase without a native dialog
+- tapOn:
+    id: "paywall-buy"
+
+# Wait for paywall to close (Pro active closes it automatically)
+- extendedWaitUntil:
+    notVisible: "Time Mapper Pro"
+    timeout: 15000

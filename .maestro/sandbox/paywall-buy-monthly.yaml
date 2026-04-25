@@ -1,0 +1,32 @@
+appId: com.timemapper.app
+name: "[Sandbox] Buy monthly subscription via Test Store"
+tags:
+  - sandbox
+  - paywall
+  - pro-gate
+---
+# Verifies the full monthly purchase flow against RevenueCat's Test Store.
+# After purchase the paywall closes and Settings shows the Pro active row.
+#
+# Prereqs: EXPO_PUBLIC_REVENUECAT_ANDROID_KEY must be a test_... key.
+# No Play developer account or license-tester setup required.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "../../flows/seed-one-place.yaml"
+
+- runFlow:
+    file: "./flows/seed-pro-monthly.yaml"
+
+# Verify Pro is active — navigate to Settings and assert the row
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-pro-active"
+    timeout: 10000
+
+# Verify the change-plan row is present (monthly → upgrade to annual)
+- assertVisible:
+    id: "settings-row-change-plan"
