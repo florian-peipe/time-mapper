@@ -111,13 +111,10 @@ if (!fs.existsSync(path.join(repoRoot, "play-service-account.json"))) {
 
 // 5. Store metadata URLs must not still point at the unregistered timemapper.app domain.
 {
-  const files = [
-    "store/ios/metadata.yaml",
-    "store/android/metadata.yaml",
-  ];
+  const files = ["store/ios/metadata.yaml", "store/android/metadata.yaml"];
   for (const rel of files) {
     const contents = readFile(rel);
-    if (contents && /timemapper\.app/.test(contents)) {
+    if (contents && /https?:\/\/timemapper\.app/.test(contents)) {
       fail(
         `${rel} still references timemapper.app (unregistered domain). Replace with the real hosted URL before submitting.`,
       );

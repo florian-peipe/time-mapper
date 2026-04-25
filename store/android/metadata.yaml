@@ -129,6 +129,8 @@ permissions:
     rationale: "Required on Android 14+ for background geofence callbacks."
   - id: "POST_NOTIFICATIONS"
     rationale: "Used to show optional 'arrived' / 'left' confirmations so users know tracking started."
+  - id: "RECEIVE_BOOT_COMPLETED"
+    rationale: "Required by expo-task-manager to re-register background geofence tasks after device reboot, ensuring tracking resumes reliably without the user having to open the app."
 
 
 releaseNotes:
