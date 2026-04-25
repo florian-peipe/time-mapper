@@ -19,6 +19,7 @@ import type { KvRepo } from "@/db/repository/kv";
 import { useSheetStore } from "@/state/sheetStore";
 import { readGlobalBuffers } from "@/screens/Settings/BuffersSheet";
 import type { PlaceSuggestion } from "@/lib/geocode";
+import { parseGoalDays } from "@/lib/entries";
 
 /** 9 icons users can assign to a place. Exposed so the grid renders them. */
 export const ICON_CHOICES: readonly IconName[] = [
@@ -49,16 +50,6 @@ export type Selection = {
   latitude: number;
   longitude: number;
 };
-
-/** Parse `places.dailyGoalDays` into a sorted array of ISO day numbers. */
-export function parseGoalDays(raw: string | null | undefined): number[] {
-  if (!raw || raw.trim().length === 0) return [];
-  return raw
-    .split(",")
-    .map((s) => Number(s.trim()))
-    .filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
-    .sort((a, b) => a - b);
-}
 
 type FieldDefaults = {
   colorIdx: number;
@@ -229,7 +220,6 @@ export function usePlaceForm(opts: UsePlaceFormOpts): UsePlaceFormResult {
       : WEEKLY_GOAL_DEFAULT_H,
   );
 
-  // Track the previous visible state so we can detect the false→true transition.
   const prevVisible = useRef(false);
 
   // Hydration: pendingPlaceForm (post-paywall) > editingPlace > reset-on-close.

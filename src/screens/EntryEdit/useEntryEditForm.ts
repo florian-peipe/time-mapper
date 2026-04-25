@@ -43,7 +43,7 @@ export function useEntryEditForm(entryId: string | null, _places: Place[]) {
 
   const pauseMin = useMemo(() => pauseDateToMinutes(pauseDate), [pauseDate]);
 
-  const netMin = Math.max(0, grossMin - pauseMin);
+  const netMin = useMemo(() => Math.max(0, grossMin - pauseMin), [grossMin, pauseMin]);
 
   return {
     placeId,

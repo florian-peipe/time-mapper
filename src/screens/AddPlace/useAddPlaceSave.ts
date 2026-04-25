@@ -5,6 +5,7 @@ import { useSnackbarStore } from "@/state/snackbarStore";
 import { useSheetStore, type AddPlaceSource, type PendingPlaceForm } from "@/state/sheetStore";
 import { MAX_PLACES } from "@/features/tracking/geofenceService";
 import { i18n } from "@/lib/i18n";
+import { serializeGoalDays } from "@/lib/entries";
 import type { Place } from "@/db/schema";
 import { type CreatePlaceInput } from "@/db/repository/places";
 import { ICON_CHOICES, type Selection } from "./usePlaceForm";
@@ -43,14 +44,6 @@ type Opts = {
   onClose: () => void;
   onSaved?: (placeId: string) => void;
 };
-
-function buildGoalDays(enabled: boolean, days: number[]): string | null {
-  if (!enabled || days.length === 0 || days.length >= 7) return null;
-  return days
-    .slice()
-    .sort((a, b) => a - b)
-    .join(",");
-}
 
 export function useAddPlaceSave({ placeId, source, isPro, form, placeOps, onClose, onSaved }: Opts) {
   const setPendingPlaceForm = useSheetStore((s) => s.setPendingPlaceForm);
@@ -91,7 +84,7 @@ export function useAddPlaceSave({ placeId, source, isPro, form, placeOps, onClos
           exitBufferMin,
           dailyGoalMinutes: dailyGoalEnabled ? dailyGoalHours * 60 : null,
           weeklyGoalMinutes: weeklyGoalEnabled ? weeklyGoalHours * 60 : null,
-          dailyGoalDays: buildGoalDays(dailyGoalEnabled, dailyGoalDays),
+          dailyGoalDays: serializeGoalDays(dailyGoalEnabled, dailyGoalDays),
         };
         setPendingPlaceForm(stash);
       }
@@ -115,7 +108,7 @@ export function useAddPlaceSave({ placeId, source, isPro, form, placeOps, onClos
     const goals = {
       dailyGoalMinutes: dailyGoalEnabled ? dailyGoalHours * 60 : null,
       weeklyGoalMinutes: weeklyGoalEnabled ? weeklyGoalHours * 60 : null,
-      dailyGoalDays: buildGoalDays(dailyGoalEnabled, dailyGoalDays),
+      dailyGoalDays: serializeGoalDays(dailyGoalEnabled, dailyGoalDays),
     };
 
     let saved: Place;

@@ -33,18 +33,37 @@ export function isoDayOfWeek(date: Date): number {
 }
 
 /**
+ * Parse the `dailyGoalDays` CSV string ("1,3,5") into a sorted array of
+ * ISO day numbers. Empty / null input returns `[]` (= every day).
+ */
+export function parseGoalDays(raw: string | null | undefined): number[] {
+  if (!raw || raw.trim().length === 0) return [];
+  return raw
+    .split(",")
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
+    .sort((a, b) => a - b);
+}
+
+/**
+ * Serialize a day-number array back to the `dailyGoalDays` CSV format.
+ * Returns `null` when the selection means "every day" (empty or all 7 days).
+ */
+export function serializeGoalDays(enabled: boolean, days: number[]): string | null {
+  if (!enabled || days.length === 0 || days.length >= 7) return null;
+  return days
+    .slice()
+    .sort((a, b) => a - b)
+    .join(",");
+}
+
+/**
  * True when `date`'s day-of-week is in the `dailyGoalDays` filter.
  * `null` / empty string = "every day" (the default before the filter
  * was introduced, so existing places keep their prior behavior).
- *
- * `dailyGoalDays` is a comma-separated list of ISO day numbers
- * (1..7). Whitespace + duplicates are tolerated.
  */
 export function isDayInDailyGoal(dailyGoalDays: string | null | undefined, date: Date): boolean {
   if (!dailyGoalDays || dailyGoalDays.trim().length === 0) return true;
   const iso = isoDayOfWeek(date);
-  return dailyGoalDays
-    .split(",")
-    .map((s) => Number(s.trim()))
-    .some((d) => d === iso);
+  return parseGoalDays(dailyGoalDays).some((d) => d === iso);
 }
