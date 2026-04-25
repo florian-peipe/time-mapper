@@ -219,6 +219,7 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
         </Text>
       ) : null}
       <Pressable
+        testID="paywall-buy"
         onPress={handlePurchase}
         disabled={purchaseState !== "idle" || !selectedPkg}
         accessibilityRole="button"
@@ -243,6 +244,7 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
         </Text>
       </Pressable>
       <Pressable
+        testID="paywall-restore"
         onPress={handleRestore}
         disabled={purchaseState !== "idle"}
         accessibilityRole="button"
@@ -468,6 +470,7 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
                 savingsPercent={savingsPercent}
                 annualTrial={annualTrial}
                 isChangeMode
+                testID={`paywall-package-${pkgs[selected]!.product.identifier}`}
               />
             ) : null
           ) : (
@@ -481,6 +484,7 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
                   savingsPercent={savingsPercent}
                   annualTrial={annualTrial}
                   isChangeMode={false}
+                  testID={`paywall-package-${pkgs.annual.product.identifier}`}
                 />
               )}
               {pkgs.monthly && (
@@ -492,6 +496,7 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
                   savingsPercent={savingsPercent}
                   annualTrial={annualTrial}
                   isChangeMode={false}
+                  testID={`paywall-package-${pkgs.monthly.product.identifier}`}
                 />
               )}
             </>

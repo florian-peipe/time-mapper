@@ -135,9 +135,9 @@ their own notify path.
 
 - `npm ci` — install (use `npm install` if you're changing deps).
 - `cp .env.example .env.local` — fill the keys you have; leave the
-  rest empty. The app falls back to mock mode gracefully for every
-  empty env var (RevenueCat → `useProMock`, Photon still works, Sentry
-  silently disabled).
+  rest empty. Without RevenueCat keys, `configureRevenueCat` throws but
+  `usePro` catches it — app loads with `isPro: false`, purchases unavailable.
+  Photon still works. Sentry silently disabled.
 - `npm run typecheck` — `tsc --noEmit`.
 - `npm run lint` — `eslint .` with a zero-warning baseline.
 - `npm test` — Jest. Currently 630 tests across 83 suites.

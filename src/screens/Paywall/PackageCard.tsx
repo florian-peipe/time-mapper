@@ -14,6 +14,7 @@ type Props = {
   savingsPercent: number;
   annualTrial: IntroPrice | null;
   isChangeMode: boolean;
+  testID?: string;
 };
 
 export function PackageCard({
@@ -24,6 +25,7 @@ export function PackageCard({
   savingsPercent,
   annualTrial,
   isChangeMode,
+  testID,
 }: Props) {
   const t = useTheme();
   const isAnnual = side === "annual";
@@ -34,6 +36,7 @@ export function PackageCard({
 
   return (
     <Pressable
+      testID={testID}
       onPress={onSelect}
       accessibilityRole="radio"
       accessibilityState={{ checked: isSelected }}

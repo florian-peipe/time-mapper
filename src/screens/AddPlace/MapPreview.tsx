@@ -52,12 +52,24 @@ export function MapPreview({ latitude, longitude, radiusM, color, testID }: MapP
   const Maps = React.useMemo(() => tryLoadNativeMaps(), []);
   const mapUsable = React.useMemo(() => isNativeMapUsable(), []);
 
-  if (!Maps || !mapUsable) {
+  if (!Maps) {
+    return (
+      <View testID={testID}>
+        <Banner
+          tone="info"
+          title={i18n.t("addPlace.map.unavailable")}
+          testID={testID ? `${testID}-fallback` : undefined}
+        />
+      </View>
+    );
+  }
+
+  if (!mapUsable) {
     return (
       <View testID={testID}>
         <Banner
           tone="warning"
-          title={i18n.t("addPlace.map.unavailable")}
+          title={i18n.t("addPlace.map.androidKeyMissing")}
           testID={testID ? `${testID}-fallback` : undefined}
         />
       </View>

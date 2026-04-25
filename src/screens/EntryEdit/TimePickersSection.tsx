@@ -6,6 +6,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
+import { PauseDurationStepper } from "./PauseDurationStepper";
 
 export type TimePickersSectionProps = {
   startDate: Date;
@@ -66,13 +67,52 @@ export function TimePickersSection({
         value={endDate}
         onChange={onEndDateChange}
       />
-      <PickerRow
+      <PauseRow
         label={i18n.t("entryEdit.label.pause")}
         testID="entry-edit-pause"
-        mode="time"
         value={pauseDate}
         onChange={onPauseDateChange}
       />
+    </View>
+  );
+}
+
+function PauseRow({
+  label,
+  value,
+  onChange,
+  testID,
+}: {
+  label: string;
+  value: Date;
+  onChange: (d: Date) => void;
+  testID?: string;
+}) {
+  const t = useTheme();
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 8,
+        paddingHorizontal: t.space[4],
+        minHeight: t.minTouchTarget,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: t.type.size.s,
+          color: t.color("color.fg3"),
+          fontFamily: t.type.family.sans,
+          fontWeight: t.type.weight.medium,
+          width: 78,
+        }}
+      >
+        {label}
+      </Text>
+      <View style={{ flex: 1, alignItems: "flex-end" }}>
+        <PauseDurationStepper testID={testID} value={value} onChange={onChange} />
+      </View>
     </View>
   );
 }

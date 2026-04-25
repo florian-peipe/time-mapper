@@ -167,11 +167,10 @@ exact strings to paste into App Store Connect and Play Console.
 When an env var is missing the app does NOT crash — it falls back to a
 local mock so dev workflows keep working:
 
-- **No RevenueCat keys**: `usePro()` delegates to `useProMock()`. The
-  Settings → Developer → "Toggle Pro (mock)" row flips the in-memory
-  Pro flag so you can preview Pro-gated UI without a real subscription.
-  Purchases throw a "mock mode" error if attempted; the paywall surfaces
-  this in its error Banner.
+- **No RevenueCat keys**: `configureRevenueCat` throws at init time, which
+  `usePro()` catches — the app keeps running with `isPro: false`. Pro-gated
+  UI is visible but purchases will fail. There is no in-memory mock mode;
+  use a real RC Sandbox key for purchase testing.
 - **Photon unreachable** (or inside Jest): AddPlaceSheet falls back to
   three hardcoded Cologne / Düsseldorf addresses (the same ones used in
   screenshots). Photon itself needs no key.

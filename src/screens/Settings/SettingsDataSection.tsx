@@ -91,13 +91,15 @@ export function SettingsDataSection({
         testID="settings-row-telemetry"
         accessibilityState={{ checked: telemetryEnabled }}
       />
-      <ListRow
-        icon="repeat"
-        title={i18n.t("settings.data.showOnboarding")}
-        detail={i18n.t("settings.data.showOnboarding.detail")}
-        onPress={onShowOnboarding}
-        testID="settings-row-show-onboarding"
-      />
+      {__DEV__ ? (
+        <ListRow
+          icon="repeat"
+          title={i18n.t("settings.data.showOnboarding")}
+          detail={i18n.t("settings.data.showOnboarding.detail")}
+          onPress={onShowOnboarding}
+          testID="settings-row-show-onboarding"
+        />
+      ) : null}
       {__DEV__ ? (
         <ListRow
           icon="alert-triangle"

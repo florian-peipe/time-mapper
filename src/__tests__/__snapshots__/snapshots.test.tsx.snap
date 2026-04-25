@@ -4282,13 +4282,153 @@ exports[`snapshots — main screens EntryEditSheet (new entry) 1`] = `
                                 {
                                   "children": [
                                     {
-                                      "children": null,
-                                      "props": {
-                                        "accessibilityLabel": "datepicker-time",
-                                        "accessibilityValue": {
-                                          "text": "1969-12-31T23:00:00.000Z",
+                                      "children": [
+                                        {
+                                          "children": [
+                                            {
+                                              "children": [
+                                                "−",
+                                              ],
+                                              "props": {
+                                                "style": {
+                                                  "color": "#1A1714",
+                                                  "fontFamily": "Inter",
+                                                  "fontSize": 18,
+                                                  "lineHeight": 20,
+                                                },
+                                              },
+                                              "type": "Text",
+                                            },
+                                          ],
+                                          "props": {
+                                            "accessibilityLabel": "Decrease break",
+                                            "accessibilityRole": "button",
+                                            "accessibilityState": {
+                                              "busy": undefined,
+                                              "checked": undefined,
+                                              "disabled": true,
+                                              "expanded": undefined,
+                                              "selected": undefined,
+                                            },
+                                            "accessibilityValue": {
+                                              "max": undefined,
+                                              "min": undefined,
+                                              "now": undefined,
+                                              "text": undefined,
+                                            },
+                                            "accessible": true,
+                                            "collapsable": false,
+                                            "focusable": true,
+                                            "onBlur": [Function],
+                                            "onClick": [Function],
+                                            "onFocus": [Function],
+                                            "onResponderGrant": [Function],
+                                            "onResponderMove": [Function],
+                                            "onResponderRelease": [Function],
+                                            "onResponderTerminate": [Function],
+                                            "onResponderTerminationRequest": [Function],
+                                            "onStartShouldSetResponder": [Function],
+                                            "style": {
+                                              "alignItems": "center",
+                                              "backgroundColor": "#F5F2EC",
+                                              "borderColor": "#E9E4DD",
+                                              "borderRadius": 16,
+                                              "borderWidth": 1,
+                                              "height": 32,
+                                              "justifyContent": "center",
+                                              "opacity": 0.35,
+                                              "width": 32,
+                                            },
+                                            "testID": "entry-edit-pause-decrement",
+                                          },
+                                          "type": "View",
                                         },
-                                        "onChange": [Function],
+                                        {
+                                          "children": [
+                                            "0 min",
+                                          ],
+                                          "props": {
+                                            "style": {
+                                              "color": "#E85526",
+                                              "fontFamily": "Inter",
+                                              "fontSize": 13,
+                                              "fontWeight": "500",
+                                              "minWidth": 52,
+                                              "textAlign": "center",
+                                            },
+                                          },
+                                          "type": "Text",
+                                        },
+                                        {
+                                          "children": [
+                                            {
+                                              "children": [
+                                                "+",
+                                              ],
+                                              "props": {
+                                                "style": {
+                                                  "color": "#1A1714",
+                                                  "fontFamily": "Inter",
+                                                  "fontSize": 18,
+                                                  "lineHeight": 20,
+                                                },
+                                              },
+                                              "type": "Text",
+                                            },
+                                          ],
+                                          "props": {
+                                            "accessibilityLabel": "Increase break",
+                                            "accessibilityRole": "button",
+                                            "accessibilityState": {
+                                              "busy": undefined,
+                                              "checked": undefined,
+                                              "disabled": false,
+                                              "expanded": undefined,
+                                              "selected": undefined,
+                                            },
+                                            "accessibilityValue": {
+                                              "max": undefined,
+                                              "min": undefined,
+                                              "now": undefined,
+                                              "text": undefined,
+                                            },
+                                            "accessible": true,
+                                            "collapsable": false,
+                                            "focusable": true,
+                                            "onBlur": [Function],
+                                            "onClick": [Function],
+                                            "onFocus": [Function],
+                                            "onResponderGrant": [Function],
+                                            "onResponderMove": [Function],
+                                            "onResponderRelease": [Function],
+                                            "onResponderTerminate": [Function],
+                                            "onResponderTerminationRequest": [Function],
+                                            "onStartShouldSetResponder": [Function],
+                                            "style": {
+                                              "alignItems": "center",
+                                              "backgroundColor": "#F5F2EC",
+                                              "borderColor": "#E9E4DD",
+                                              "borderRadius": 16,
+                                              "borderWidth": 1,
+                                              "height": 32,
+                                              "justifyContent": "center",
+                                              "opacity": 1,
+                                              "width": 32,
+                                            },
+                                            "testID": "entry-edit-pause-increment",
+                                          },
+                                          "type": "View",
+                                        },
+                                      ],
+                                      "props": {
+                                        "accessibilityValue": {
+                                          "text": "0",
+                                        },
+                                        "style": {
+                                          "alignItems": "center",
+                                          "flexDirection": "row",
+                                          "gap": 12,
+                                        },
                                         "testID": "entry-edit-pause",
                                       },
                                       "type": "View",
@@ -4306,8 +4446,6 @@ exports[`snapshots — main screens EntryEditSheet (new entry) 1`] = `
                               "props": {
                                 "style": {
                                   "alignItems": "center",
-                                  "borderBottomColor": "#E9E4DD",
-                                  "borderBottomWidth": 1,
                                   "flexDirection": "row",
                                   "minHeight": 44,
                                   "paddingHorizontal": 16,

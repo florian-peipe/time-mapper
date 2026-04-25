@@ -4,15 +4,69 @@ tags:
   - settings
   - paywall
 ---
-# Verifies the "Restore purchases" row in Settings is tappable and that
-# tapping it triggers the restore flow (confirmed by the row's detail
-# label updating away from its idle state).
+# Verifies the "Restore purchases" row actually triggers the RC restore call.
+# We assert the row's detail text cycles through "Restoring…" (proves the
+# call was dispatched) and then settles to a non-busy state (proves it
+# completed). No place-seeding needed: the "Skip for now" button on the
+# first-place screen routes straight to the tabs.
 
 - launchApp:
     clearState: true
 
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- extendedWaitUntil:
+    visible: "Time Mapper"
+    timeout: 60000
+
+# Welcome slide — retry once for slow warm restarts
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-welcome-continue"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-welcome-continue"
 - runFlow:
-    file: "./flows/seed-one-place.yaml"
+    when:
+      notVisible: "How it works"
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - tapOn:
+          id: "onboarding-welcome-continue"
+
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+
+- extendedWaitUntil:
+    visible: "Goals and stats"
+    timeout: 10000
+- tapOn: "Continue"
+
+- extendedWaitUntil:
+    visible: "Private by default"
+    timeout: 10000
+- tapOn: "Continue"
+
+- extendedWaitUntil:
+    visible: "Always location"
+    timeout: 10000
+- tapOn: "Not now"
+
+# Skip place addition — marks onboarding complete and routes to tabs
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-first-place-skip"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-first-place-skip"
+
+- extendedWaitUntil:
+    visible: "Timeline"
+    timeout: 10000
 
 - tapOn: "Settings"
 
@@ -24,11 +78,15 @@ tags:
 - tapOn:
     id: "settings-row-restore"
 
-# The row detail briefly shows "Restoring…" as the RC call fires.
-# We accept either busy or done/error state — the important thing is the
-# Settings screen stays stable and doesn't crash.
-- waitForAnimationToEnd:
-    timeout: 3000
+# Busy state must appear — proves the RC call was dispatched
+- extendedWaitUntil:
+    visible: "Restoring…"
+    timeout: 5000
+
+# Busy state must clear — proves the call completed (success or no-op)
+- extendedWaitUntil:
+    notVisible: "Restoring…"
+    timeout: 10000
 
 # Settings screen still intact
 - assertVisible:

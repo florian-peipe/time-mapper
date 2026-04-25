@@ -123,6 +123,30 @@ function setPickerTime(testID: string, hh: number, mm: number, dateRef: Date) {
     fireEvent(screen.getByTestId(testID), "change", { type: "set" }, d);
   });
 }
+/**
+ * Read the current pause minutes from the PauseDurationStepper.
+ * The stepper exposes `accessibilityValue.text` as a plain minute count string.
+ */
+function readPauseMinutes(): number {
+  const node = screen.getByTestId("entry-edit-pause");
+  const v = node.props.accessibilityValue as { text?: string } | undefined;
+  return parseInt(v?.text ?? "0", 10);
+}
+/**
+ * Set pause minutes by pressing the stepper increment button N times.
+ * Each press adds 5 minutes; starting from the current value.
+ */
+function setPauseMinutes(targetMinutes: number) {
+  // Reset to 0 by pressing decrement until 0
+  while (readPauseMinutes() > 0) {
+    act(() => { fireEvent.press(screen.getByTestId("entry-edit-pause-decrement")); });
+  }
+  // Increment to target (must be a multiple of 5)
+  const steps = Math.floor(targetMinutes / 5);
+  for (let i = 0; i < steps; i++) {
+    act(() => { fireEvent.press(screen.getByTestId("entry-edit-pause-increment")); });
+  }
+}
 describe("EntryEditSheet — New mode", () => {
   it("renders the 'New entry' title and default fields (09:00 → 10:00, 0m break)", () => {
     setup({ nowMs: new Date(2026, 3, 17, 12, 0, 0).getTime(), mode: "new" });
@@ -133,12 +157,10 @@ describe("EntryEditSheet — New mode", () => {
     expect(screen.getByTestId("entry-edit-net").props.children).toBe("1h 00m");
     expect(screen.getByText(/1h 00m gross/)).toBeTruthy();
     expect(screen.getByText(/0m break/)).toBeTruthy();
-    // Pickers carry the default values — 09:00 → 10:00, pause 00:00.
+    // Pickers carry the default values — 09:00 → 10:00, pause 0 min.
     expect(readPickerDate("entry-edit-start").getHours()).toBe(9);
     expect(readPickerDate("entry-edit-end").getHours()).toBe(10);
-    const pausePicker = readPickerDate("entry-edit-pause");
-    expect(pausePicker.getHours()).toBe(0);
-    expect(pausePicker.getMinutes()).toBe(0);
+    expect(readPauseMinutes()).toBe(0);
   });
 
   it("defaults the place to the first place in the list", () => {
@@ -189,9 +211,7 @@ describe("EntryEditSheet — Edit mode", () => {
     expect(startPicker.getMinutes()).toBe(15);
     expect(endPicker.getHours()).toBe(12);
     expect(endPicker.getMinutes()).toBe(0);
-    const pausePicker = readPickerDate("entry-edit-pause");
-    expect(pausePicker.getHours()).toBe(0);
-    expect(pausePicker.getMinutes()).toBe(15);
+    expect(readPauseMinutes()).toBe(15);
     // Note hydrated.
     expect(screen.getByTestId("entry-edit-note").props.value).toBe("client call");
   });
@@ -265,15 +285,15 @@ describe("EntryEditSheet — Net-duration math", () => {
     setup({ nowMs: new Date(2026, 3, 17, 12, 0, 0).getTime(), mode: "new" });
     // Default is 1h gross, 0m pause → 1h 00m net.
     expect(screen.getByTestId("entry-edit-net").props.children).toBe("1h 00m");
-    // Pick 0h 15m pause via the native time wheel.
-    setPickerTime("entry-edit-pause", 0, 15, new Date(0));
+    // Set 15m pause via the stepper (3 × +5 min).
+    setPauseMinutes(15);
     expect(screen.getByTestId("entry-edit-net").props.children).toBe("45m");
   });
 
   it("clamps net to zero when pause exceeds gross", () => {
     setup({ nowMs: new Date(2026, 3, 17, 12, 0, 0).getTime(), mode: "new" });
-    // 16h pause dwarfs the 1h default gross → net clamps to 0.
-    setPickerTime("entry-edit-pause", 16, 0, new Date(0));
+    // 65m pause exceeds the 60m default gross → net clamps to 0.
+    setPauseMinutes(65);
     expect(screen.getByTestId("entry-edit-net").props.children).toBe("0m");
   });
 });
@@ -356,8 +376,8 @@ describe("EntryEditSheet — save", () => {
     expect(entry).not.toBeNull();
     if (!entry) return;
 
-    // Edit the pause (via the native time wheel) and the note.
-    setPickerTime("entry-edit-pause", 0, 10, new Date(0));
+    // Edit the pause (via the stepper: 2 × +5 min = 10 min) and the note.
+    setPauseMinutes(10);
     fireEvent.changeText(screen.getByTestId("entry-edit-note"), "new note");
     fireEvent.press(screen.getByTestId("entry-edit-save"));
 
