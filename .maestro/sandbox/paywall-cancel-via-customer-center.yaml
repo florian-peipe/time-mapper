@@ -6,14 +6,15 @@ tags:
 ---
 # Pre-state: active monthly subscription (seeded via seed-pro-monthly).
 # Tapping the Pro active row opens the RC Customer Center native overlay.
-# This flow asserts the overlay opens and that the resubscribe row appears
-# after cancellation.
 #
-# NOTE: The Customer Center is a native RC overlay (not React Native).
-# Cancel confirmation inside it uses text-based taps on the native UI.
-# If the overlay does not show a "Cancel subscription" option (e.g. because
-# the Test Store does not surface it), the final resubscribe assertion is
-# the meaningful check.
+# Customer Center screen title: "How can we help?"
+# Cancel button text: "Cancel subscription" (confirmed in RC dashboard)
+# After tapping cancel, a Feedback Survey appears with options:
+#   "Too expensive" / "Don't use the app" / "Bought by mistake"
+# RC may then show a promotional offer before final confirmation.
+#
+# NOTE: The Customer Center is a native RC overlay. All assertions are
+# text-based against the native UI, not testIDs.
 
 - launchApp:
     clearState: true
@@ -34,32 +35,47 @@ tags:
 - tapOn:
     id: "settings-row-pro-active"
 
-# Customer Center opens as a native overlay — assert it is visible
+# Customer Center screen title is "How can we help?"
 - extendedWaitUntil:
-    visible: "Manage"
+    visible: "How can we help?"
     timeout: 10000
 
-# Attempt to cancel — the exact label depends on the RC Customer Center
-# config and the platform (iOS: "Cancel subscription", Android may vary)
+# Tap "Cancel subscription" button
+- tapOn: "Cancel subscription"
+
+# Feedback Survey — pick a reason
+- extendedWaitUntil:
+    visible: "Too expensive"
+    timeout: 8000
+- tapOn: "Too expensive"
+
+# RC may show a promotional offer — skip it if present
 - runFlow:
     when:
-      visible: "Cancel subscription"
+      visible: "No thanks"
     commands:
-      - tapOn: "Cancel subscription"
-      # Confirm in the system dialog if one appears
-      - runFlow:
-          when:
-            visible: "Confirm"
-          commands:
-            - tapOn: "Confirm"
-      - waitForAnimationToEnd:
-          timeout: 3000
+      - tapOn: "No thanks"
+
+# Final confirmation dialog or proceed button
+- runFlow:
+    when:
+      visible: "Continue cancellation"
+    commands:
+      - tapOn: "Continue cancellation"
+- runFlow:
+    when:
+      visible: "Confirm cancellation"
+    commands:
+      - tapOn: "Confirm cancellation"
+
+- waitForAnimationToEnd:
+    timeout: 3000
 
 # Dismiss the Customer Center
 - back
 
-# After cancellation: pro row may still show (sub active until period end)
-# OR resubscribe row appears. Either is valid — just assert Settings is back.
+# Settings screen is back — sub may still be active until period end
+# (Pro row stays visible), or resubscribe row appears. Either is valid.
 - extendedWaitUntil:
     visible: "Settings"
     timeout: 5000
