@@ -49,9 +49,9 @@ localizations:
 
     keywords: "time tracker,geofence,location,hours,automatic,work,home,office,gym,places,privacy,offline"
     promotionalText: "Automatic time tracking for the places that matter. Private, on-device, no taps required."
-    supportUrl: "https://florian-peipe.github.io/opus-4.7-time-mapper/"
-    marketingUrl: "https://florian-peipe.github.io/opus-4.7-time-mapper/"
-    privacyPolicyUrl: "https://florian-peipe.github.io/opus-4.7-time-mapper/privacy-en.html"
+    supportUrl: "https://florian-peipe.github.io/time-mapper/"
+    marketingUrl: "https://florian-peipe.github.io/time-mapper/"
+    privacyPolicyUrl: "https://florian-peipe.github.io/time-mapper/privacy-en.html"
     whatsNew: "Places tab with map + list view. Per-place daily and weekly goals with notifications. Day / Week / Month / Year timeline and stats. RevenueCat-hosted paywall and Customer Center."
 
   de-DE:
@@ -89,9 +89,9 @@ localizations:
 
     keywords: "Zeittracking,Geofence,Standort,Stunden,automatisch,Arbeit,zuhause,Büro,Gym,Orte,Datenschutz"
     promotionalText: "Automatisches Zeittracking für die Orte, die zählen. Privat, auf dem Gerät, ohne Antippen."
-    supportUrl: "https://florian-peipe.github.io/opus-4.7-time-mapper/"
-    marketingUrl: "https://florian-peipe.github.io/opus-4.7-time-mapper/"
-    privacyPolicyUrl: "https://florian-peipe.github.io/opus-4.7-time-mapper/privacy-de.html"
+    supportUrl: "https://florian-peipe.github.io/time-mapper/"
+    marketingUrl: "https://florian-peipe.github.io/time-mapper/"
+    privacyPolicyUrl: "https://florian-peipe.github.io/time-mapper/privacy-de.html"
     whatsNew: "Orte-Tab mit Karten- und Listenansicht. Tages- und Wochenziele pro Ort mit Benachrichtigungen. Tag / Woche / Monat / Jahr-Navigation in Verlauf und Statistik."
 
 # App privacy labels — fill these in App Store Connect → App Privacy.

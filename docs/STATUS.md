@@ -69,7 +69,7 @@ file and rebuild.
 | Google Maps Android SDK key | `app.json → android.config.googleMaps.apiKey` — free 28.5k loads/mo; GCP billing account required |
 | Sentry DSN (optional)       | `EXPO_PUBLIC_SENTRY_DSN` — disables gracefully when missing                                       |
 | Impressum contact details   | `src/screens/Legal/contact.local.ts` (gitignored, copy from `.example.ts`)                        |
-| Privacy policy hosted URL   | **Done** — GitHub Pages at `florian-peipe.github.io/opus-4.7-time-mapper/privacy-en.html` (see Stage 2 below) |
+| Privacy policy hosted URL   | **Done** — GitHub Pages at `florian-peipe.github.io/time-mapper/privacy-en.html` (see Stage 2 below) |
 | App Store screenshots       | Capture via `store/screenshots/README.md` commands once dev build installed                       |
 | Play Store screenshots      | Same commands, Android simulator                                                                  |
 
@@ -106,7 +106,7 @@ npx eas secret:create --name EXPO_PUBLIC_SENTRY_DSN             --value https://
 |-------|-------------|--------|
 | 0 | Code polish: console.warn → captureException, app.json fixes (targetSdk 35, UIBackgroundModes, RECEIVE_BOOT_COMPLETED restored), metadata copy | ✅ Done |
 | 1 | Keystone artifacts verified: contact.local.ts filled, icon 1024×1024 opaque, expo-location foregroundServiceType confirmed | ✅ Done |
-| 2 | GitHub Pages site live at `florian-peipe.github.io/opus-4.7-time-mapper/` — privacy-en/de, terms-en/de, impressum, support/index | ✅ Done (needs activation — see below) |
+| 2 | GitHub Pages site live at `florian-peipe.github.io/time-mapper/` — privacy-en/de, terms-en/de, impressum, support/index | ✅ Done (needs activation — see below) |
 | 3 | External accounts: Apple Developer, Google Play, RevenueCat, EAS secrets | ⏳ User action required |
 | 4 | Store listing assets: screenshots (6 × 2 locales × 2 platforms), Android feature graphic, background-location demo video | ⏳ User action required |
 | 5 | iOS submission via EAS Build + Submit → TestFlight → App Store review | ⏳ User action required |
@@ -118,7 +118,7 @@ npx eas secret:create --name EXPO_PUBLIC_SENTRY_DSN             --value https://
 ### Activate GitHub Pages (5 minutes)
 Go to **github.com → your repo → Settings → Pages → Source: Deploy from branch →
 Branch: `main`, Folder: `/docs`** → Save.
-The site becomes live at `https://florian-peipe.github.io/opus-4.7-time-mapper/`.
+The site becomes live at `https://florian-peipe.github.io/time-mapper/`.
 
 ### Confirm green before building
 ```sh
