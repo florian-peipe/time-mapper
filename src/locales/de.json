@@ -261,7 +261,6 @@
   "entryEdit.label.sourceAuto": "Automatisch erfasst",
   "entryEdit.label.sourceManual": "Manueller Eintrag",
   "entryEdit.label.grossAndBreak": "{{gross}} brutto · {{pause}} Min. Pause",
-  "entryEdit.error.hhmm": "HH:MM verwenden",
   "entryEdit.overlap.title": "Überlappung erkannt",
   "entryEdit.overlap.body": "Dieser Eintrag überschneidet sich mit {{count}} Einträgen. Ersetzen oder beide behalten?",
   "entryEdit.overlap.replace": "Ersetzen",

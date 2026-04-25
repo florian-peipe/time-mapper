@@ -261,7 +261,6 @@
   "entryEdit.label.sourceAuto": "Auto-tracked",
   "entryEdit.label.sourceManual": "Manual entry",
   "entryEdit.label.grossAndBreak": "{{gross}} gross · {{pause}}m break",
-  "entryEdit.error.hhmm": "Use HH:MM",
   "entryEdit.snack.deleted": "Entry deleted",
   "entryEdit.snack.undo": "Undo",
   "entryEdit.overlap.title": "Overlap detected",

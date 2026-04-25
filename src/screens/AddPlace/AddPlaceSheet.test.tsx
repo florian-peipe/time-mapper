@@ -137,7 +137,7 @@ async function gotoPhase2() {
 
 beforeEach(() => {
   jest.useFakeTimers();
-  useSheetStore.setState({ active: null, payload: null });
+  useSheetStore.setState({ active: null, payload: null, pendingPlaceForm: null });
   __setProForTests(null);
 });
 

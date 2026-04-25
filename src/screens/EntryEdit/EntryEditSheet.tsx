@@ -314,7 +314,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
       {/* Delete — only in Edit mode. Trivially thin (one Button), so inline. */}
       {!isNew ? (
         <View style={{ marginTop: t.space[1], marginBottom: t.space[6] }}>
-          <Button variant="destructive" size="md" full onPress={handleDelete}>
+          <Button variant="destructive" size="md" full testID="entry-edit-delete" onPress={handleDelete}>
             {i18n.t("entryEdit.label.delete")}
           </Button>
         </View>

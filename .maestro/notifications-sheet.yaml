@@ -1,0 +1,54 @@
+appId: com.timemapper.app
+name: Settings → Notifications sheet round-trip
+tags:
+  - settings
+  - notifications
+---
+# Verifies the Notifications sheet opens from Settings, the quiet-hours
+# toggle and daily digest toggle are present, and saving closes the sheet.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
+
+- tapOn: "Settings"
+
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-notifications"
+    timeout: 5000
+
+- tapOn:
+    id: "settings-row-notifications"
+
+# Sheet opens
+- extendedWaitUntil:
+    visible:
+      id: "notifications-sheet"
+    timeout: 5000
+
+# Both toggle controls are present
+- assertVisible:
+    id: "notifications-toggle"
+
+- assertVisible:
+    id: "notifications-digest-toggle"
+
+# Toggle the daily digest on
+- tapOn:
+    id: "notifications-digest-toggle"
+
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Save
+- tapOn:
+    id: "notifications-sheet-save"
+
+# Sheet closes — verify we're back on Settings
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-notifications"
+    timeout: 5000

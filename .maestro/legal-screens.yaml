@@ -1,0 +1,85 @@
+appId: com.timemapper.app
+name: Settings → Legal screens (Privacy, Terms, Impressum)
+tags:
+  - settings
+  - legal
+---
+# Verifies all three legal document screens are reachable from Settings
+# and that the back button returns to Settings.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
+
+- tapOn: "Settings"
+
+# Scroll down to reveal the About section (privacy/terms/impressum are near the bottom)
+- scrollUntilVisible:
+    element:
+      id: "settings-row-privacy"
+    direction: DOWN
+    timeout: 10000
+
+# --- Privacy ---
+- tapOn:
+    id: "settings-row-privacy"
+
+- extendedWaitUntil:
+    visible:
+      id: "legal-screen-privacy"
+    timeout: 5000
+
+- assertVisible: "Privacy policy"
+
+- tapOn:
+    id: "legal-back"
+
+# After returning, scroll position may reset — scroll to terms row
+- scrollUntilVisible:
+    element:
+      id: "settings-row-terms"
+    direction: DOWN
+    timeout: 10000
+
+# --- Terms of service ---
+- tapOn:
+    id: "settings-row-terms"
+
+- extendedWaitUntil:
+    visible:
+      id: "legal-screen-terms"
+    timeout: 5000
+
+- assertVisible: "Terms of service"
+
+- tapOn:
+    id: "legal-back"
+
+# After returning, scroll position may reset — scroll to impressum row
+- scrollUntilVisible:
+    element:
+      id: "settings-row-impressum"
+    direction: DOWN
+    timeout: 10000
+
+# --- Impressum ---
+- tapOn:
+    id: "settings-row-impressum"
+
+- extendedWaitUntil:
+    visible:
+      id: "legal-screen-impressum"
+    timeout: 5000
+
+- assertVisible: "Impressum"
+
+- tapOn:
+    id: "legal-back"
+
+- scrollUntilVisible:
+    element:
+      id: "settings-row-impressum"
+    direction: DOWN
+    timeout: 10000

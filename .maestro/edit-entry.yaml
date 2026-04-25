@@ -8,26 +8,50 @@ tags:
 # pickers hydrate from the entry's stored times, and saving closes the
 # sheet without error.
 #
-# Prereqs: at least one tracked entry on Timeline. Use the Developer
-# submenu's "Simulate visit" if running on a sideload build.
+# Prereqs: none — clearState resets everything. The flow seeds a place
+# via onboarding, then creates a manual entry via the Timeline FAB before
+# testing the edit flow.
 
-- launchApp
+- launchApp:
+    clearState: true
 
-# Make sure we're on the Timeline tab.
-- tapOn: "Timeline"
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
 
-# Tap the first entry row (any match).
+# Create a manual entry using the Timeline FAB (visible once places.length > 0)
 - tapOn:
-    idRegex: "^entry-row-"
+    id: "timeline-fab"
 
-# Sheet title comes up.
-- assertVisible: "Edit entry"
+# EntryEditSheet opens in "New entry" mode
+- extendedWaitUntil:
+    visible: "New entry"
+    timeout: 5000
 
-# Pickers should be mounted — check the net minutes readout.
+# Pickers are mounted; check net-duration readout
 - assertVisible:
     id: "entry-edit-net"
 
-# Save, return to Timeline, assert no crash.
+# Save without changing anything — creates the entry with default times
+- tapOn:
+    id: "entry-edit-save"
+
+- extendedWaitUntil:
+    visible: "Timeline"
+    timeout: 5000
+
+# The entry row should now be present on the Timeline (tap by place name)
+- tapOn: "Home"
+
+# Sheet title comes up in edit mode
+- extendedWaitUntil:
+    visible: "Edit entry"
+    timeout: 5000
+
+# Pickers should be mounted — check the net minutes readout
+- assertVisible:
+    id: "entry-edit-net"
+
+# Save, return to Timeline, assert no crash
 - tapOn:
     id: "entry-edit-save"
 

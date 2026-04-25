@@ -1,6 +1,9 @@
 import React from "react";
-import { Platform, Text, View } from "react-native";
-import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { Platform, Pressable, Text, View } from "react-native";
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  type DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { useTheme } from "@/theme/useTheme";
 import { i18n } from "@/lib/i18n";
 
@@ -74,14 +77,6 @@ export function TimePickersSection({
   );
 }
 
-/**
- * Row that hosts a native `DateTimePicker` inline — `display="compact"`
- * on iOS renders a tappable chip with the current value that opens the
- * native wheel picker in a popover when pressed; Android shows the
- * value as text and opens the system picker dialog on tap. Either way
- * the user never sees a keyboard or a custom parser — the OS controls
- * time entry.
- */
 function PickerRow({
   label,
   value,
@@ -98,6 +93,28 @@ function PickerRow({
   testID?: string;
 }) {
   const t = useTheme();
+
+  // Android: mounting <DateTimePicker> immediately opens the system dialog.
+  // Use the imperative API so the dialog only opens when the user taps the row.
+  const handleAndroidPress = () => {
+    DateTimePickerAndroid.open({
+      value,
+      mode,
+      maximumDate,
+      onChange: (event: DateTimePickerEvent, selected?: Date) => {
+        if (event.type === "set" && selected) {
+          onChange(selected);
+        }
+      },
+    });
+  };
+
+  // Formatted display value for the Android tappable chip.
+  const androidLabel =
+    mode === "time"
+      ? value.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
+      : value.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" });
+
   return (
     <View
       style={{
@@ -122,22 +139,39 @@ function PickerRow({
         {label}
       </Text>
       <View style={{ flex: 1, alignItems: "flex-end" }}>
-        <DateTimePicker
-          testID={testID}
-          mode={mode}
-          display={Platform.OS === "ios" ? "compact" : "default"}
-          value={value}
-          maximumDate={maximumDate}
-          onChange={(event: DateTimePickerEvent, selected?: Date) => {
-            // Android's picker fires once and dismisses; iOS fires on
-            // every scroll of the wheel. Only commit when a value came
-            // through — `type` is `"set"` on both platforms when the
-            // user has chosen a value (vs `"dismissed"` for cancel).
-            if (event.type === "set" && selected) {
-              onChange(selected);
-            }
-          }}
-        />
+        {Platform.OS === "android" ? (
+          <Pressable
+            testID={testID}
+            onPress={handleAndroidPress}
+            hitSlop={t.space[2]}
+            accessibilityRole="button"
+          >
+            <Text
+              style={{
+                fontSize: t.type.size.s,
+                color: t.color("color.accent"),
+                fontFamily: t.type.family.sans,
+                fontWeight: t.type.weight.medium,
+              }}
+            >
+              {androidLabel}
+            </Text>
+          </Pressable>
+        ) : (
+          <DateTimePicker
+            testID={testID}
+            mode={mode}
+            display="compact"
+            value={value}
+            maximumDate={maximumDate}
+            onChange={(event: DateTimePickerEvent, selected?: Date) => {
+              // iOS fires on every scroll of the wheel — only commit on "set".
+              if (event.type === "set" && selected) {
+                onChange(selected);
+              }
+            }}
+          />
+        )}
       </View>
     </View>
   );

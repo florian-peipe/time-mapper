@@ -4,6 +4,7 @@
 // iOS/Android and the app fails to boot.
 import "react-native-get-random-values";
 import React, { useEffect, useRef, useState } from "react";
+import { View } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { getLocales } from "expo-localization";
 import { StatusBar } from "expo-status-bar";
@@ -104,7 +105,9 @@ export default function RootLayout() {
     return () => sub.remove();
   }, [localeOverride]);
 
-  if (!fontsLoaded || !dbReady) return null;
+  // Splash background color matches app.json → splash.backgroundColor so
+  // there is no visual flash while fonts and the DB initialise.
+  if (!fontsLoaded || !dbReady) return <View style={{ flex: 1, backgroundColor: "#FAFAF8" }} />;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

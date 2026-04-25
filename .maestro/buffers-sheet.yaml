@@ -1,0 +1,49 @@
+appId: com.timemapper.app
+name: Settings → Buffers sheet round-trip
+tags:
+  - settings
+  - tracking
+---
+# Verifies the Buffers sheet opens from Settings, shows the entry/exit
+# buffer sliders, and saves without error.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
+
+- tapOn: "Settings"
+
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-buffers"
+    timeout: 5000
+
+- tapOn:
+    id: "settings-row-buffers"
+
+# Sheet opens — both sliders should be visible
+- extendedWaitUntil:
+    visible:
+      id: "buffers-sheet"
+    timeout: 5000
+
+- assertVisible:
+    id: "buffers-entry"
+
+- assertVisible:
+    id: "buffers-exit"
+
+# Save button is present and tappable
+- assertVisible:
+    id: "buffers-sheet-save"
+
+- tapOn:
+    id: "buffers-sheet-save"
+
+# Sheet closes — verify we're back on Settings
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-buffers"
+    timeout: 5000

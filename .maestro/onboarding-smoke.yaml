@@ -15,30 +15,67 @@ tags:
 - launchApp:
     clearState: true
 
-# Welcome
-- assertVisible: "Time Mapper"
+# Let the OS settle so any system dialogs (e.g. Location Accuracy) have time to appear
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Confirm Location Accuracy if Google Play Services shows the prompt
+- runFlow:
+    when:
+      visible: "Location Accuracy"
+    commands:
+      - tapOn: "Turn on"
+
+# Welcome — extended wait covers Metro bundle download on first cold launch
+- extendedWaitUntil:
+    visible: "Time Mapper"
+    timeout: 60000
+
+# Tap the LogBox X button position twice with a delay — dismisses the toast if present,
+# harmless tap on empty space otherwise. X bounds: ~[970,2207][1022,2259] on 1080x2400.
+- tapOn:
+    point: "92%,93%"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    point: "92%,93%"
+- waitForAnimationToEnd:
+    timeout: 1000
+
 - tapOn: "Get started"
 
 # How it works
-- assertVisible: "How it works"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 10000
 - tapOn: "Continue"
 
 # Goals and stats
-- assertVisible: "Goals and stats"
+- extendedWaitUntil:
+    visible: "Goals and stats"
+    timeout: 10000
 - tapOn: "Continue"
 
 # Privacy
-- assertVisible: "Private by default"
+- extendedWaitUntil:
+    visible: "Private by default"
+    timeout: 10000
 - tapOn: "Continue"
 
 # Permissions — stub: skip without granting, the app should let us through
 # so we can see the First place screen.
-- assertVisible: "Always location"
+- extendedWaitUntil:
+    visible: "Always location"
+    timeout: 10000
 - tapOn: "Not now"
 
 # First place
-- assertVisible: "Your first place"
+- extendedWaitUntil:
+    visible: "Your first place"
+    timeout: 10000
 - tapOn: "Skip for now"
 
 # Landed on the Timeline tab.
-- assertVisible: "Timeline"
+- extendedWaitUntil:
+    visible: "Timeline"
+    timeout: 10000

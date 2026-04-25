@@ -1,0 +1,46 @@
+appId: com.timemapper.app
+name: Settings → Reset all data → Welcome reappears
+tags:
+  - settings
+  - data
+---
+# Verifies that "Reset all data" wipes SQLite + KV and sends the user
+# back to the Welcome onboarding screen. Exercises the two-step
+# confirmation Alert flow.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
+
+- tapOn: "Settings"
+
+# Scroll down to reveal the Data section (may be below the fold)
+- scrollUntilVisible:
+    element:
+      id: "settings-row-reset"
+    direction: DOWN
+    timeout: 10000
+
+- tapOn:
+    id: "settings-row-reset"
+
+# First confirmation Alert
+- extendedWaitUntil:
+    visible: "Erase all data?"
+    timeout: 5000
+
+- tapOn: "Continue"
+
+# Second (final) confirmation Alert
+- extendedWaitUntil:
+    visible: "Final confirmation"
+    timeout: 5000
+
+- tapOn: "Erase all"
+
+# App reloads and shows the Welcome onboarding screen
+- extendedWaitUntil:
+    visible: "Time Mapper"
+    timeout: 15000

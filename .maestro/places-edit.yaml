@@ -1,0 +1,46 @@
+appId: com.timemapper.app
+name: Places → Edit existing place
+tags:
+  - places
+  - edit
+---
+# Verifies that tapping an existing place row opens the AddPlaceSheet in
+# edit mode — pre-filling the name, showing the delete button, and saving
+# without error.
+#
+# On Android without a Google Maps SDK key the Places screen defaults to
+# list mode automatically; no toggle tap is needed.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
+
+- tapOn: "Places"
+
+# Wait for the list to render (seeded place "Home" is the only row)
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 5000
+
+- tapOn: "Home"
+
+# AddPlaceSheet opens in edit mode — name input pre-filled, delete button present
+- extendedWaitUntil:
+    visible:
+      id: "add-place-name"
+    timeout: 5000
+
+- assertVisible: "Home"
+
+- assertVisible:
+    id: "add-place-delete"
+
+# Save without changing anything — verifies the edit path doesn't crash
+- tapOn:
+    id: "add-place-save"
+
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 5000

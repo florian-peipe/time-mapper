@@ -1,0 +1,59 @@
+appId: com.timemapper.app
+name: Timeline → Delete entry → entry removed
+tags:
+  - entry
+  - timeline
+---
+# Verifies that deleting an entry from EntryEditSheet removes it from
+# the Timeline. The snackbar TTL (5 s) races with Maestro's polling in
+# back-to-back suite runs, so we assert the end state (empty Timeline)
+# rather than a transient UI element.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
+
+# Create a manual entry via the Timeline FAB
+- tapOn:
+    id: "timeline-fab"
+
+- extendedWaitUntil:
+    visible: "New entry"
+    timeout: 5000
+
+- assertVisible:
+    id: "entry-edit-net"
+
+- tapOn:
+    id: "entry-edit-save"
+
+# Entry row is now on the Timeline — wait for place name to appear
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 5000
+
+# Tap the row to open edit mode (place name is the unique text)
+- tapOn: "Home"
+
+- extendedWaitUntil:
+    visible: "Edit entry"
+    timeout: 5000
+
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Delete the entry
+- tapOn:
+    id: "entry-edit-delete"
+
+# Sheet closes — wait for it to dismiss
+- extendedWaitUntil:
+    notVisible: "Edit entry"
+    timeout: 5000
+
+# Entry is gone — Timeline shows empty state
+- extendedWaitUntil:
+    visible: "You're set up."
+    timeout: 8000

@@ -14,7 +14,7 @@
  *   2. `editingPlace` — the place being edited.
  *   3. Defaults (for the "new place" flow).
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PLACE_COLORS } from "@/theme/tokens";
 import type { IconName } from "@/components";
 import type { Place } from "@/db/schema";
@@ -199,10 +199,19 @@ export function usePlaceForm(opts: UsePlaceFormOpts): UsePlaceFormResult {
       : WEEKLY_GOAL_DEFAULT_H,
   );
 
+  // Track the previous visible state so we can detect the false→true transition.
+  // The pendingPlaceForm hydration must only fire when the sheet *just opened*
+  // (not when pendingPlaceForm is set while the sheet is already visible, which
+  // would prematurely consume and clear the stash before the paywall opens).
+  const prevVisible = useRef(false);
+
   // Hydration: pendingPlaceForm (post-paywall) > editingPlace > reset-on-close.
   useEffect(() => {
+    const justOpened = visible && !prevVisible.current;
+    prevVisible.current = visible;
+
     if (
-      visible &&
+      justOpened &&
       pendingPlaceForm &&
       pendingPlaceForm.placeId === placeId &&
       pendingPlaceForm.source === source

@@ -107,8 +107,8 @@ export function SettingsDataSection({
           detail={i18n.t("settings.dev.testCrash.detail")}
           onPress={() => {
             // Fire an explicit Sentry event with a full breadcrumb chain
-            // so we can verify the crash-reporting pipeline in a real
-            // dev build. Delete this row before shipping.
+            // so we can verify the crash-reporting pipeline in a dev build.
+            // This row is __DEV__-gated and does not ship in production.
             captureException(new Error("[dev] test crash — verifying Sentry wiring"), {
               scope: "settings.dev.testCrash",
             });

@@ -43,7 +43,7 @@ src/
     permissions/        useLocationPermission, useNotificationPermission
     places/             usePlaces, useClosestPlace, testFixtures
     tracking/           stateMachine, geofenceService, bootstrap, persistence,
-                        trackingHealth, devSim
+                        trackingHealth
   lib/                  pure helpers (time, range, id, i18n, crash, geocode, routes)
   locales/              en.json, de.json — every user-facing string
   screens/              composed screens (AddPlace, EntryEdit, Legal, Onboarding,

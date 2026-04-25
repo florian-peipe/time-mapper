@@ -1,0 +1,34 @@
+appId: com.timemapper.app
+name: Stats → Pro upsell card → Paywall opens
+tags:
+  - stats
+  - paywall
+  - pro-gate
+---
+# Verifies that a free user on the Stats screen sees the Pro upsell card
+# and tapping it opens the PaywallSheet.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
+
+- tapOn: "Stats"
+
+# Free user always sees the upsell card (no entry count requirement)
+- extendedWaitUntil:
+    visible:
+      id: "stats-pro-upsell"
+    timeout: 5000
+
+# Tap the card — PaywallSheet should open
+- tapOn:
+    id: "stats-pro-upsell"
+
+- extendedWaitUntil:
+    visible: "Time Mapper Pro"
+    timeout: 10000
+
+# Dismiss the paywall
+- back

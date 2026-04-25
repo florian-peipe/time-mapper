@@ -1,0 +1,49 @@
+appId: com.timemapper.app
+name: Settings → Theme cycle (System → Light → Dark → System)
+tags:
+  - settings
+  - appearance
+---
+# Verifies the Theme row cycles the in-app appearance mode and the
+# Settings screen right-hand label updates on each tap.
+# Exercises `uiStore.setTheme` + `ThemeProvider` re-render.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
+
+- tapOn: "Settings"
+
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-theme"
+    timeout: 5000
+
+# Initial state should be System
+- assertVisible: "System"
+
+- tapOn:
+    id: "settings-row-theme"
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# After first tap → Light
+- assertVisible: "Light"
+
+- tapOn:
+    id: "settings-row-theme"
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# After second tap → Dark
+- assertVisible: "Dark"
+
+- tapOn:
+    id: "settings-row-theme"
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# After third tap → back to System
+- assertVisible: "System"

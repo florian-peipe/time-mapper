@@ -1,0 +1,116 @@
+appId: com.timemapper.app
+---
+# Shared subflow: onboarding + add first place.
+# Leaves the app on the Timeline with exactly 1 place saved and Pro NOT active.
+#
+# Callers must issue `launchApp: { clearState: true }` BEFORE including this
+# subflow. This file intentionally omits launchApp so it can be nested inside
+# a parent flow that needs to do other setup first.
+
+# Let the OS settle so any system dialogs have time to appear
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Confirm Location Accuracy if Google Play Services shows the prompt
+- runFlow:
+    when:
+      visible: "Location Accuracy"
+    commands:
+      - tapOn: "Turn on"
+
+# Wait for the Welcome screen (covers Metro bundle download on first cold launch)
+- extendedWaitUntil:
+    visible: "Time Mapper"
+    timeout: 60000
+
+# Welcome slide — React Navigation may not be ready immediately on warm
+# restarts (Metro cache makes the bundle load much faster). Tap once, then
+# check if the next slide appeared; if not, wait and tap again.
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-welcome-continue"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-welcome-continue"
+- runFlow:
+    when:
+      notVisible: "How it works"
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - tapOn:
+          id: "onboarding-welcome-continue"
+- runFlow:
+    when:
+      notVisible: "How it works"
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 4000
+      - tapOn:
+          id: "onboarding-welcome-continue"
+
+# How it works
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+
+# Goals and stats
+- extendedWaitUntil:
+    visible: "Goals and stats"
+    timeout: 10000
+- tapOn: "Continue"
+
+# Privacy
+- extendedWaitUntil:
+    visible: "Private by default"
+    timeout: 10000
+- tapOn: "Continue"
+
+# Permissions — grant or skip
+- extendedWaitUntil:
+    visible: "Always location"
+    timeout: 10000
+- tapOn: "Not now"
+
+# First place — tap "Add first place" to open the AddPlace sheet
+- extendedWaitUntil:
+    visible: "Your first place"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-first-place-add"
+
+# AddPlace Phase 1 — search for an address
+- extendedWaitUntil:
+    visible:
+      id: "add-place-search"
+    timeout: 5000
+- tapOn:
+    id: "add-place-search"
+- inputText: "Berlin Mitte"
+
+# Wait for autocomplete suggestions
+- extendedWaitUntil:
+    visible:
+      id: "add-place-suggestion-0"
+    timeout: 10000
+- tapOn:
+    id: "add-place-suggestion-0"
+
+# AddPlace Phase 2 — name the place and save
+- extendedWaitUntil:
+    visible:
+      id: "add-place-name"
+    timeout: 5000
+- tapOn:
+    id: "add-place-name"
+- eraseText: 20
+- inputText: "Home"
+- hideKeyboard
+- tapOn:
+    id: "add-place-save"
+
+# Onboarding marks complete and routes to tabs — wait for Timeline
+- extendedWaitUntil:
+    visible: "Timeline"
+    timeout: 10000

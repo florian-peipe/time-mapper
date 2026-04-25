@@ -15,6 +15,8 @@ import {
   purchasePackage,
   restorePurchases,
 } from "@/features/billing/revenuecat";
+import { usePro } from "@/features/billing/usePro";
+import { PackageCard } from "./PackageCard";
 
 const BASE = "https://florian-peipe.github.io/time-mapper";
 function legalUrl(page: "terms" | "privacy"): string {
@@ -42,6 +44,7 @@ type PurchaseState = "idle" | "processing" | "restoring";
 export function PaywallSheet({ visible, paywallSource, mode = "subscribe", currentProductId, onClose }: Props) {
   const t = useTheme();
   const store = useSheetStore;
+  const { isPro } = usePro();
   const isChangeMode = mode === "change";
 
   const [pkgs, setPkgs] = useState<LoadedPackages | null>(null);
@@ -49,17 +52,12 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
   const [purchaseState, setPurchaseState] = useState<PurchaseState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [restoreDone, setRestoreDone] = useState(false);
+  const [offeringsError, setOfferingsError] = useState(false);
 
-  useEffect(() => {
-    if (!visible) return;
+  const loadOfferings = useCallback(() => {
     setPkgs(null);
-    setError(null);
-    setPurchaseState("idle");
-    setRestoreDone(false);
-    // In change mode the target is determined by which package isn't the current one.
-    // Defer setting `selected` until packages load (see below).
+    setOfferingsError(false);
     if (!isChangeMode) setSelected("annual");
-
     void getOfferings()
       .then((offering: PurchasesOffering | null) => {
         if (!offering) return;
@@ -69,7 +67,6 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
         };
         setPkgs(loaded);
         if (isChangeMode && currentProductId) {
-          // Auto-select the target: the package the user is NOT currently on.
           const isCurrentlyMonthly =
             currentProductId === offering.monthly?.product.identifier;
           setSelected(isCurrentlyMonthly ? "annual" : "monthly");
@@ -77,8 +74,17 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
       })
       .catch((err: unknown) => {
         captureException(err, { scope: "PaywallSheet.getOfferings" });
+        setOfferingsError(true);
       });
-  }, [visible, isChangeMode, currentProductId]);
+  }, [isChangeMode, currentProductId]);
+
+  useEffect(() => {
+    if (!visible) return;
+    setError(null);
+    setPurchaseState("idle");
+    setRestoreDone(false);
+    loadOfferings();
+  }, [visible, loadOfferings]);
 
   const selectedPkg: PurchasesPackage | null =
     pkgs ? (selected === "annual" ? pkgs.annual : pkgs.monthly) : null;
@@ -105,6 +111,19 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
     }
   }, [store]);
 
+  // Safety net: if isPro becomes true while the paywall is visible and there
+  // is a stashed AddPlace form, resume it. Handles the case where the
+  // entitlement update arrives via the RC CustomerInfo listener rather than
+  // (or slightly after) the purchasePackage() promise resolving.
+  useEffect(() => {
+    if (!visible || !isPro) return;
+    const pending = store.getState().pendingPlaceForm;
+    if (!pending) return;
+    // openSheet("addPlace") makes the paywall invisible (active ≠ "paywall"),
+    // so we don't need a separate onClose() call — it would race and lose.
+    resumeAddPlace();
+  }, [isPro, visible, resumeAddPlace, store]);
+
   const handlePurchase = useCallback(async () => {
     if (!selectedPkg || purchaseState !== "idle") return;
     setPurchaseState("processing");
@@ -127,8 +146,13 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
         level: "info",
         data: isChangeMode ? { from: currentProductId, to: selectedPkg.product.identifier } : {},
       });
-      onClose();
-      if (!isChangeMode) resumeAddPlace();
+      if (!isChangeMode && store.getState().pendingPlaceForm) {
+        // Resume stashed AddPlace flow — openSheet("addPlace") makes the paywall
+        // invisible without a separate onClose() call (which would race and win).
+        resumeAddPlace();
+      } else {
+        onClose();
+      }
     } catch (err: unknown) {
       const cancelled =
         (err as Record<string, unknown>).userCancelled === true;
@@ -148,8 +172,11 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
     try {
       const info = await restorePurchases();
       if (isProActive(info)) {
-        onClose();
-        resumeAddPlace();
+        if (store.getState().pendingPlaceForm) {
+          resumeAddPlace();
+        } else {
+          onClose();
+        }
       } else {
         setRestoreDone(true);
       }
@@ -175,155 +202,6 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
       : restoreDone
         ? i18n.t("paywall.restore.done")
         : i18n.t("paywall.restore.idle");
-
-  function renderPackageCard(side: "monthly" | "annual") {
-    const pkg = side === "annual" ? pkgs!.annual : pkgs!.monthly;
-    if (!pkg) return null;
-    const isSelected = selected === side;
-    const isAnnual = side === "annual";
-
-    const monthlyEquivalent = isAnnual
-      ? formatAmount(pkg.product.price / 12, pkg.product.currencyCode)
-      : null;
-
-    return (
-      <Pressable
-        key={side}
-        onPress={() => setSelected(side)}
-        accessibilityRole="radio"
-        accessibilityState={{ checked: isSelected }}
-        style={({ pressed }) => ({
-          borderWidth: isSelected ? 2 : 1,
-          borderColor: isSelected ? t.color("color.accent") : t.color("color.border"),
-          borderRadius: t.radius.md,
-          padding: t.space[4],
-          marginBottom: t.space[3],
-          backgroundColor: isSelected ? t.color("color.accent.soft") : t.color("color.surface"),
-          opacity: pressed ? 0.85 : 1,
-        })}
-      >
-        <View
-          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
-        >
-          <Text
-            style={{
-              fontFamily: t.type.family.sans,
-              fontSize: t.type.size.m,
-              fontWeight: t.type.weight.semibold,
-              color: t.color("color.fg"),
-            }}
-          >
-            {isAnnual
-              ? i18n.t("paywall.packageLabel.annual")
-              : i18n.t("paywall.packageLabel.monthly")}
-          </Text>
-          {isAnnual && savingsPercent > 0 && (
-            <View
-              style={{
-                backgroundColor: t.color("color.accent"),
-                borderRadius: t.radius.pill,
-                paddingHorizontal: t.space[2],
-                paddingVertical: 3,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: t.type.family.sans,
-                  fontSize: t.type.size.xs,
-                  fontWeight: t.type.weight.bold,
-                  color: t.color("color.accent.contrast"),
-                }}
-              >
-                {i18n.t("paywall.savings", { percent: savingsPercent })}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {isAnnual && monthlyEquivalent ? (
-          <>
-            <Text
-              style={{
-                fontFamily: t.type.family.sans,
-                fontSize: t.type.size.l,
-                fontWeight: t.type.weight.bold,
-                color: t.color("color.fg"),
-                marginTop: t.space[1],
-              }}
-            >
-              {monthlyEquivalent}
-              <Text
-                style={{
-                  fontSize: t.type.size.s,
-                  fontWeight: t.type.weight.regular,
-                  color: t.color("color.fg2"),
-                }}
-              >
-                {" "}
-                {i18n.t("paywall.period.month")}
-              </Text>
-            </Text>
-            <Text
-              style={{
-                fontFamily: t.type.family.sans,
-                fontSize: t.type.size.xs,
-                color: t.color("color.fg2"),
-                marginTop: 2,
-              }}
-            >
-              {i18n.t("paywall.billing.annual", { price: pkg.product.priceString })}
-            </Text>
-          </>
-        ) : (
-          <Text
-            style={{
-              fontFamily: t.type.family.sans,
-              fontSize: t.type.size.l,
-              fontWeight: t.type.weight.bold,
-              color: t.color("color.fg"),
-              marginTop: t.space[1],
-            }}
-          >
-            {pkg.product.priceString}
-            <Text
-              style={{
-                fontSize: t.type.size.s,
-                fontWeight: t.type.weight.regular,
-                color: t.color("color.fg2"),
-              }}
-            >
-              {" "}
-              {i18n.t("paywall.period.month")}
-            </Text>
-          </Text>
-        )}
-
-        {isAnnual && annualTrial && !isChangeMode && (
-          <View style={{ flexDirection: "row", marginTop: t.space[2] }}>
-            <View
-              style={{
-                backgroundColor: t.color("color.success.soft"),
-                borderRadius: t.radius.pill,
-                paddingHorizontal: t.space[2],
-                paddingVertical: 3,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: t.type.family.sans,
-                  fontSize: t.type.size.xs,
-                  fontWeight: t.type.weight.semibold,
-                  color: t.color("color.success"),
-                }}
-              >
-                {i18n.t("paywall.trial.badge", { days: annualTrial.periodNumberOfUnits })}
-              </Text>
-            </View>
-          </View>
-        )}
-      </Pressable>
-    );
-  }
 
   const footer = (
     <>
@@ -400,17 +278,57 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
             paddingVertical: t.space[10],
           }}
         >
-          <ActivityIndicator color={t.color("color.accent")} />
-          <Text
-            style={{
-              fontFamily: t.type.family.sans,
-              fontSize: t.type.size.s,
-              color: t.color("color.fg2"),
-              marginTop: t.space[3],
-            }}
-          >
-            {i18n.t("paywall.loading")}
-          </Text>
+          {offeringsError ? (
+            <>
+              <Text
+                style={{
+                  fontFamily: t.type.family.sans,
+                  fontSize: t.type.size.s,
+                  color: t.color("color.fg2"),
+                  textAlign: "center",
+                  marginBottom: t.space[4],
+                }}
+              >
+                {i18n.t("paywall.error.pricingNotLoaded")}
+              </Text>
+              <Pressable
+                onPress={loadOfferings}
+                accessibilityRole="button"
+                style={({ pressed }) => ({
+                  backgroundColor: t.color("color.accent"),
+                  borderRadius: t.radius.pill,
+                  paddingVertical: t.space[2],
+                  paddingHorizontal: t.space[5],
+                  opacity: pressed ? 0.75 : 1,
+                })}
+              >
+                <Text
+                  style={{
+                    fontFamily: t.type.family.sans,
+                    fontSize: t.type.size.s,
+                    fontWeight: t.type.weight.semibold,
+                    color: t.color("color.accent.contrast"),
+                  }}
+                >
+                  {i18n.t("paywall.error.tryAgain")}
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <ActivityIndicator color={t.color("color.accent")} />
+              <Text
+                style={{
+                  fontFamily: t.type.family.sans,
+                  fontSize: t.type.size.s,
+                  color: t.color("color.fg2"),
+                  marginTop: t.space[3],
+                }}
+              >
+                {i18n.t("paywall.loading")}
+              </Text>
+            </>
+          )}
         </View>
       ) : (
         <>
@@ -541,11 +459,41 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
 
           {/* Package cards — annual first in subscribe mode; only target card in change mode */}
           {isChangeMode ? (
-            renderPackageCard(selected)
+            pkgs[selected] ? (
+              <PackageCard
+                side={selected}
+                pkg={pkgs[selected]!}
+                isSelected
+                onSelect={() => {}}
+                savingsPercent={savingsPercent}
+                annualTrial={annualTrial}
+                isChangeMode
+              />
+            ) : null
           ) : (
             <>
-              {renderPackageCard("annual")}
-              {renderPackageCard("monthly")}
+              {pkgs.annual && (
+                <PackageCard
+                  side="annual"
+                  pkg={pkgs.annual}
+                  isSelected={selected === "annual"}
+                  onSelect={() => setSelected("annual")}
+                  savingsPercent={savingsPercent}
+                  annualTrial={annualTrial}
+                  isChangeMode={false}
+                />
+              )}
+              {pkgs.monthly && (
+                <PackageCard
+                  side="monthly"
+                  pkg={pkgs.monthly}
+                  isSelected={selected === "monthly"}
+                  onSelect={() => setSelected("monthly")}
+                  savingsPercent={savingsPercent}
+                  annualTrial={annualTrial}
+                  isChangeMode={false}
+                />
+              )}
             </>
           )}
 
@@ -609,15 +557,3 @@ export function PaywallSheet({ visible, paywallSource, mode = "subscribe", curre
   );
 }
 
-function formatAmount(amount: number, currencyCode: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: currencyCode,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  } catch {
-    return amount.toFixed(2);
-  }
-}

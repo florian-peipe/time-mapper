@@ -8,7 +8,11 @@ tags:
 # header re-renders in the new locale on each tap. Exercises the
 # `uiStore.setLocaleOverride` + `setLocale()` side-effect.
 
-- launchApp
+- launchApp:
+    clearState: true
+
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
 
 - tapOn: "Settings"
 
@@ -19,17 +23,18 @@ tags:
 - tapOn:
     id: "settings-row-language"
 
-# After first tap we're on English; the section heading should be in EN.
-- assertVisible: "Settings"
+# After first tap we're on English; assert on a string that only appears
+# in the Settings body (not the tab bar): the "Appearance" section heading.
+- assertVisible: "Appearance"
 
 - tapOn:
     id: "settings-row-language"
 
-# Second tap → Deutsch. Heading flips to "Einstellungen".
-- assertVisible: "Einstellungen"
+# Second tap → Deutsch. The section heading flips to "Darstellung".
+- assertVisible: "Darstellung"
 
-# Reset to System.
+# Reset to System (English on this emulator).
 - tapOn:
     id: "settings-row-language"
 
-- assertVisible: "Settings"
+- assertVisible: "Appearance"

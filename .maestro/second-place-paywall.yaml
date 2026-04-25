@@ -4,31 +4,58 @@ tags:
   - paywall
   - pro-gate
 ---
-# Verifies the free-tier gate: after saving the first place during
-# onboarding, attempting to add a second place from the Places tab
-# opens the RevenueCat-hosted paywall (source: "2nd-place").
+# Verifies the free-tier gate: starting from a fresh install, adds a first
+# place through onboarding, then tries to add a second place from the Places
+# tab. The save attempt on Phase 2 should open the PaywallSheet.
 #
-# Prereqs:
-#   - App already has ONE place (run onboarding-smoke.yaml first, or seed).
-#   - Not on Pro. If the test account is Pro, cancel sandbox sub first.
+# Prereqs: none — clearState resets everything.
 
-- launchApp
+- launchApp:
+    clearState: true
 
-# Navigate to Places tab
+- runFlow:
+    file: "./flows/seed-one-place.yaml"
+
+# Navigate to the Places tab — 1 place is visible
 - tapOn: "Places"
 
-# Tap the add-place FAB
+# The FAB is visible because places.length > 0
+- extendedWaitUntil:
+    visible:
+      id: "places-fab-add"
+    timeout: 5000
 - tapOn:
-    id: "places-fab"
+    id: "places-fab-add"
 
-# The paywall should present. Either the RC-hosted paywall (real mode)
-# or — if RC isn't yet configured — the AddPlaceSheet opens and we see
-# it stash `pendingPlaceForm`. Assert on either outcome.
-- runFlow:
-    when:
-      visible: "Time Mapper Pro"
-    commands:
-      - assertVisible: "Time Mapper Pro"
+# AddPlace sheet opens — search for a second address
+- extendedWaitUntil:
+    visible:
+      id: "add-place-search"
+    timeout: 5000
+- tapOn:
+    id: "add-place-search"
+- inputText: "Munich"
 
-# Dismiss the paywall (user-cancelled flow).
+- extendedWaitUntil:
+    visible:
+      id: "add-place-suggestion-0"
+    timeout: 10000
+- tapOn:
+    id: "add-place-suggestion-0"
+
+# Phase 2 — save button label changes to "Unlock more places with Pro"
+# when shouldPaywall is true
+- extendedWaitUntil:
+    visible:
+      id: "add-place-save"
+    timeout: 5000
+- tapOn:
+    id: "add-place-save"
+
+# The paywall should present
+- extendedWaitUntil:
+    visible: "Time Mapper Pro"
+    timeout: 10000
+
+# Dismiss the paywall (user-cancelled flow)
 - back
