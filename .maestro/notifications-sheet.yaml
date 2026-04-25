@@ -5,7 +5,8 @@ tags:
   - notifications
 ---
 # Verifies the Notifications sheet opens from Settings, the quiet-hours
-# toggle and daily digest toggle are present, and saving closes the sheet.
+# toggle and daily digest toggle are present, and that the digest toggle
+# state persists across a save/reopen cycle.
 
 - launchApp:
     clearState: true
@@ -36,12 +37,22 @@ tags:
 - assertVisible:
     id: "notifications-digest-toggle"
 
+# Digest is off by default
+- assertVisible:
+    id: "notifications-digest-toggle"
+    checked: false
+
 # Toggle the daily digest on
 - tapOn:
     id: "notifications-digest-toggle"
 
 - waitForAnimationToEnd:
     timeout: 500
+
+# Verify it flipped to on
+- assertVisible:
+    id: "notifications-digest-toggle"
+    checked: true
 
 # Save
 - tapOn:
@@ -52,3 +63,16 @@ tags:
     visible:
       id: "settings-row-notifications"
     timeout: 5000
+
+# Re-open and verify digest is still on (persistence check)
+- tapOn:
+    id: "settings-row-notifications"
+
+- extendedWaitUntil:
+    visible:
+      id: "notifications-sheet"
+    timeout: 5000
+
+- assertVisible:
+    id: "notifications-digest-toggle"
+    checked: true

@@ -6,9 +6,6 @@
  *   - Phase-2 form:   `selected`, `name`, `radius`, `colorIdx`, `iconIdx`,
  *                     buffer sliders, goal toggles + hour sliders + day filter
  *
- * The effect that reconciles state when the sheet opens/edits/restores
- * lives here too, so AddPlaceSheet stays as a thin renderer.
- *
  * Hydration priority (highest first):
  *   1. `pendingPlaceForm` from the sheet store (post-paywall restore).
  *   2. `editingPlace` — the place being edited.
@@ -61,6 +58,63 @@ export function parseGoalDays(raw: string | null | undefined): number[] {
     .map((s) => Number(s.trim()))
     .filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
     .sort((a, b) => a - b);
+}
+
+type FieldDefaults = {
+  colorIdx: number;
+  iconIdx: number;
+  entryBufferMin: number;
+  exitBufferMin: number;
+};
+
+/** Computes initial field values for a new or edited place. */
+function defaultFieldValues(editingPlace: Place | null, kv: KvRepo): FieldDefaults {
+  const { entryBufferS, exitBufferS } = readGlobalBuffers(kv);
+  const colorIdx = editingPlace
+    ? Math.max(0, PLACE_COLORS.findIndex((c) => c === editingPlace.color))
+    : 0;
+  const iconIdx = editingPlace
+    ? Math.max(0, ICON_CHOICES.findIndex((i) => i === editingPlace.icon))
+    : 0;
+  const entryBufferMin = editingPlace
+    ? Math.round((editingPlace.entryBufferS ?? 300) / 60)
+    : Math.round(entryBufferS / 60);
+  const exitBufferMin = editingPlace
+    ? Math.round((editingPlace.exitBufferS ?? 180) / 60)
+    : Math.round(exitBufferS / 60);
+  return { colorIdx, iconIdx, entryBufferMin, exitBufferMin };
+}
+
+type PlaceFormValues = FieldDefaults & {
+  selected: Selection;
+  name: string;
+  radius: number;
+  dailyGoalEnabled: boolean;
+  dailyGoalHours: number;
+  dailyGoalDays: number[];
+  weeklyGoalEnabled: boolean;
+  weeklyGoalHours: number;
+};
+
+/** Maps a Place row into form field values ready to apply to state. */
+function hydrateFromPlace(place: Place, defaults: FieldDefaults): PlaceFormValues {
+  return {
+    ...defaults,
+    selected: { description: place.address, latitude: place.latitude, longitude: place.longitude },
+    name: place.name,
+    radius: place.radiusM,
+    dailyGoalEnabled: place.dailyGoalMinutes != null,
+    dailyGoalHours:
+      place.dailyGoalMinutes != null
+        ? Math.max(DAILY_GOAL_MIN_H, Math.round(place.dailyGoalMinutes / 60))
+        : DAILY_GOAL_DEFAULT_H,
+    dailyGoalDays: parseGoalDays(place.dailyGoalDays),
+    weeklyGoalEnabled: place.weeklyGoalMinutes != null,
+    weeklyGoalHours:
+      place.weeklyGoalMinutes != null
+        ? Math.max(WEEKLY_GOAL_MIN_H, Math.round(place.weeklyGoalMinutes / 60))
+        : WEEKLY_GOAL_DEFAULT_H,
+  };
 }
 
 export type UsePlaceFormOpts = {
@@ -134,28 +188,7 @@ export function usePlaceForm(opts: UsePlaceFormOpts): UsePlaceFormResult {
     [places, placeId],
   );
 
-  // Defaults derived from the edited place, if any. Always safe (index 0)
-  // when the stored value isn't in the current choice list.
-  const initialColorIdx = useMemo(() => {
-    if (!editingPlace) return 0;
-    const idx = PLACE_COLORS.findIndex((c) => c === editingPlace.color);
-    return idx >= 0 ? idx : 0;
-  }, [editingPlace]);
-  const initialIconIdx = useMemo(() => {
-    if (!editingPlace) return 0;
-    const idx = ICON_CHOICES.findIndex((i) => i === editingPlace.icon);
-    return idx >= 0 ? idx : 0;
-  }, [editingPlace]);
-  const initialEntryBufferMin = useMemo(() => {
-    if (editingPlace) return Math.round((editingPlace.entryBufferS ?? 300) / 60);
-    const { entryBufferS } = readGlobalBuffers(kv);
-    return Math.round(entryBufferS / 60);
-  }, [editingPlace, kv]);
-  const initialExitBufferMin = useMemo(() => {
-    if (editingPlace) return Math.round((editingPlace.exitBufferS ?? 180) / 60);
-    const { exitBufferS } = readGlobalBuffers(kv);
-    return Math.round(exitBufferS / 60);
-  }, [editingPlace, kv]);
+  const defaults = useMemo(() => defaultFieldValues(editingPlace, kv), [editingPlace, kv]);
 
   // Phase-1 state
   const [query, setQuery] = useState("");
@@ -167,42 +200,36 @@ export function usePlaceForm(opts: UsePlaceFormOpts): UsePlaceFormResult {
   // Phase-2 state
   const [selected, setSelected] = useState<Selection | null>(
     editingPlace
-      ? {
-          description: editingPlace.address,
-          latitude: editingPlace.latitude,
-          longitude: editingPlace.longitude,
-        }
+      ? { description: editingPlace.address, latitude: editingPlace.latitude, longitude: editingPlace.longitude }
       : null,
   );
   const [name, setName] = useState(editingPlace?.name ?? "");
   const [radius, setRadius] = useState(editingPlace?.radiusM ?? RADIUS_DEFAULT);
-  const [colorIdx, setColorIdx] = useState(initialColorIdx);
-  const [iconIdx, setIconIdx] = useState(initialIconIdx);
-  const [entryBufferMin, setEntryBufferMin] = useState(initialEntryBufferMin);
-  const [exitBufferMin, setExitBufferMin] = useState(initialExitBufferMin);
-
-  const initialDailyGoalMin = editingPlace?.dailyGoalMinutes ?? null;
-  const initialWeeklyGoalMin = editingPlace?.weeklyGoalMinutes ?? null;
-  const [dailyGoalEnabled, setDailyGoalEnabled] = useState(initialDailyGoalMin != null);
+  const [colorIdx, setColorIdx] = useState(defaults.colorIdx);
+  const [iconIdx, setIconIdx] = useState(defaults.iconIdx);
+  const [entryBufferMin, setEntryBufferMin] = useState(defaults.entryBufferMin);
+  const [exitBufferMin, setExitBufferMin] = useState(defaults.exitBufferMin);
+  const [dailyGoalEnabled, setDailyGoalEnabled] = useState(
+    editingPlace?.dailyGoalMinutes != null,
+  );
   const [dailyGoalHours, setDailyGoalHours] = useState(
-    initialDailyGoalMin != null
-      ? Math.max(DAILY_GOAL_MIN_H, Math.round(initialDailyGoalMin / 60))
+    editingPlace?.dailyGoalMinutes != null
+      ? Math.max(DAILY_GOAL_MIN_H, Math.round(editingPlace.dailyGoalMinutes / 60))
       : DAILY_GOAL_DEFAULT_H,
   );
   const [dailyGoalDays, setDailyGoalDays] = useState<number[]>(
     parseGoalDays(editingPlace?.dailyGoalDays ?? null),
   );
-  const [weeklyGoalEnabled, setWeeklyGoalEnabled] = useState(initialWeeklyGoalMin != null);
+  const [weeklyGoalEnabled, setWeeklyGoalEnabled] = useState(
+    editingPlace?.weeklyGoalMinutes != null,
+  );
   const [weeklyGoalHours, setWeeklyGoalHours] = useState(
-    initialWeeklyGoalMin != null
-      ? Math.max(WEEKLY_GOAL_MIN_H, Math.round(initialWeeklyGoalMin / 60))
+    editingPlace?.weeklyGoalMinutes != null
+      ? Math.max(WEEKLY_GOAL_MIN_H, Math.round(editingPlace.weeklyGoalMinutes / 60))
       : WEEKLY_GOAL_DEFAULT_H,
   );
 
   // Track the previous visible state so we can detect the false→true transition.
-  // The pendingPlaceForm hydration must only fire when the sheet *just opened*
-  // (not when pendingPlaceForm is set while the sheet is already visible, which
-  // would prematurely consume and clear the stash before the paywall opens).
   const prevVisible = useRef(false);
 
   // Hydration: pendingPlaceForm (post-paywall) > editingPlace > reset-on-close.
@@ -244,30 +271,19 @@ export function usePlaceForm(opts: UsePlaceFormOpts): UsePlaceFormResult {
       return;
     }
     if (editingPlace) {
-      setSelected({
-        description: editingPlace.address,
-        latitude: editingPlace.latitude,
-        longitude: editingPlace.longitude,
-      });
-      setName(editingPlace.name);
-      setRadius(editingPlace.radiusM);
-      setColorIdx(initialColorIdx);
-      setIconIdx(initialIconIdx);
-      setEntryBufferMin(initialEntryBufferMin);
-      setExitBufferMin(initialExitBufferMin);
-      setDailyGoalEnabled(editingPlace.dailyGoalMinutes != null);
-      if (editingPlace.dailyGoalMinutes != null) {
-        setDailyGoalHours(
-          Math.max(DAILY_GOAL_MIN_H, Math.round(editingPlace.dailyGoalMinutes / 60)),
-        );
-      }
-      setDailyGoalDays(parseGoalDays(editingPlace.dailyGoalDays));
-      setWeeklyGoalEnabled(editingPlace.weeklyGoalMinutes != null);
-      if (editingPlace.weeklyGoalMinutes != null) {
-        setWeeklyGoalHours(
-          Math.max(WEEKLY_GOAL_MIN_H, Math.round(editingPlace.weeklyGoalMinutes / 60)),
-        );
-      }
+      const vals = hydrateFromPlace(editingPlace, defaults);
+      setSelected(vals.selected);
+      setName(vals.name);
+      setRadius(vals.radius);
+      setColorIdx(vals.colorIdx);
+      setIconIdx(vals.iconIdx);
+      setEntryBufferMin(vals.entryBufferMin);
+      setExitBufferMin(vals.exitBufferMin);
+      setDailyGoalEnabled(vals.dailyGoalEnabled);
+      if (vals.dailyGoalEnabled) setDailyGoalHours(vals.dailyGoalHours);
+      setDailyGoalDays(vals.dailyGoalDays);
+      setWeeklyGoalEnabled(vals.weeklyGoalEnabled);
+      if (vals.weeklyGoalEnabled) setWeeklyGoalHours(vals.weeklyGoalHours);
     } else if (!visible) {
       setQuery("");
       setSelected(null);
@@ -277,8 +293,8 @@ export function usePlaceForm(opts: UsePlaceFormOpts): UsePlaceFormResult {
       setIconIdx(0);
       setSuggestions([]);
       setApiError(null);
-      setEntryBufferMin(initialEntryBufferMin);
-      setExitBufferMin(initialExitBufferMin);
+      setEntryBufferMin(defaults.entryBufferMin);
+      setExitBufferMin(defaults.exitBufferMin);
       setDailyGoalEnabled(false);
       setDailyGoalHours(DAILY_GOAL_DEFAULT_H);
       setDailyGoalDays([]);
@@ -288,10 +304,7 @@ export function usePlaceForm(opts: UsePlaceFormOpts): UsePlaceFormResult {
   }, [
     editingPlace,
     visible,
-    initialColorIdx,
-    initialIconIdx,
-    initialEntryBufferMin,
-    initialExitBufferMin,
+    defaults,
     pendingPlaceForm,
     placeId,
     source,

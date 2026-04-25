@@ -5,7 +5,7 @@ tags:
   - tracking
 ---
 # Verifies the Buffers sheet opens from Settings, shows the entry/exit
-# buffer sliders, and saves without error.
+# buffer sliders, saves, and that the values persist on re-open.
 
 - launchApp:
     clearState: true
@@ -23,7 +23,7 @@ tags:
 - tapOn:
     id: "settings-row-buffers"
 
-# Sheet opens — both sliders should be visible
+# Sheet opens — both sliders and their value labels should be visible
 - extendedWaitUntil:
     visible:
       id: "buffers-sheet"
@@ -35,14 +35,44 @@ tags:
 - assertVisible:
     id: "buffers-exit"
 
-# Save button is present and tappable
+# Default values are visible (5 min entry, 3 min exit)
 - assertVisible:
-    id: "buffers-sheet-save"
+    id: "buffers-entry-value"
+    text: "5 min"
+
+- assertVisible:
+    id: "buffers-exit-value"
+    text: "3 min"
 
 - tapOn:
     id: "buffers-sheet-save"
 
 # Sheet closes — verify we're back on Settings
+- extendedWaitUntil:
+    visible:
+      id: "settings-row-buffers"
+    timeout: 5000
+
+# Re-open and verify the same values persisted
+- tapOn:
+    id: "settings-row-buffers"
+
+- extendedWaitUntil:
+    visible:
+      id: "buffers-sheet"
+    timeout: 5000
+
+- assertVisible:
+    id: "buffers-entry-value"
+    text: "5 min"
+
+- assertVisible:
+    id: "buffers-exit-value"
+    text: "3 min"
+
+- tapOn:
+    id: "buffers-sheet-save"
+
 - extendedWaitUntil:
     visible:
       id: "settings-row-buffers"
