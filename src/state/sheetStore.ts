@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type SheetName = "entryEdit" | "addPlace";
+export type SheetName = "entryEdit" | "addPlace" | "paywall";
 
 /**
  * `addPlace` accepts an optional `source` discriminator so the onboarding flow
@@ -10,9 +10,28 @@ export type SheetName = "entryEdit" | "addPlace";
  */
 export type AddPlaceSource = "onboarding" | "places-tab";
 
+/** Where the paywall was opened from — logged to Sentry breadcrumbs. */
+export type PaywallSource =
+  | "2nd-place"
+  | "export"
+  | "history"
+  | "settings"
+  | "settings-upgrade"
+  | "settings-downgrade";
+
+/** Whether the sheet is a fresh subscription or a plan switch. */
+export type PaywallMode = "subscribe" | "change";
+
 export type SheetPayload =
   | { entryId: string | null }
-  | { placeId: string | null; source?: AddPlaceSource };
+  | { placeId: string | null; source?: AddPlaceSource }
+  | {
+      paywallSource: PaywallSource;
+      /** Defaults to "subscribe". "change" hides the non-target package card. */
+      mode?: PaywallMode;
+      /** The user's current store product id — passed as Android googleProductChangeInfo. */
+      currentProductId?: string;
+    };
 
 /**
  * Form state stashed when the paywall interrupts an AddPlaceSheet flow. We

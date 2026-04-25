@@ -11,6 +11,7 @@
 import { Platform } from "react-native";
 import Purchases, {
   type CustomerInfo,
+  type GoogleProductChangeInfo,
   type PurchasesOffering,
   type PurchasesPackage,
 } from "react-native-purchases";
@@ -91,11 +92,32 @@ export async function getOfferings() {
 }
 
 /**
+ * Carry-over info for a plan switch on Android. iOS ignores this — plan
+ * changes within the same App Store Subscription Group are handled
+ * automatically by the platform.
+ */
+export type PlanChange = { oldProductIdentifier: string };
+
+/**
  * Execute a purchase. Resolves with the updated customerInfo on success.
  * Rejects when the user cancels the system purchase sheet, or the store is
  * unreachable / the device is offline.
+ *
+ * On Android, pass `change` when the user is switching plans (upgrade /
+ * downgrade) so Play Store applies the correct proration instead of billing
+ * the new plan as a fresh subscription.
  */
-export async function purchasePackage(pkg: PurchasesPackage): Promise<CustomerInfo> {
+export async function purchasePackage(
+  pkg: PurchasesPackage,
+  change?: PlanChange,
+): Promise<CustomerInfo> {
+  if (Platform.OS === "android" && change) {
+    const googleProductChangeInfo: GoogleProductChangeInfo = {
+      oldProductIdentifier: change.oldProductIdentifier,
+    };
+    const result = await Purchases.purchasePackage(pkg, null, googleProductChangeInfo);
+    return result.customerInfo;
+  }
   const result = await Purchases.purchasePackage(pkg);
   return result.customerInfo;
 }

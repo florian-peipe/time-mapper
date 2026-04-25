@@ -8,7 +8,7 @@
  * wiring surfaces immediately. Tests override via `__setProForTests`.
  */
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { PurchasesOffering, PurchasesPackage } from "react-native-purchases";
+import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from "react-native-purchases";
 
 import { getOrCreateRevenueCatUserIdFromDevice } from "./appUserId";
 import {
@@ -19,8 +19,12 @@ import {
   onCustomerInfoUpdate,
   purchasePackage,
   restorePurchases,
+  PRO_ENTITLEMENT_ID,
 } from "./revenuecat";
+import type { PlanChange } from "./revenuecat";
 import { captureException } from "@/lib/crash";
+
+export type CurrentPlan = "monthly" | "annual";
 
 export type UseProResult = {
   /** Whether the user currently has an active Pro entitlement. */
@@ -29,8 +33,16 @@ export type UseProResult = {
   loading: boolean;
   /** The RevenueCat offering (with monthly/annual packages) or null. */
   offerings: PurchasesOffering | null;
+  /** "monthly" | "annual", or null when not pro or offerings haven't loaded. */
+  currentPlan: CurrentPlan | null;
+  /** Raw store product id for the active entitlement (for googleProductChangeInfo). */
+  productIdentifier: string | null;
+  /** Whether the active entitlement will auto-renew. False means cancelled. */
+  willRenew: boolean;
+  /** ISO timestamp when the current period ends, or null. */
+  expirationDate: string | null;
   /** Execute a real purchase. Resolves on success, throws on cancel/error. */
-  purchase: (pkg: PurchasesPackage) => Promise<void>;
+  purchase: (pkg: PurchasesPackage, change?: PlanChange) => Promise<void>;
   /** Restore prior purchases for the current Apple/Google account. */
   restore: () => Promise<void>;
 };
@@ -41,12 +53,20 @@ export type UseProResult = {
 // notified via the version counter so changes re-render components
 // mid-test (mirrors the customer-info update listener in production).
 let proOverride: boolean | null = null;
+let planOverride: CurrentPlan | null = null;
 let overrideVersion = 0;
 const overrideSubs = new Set<() => void>();
 
 /** Test-only — set a Pro override (true/false) or clear it with null. */
 export function __setProForTests(v: boolean | null): void {
   proOverride = v;
+  overrideVersion++;
+  for (const cb of overrideSubs) cb();
+}
+
+/** Test-only — set the current plan override or clear it with null. */
+export function __setCurrentPlanForTests(plan: CurrentPlan | null): void {
+  planOverride = plan;
   overrideVersion++;
   for (const cb of overrideSubs) cb();
 }
@@ -73,6 +93,7 @@ export function usePro(): UseProResult {
   const [isPro, setIsPro] = useState(false);
   const [loading, setLoading] = useState(true);
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
 
   // Track mount status so async fetches don't write to a torn-down hook.
   const mounted = useRef(true);
@@ -113,6 +134,7 @@ export function usePro(): UseProResult {
         const [info, off] = await Promise.all([getCustomerInfo(), getOfferings()]);
         if (!mounted.current) return;
         setIsPro(isProActive(info));
+        setCustomerInfo(info);
         setOfferings(off);
       } catch (err) {
         captureException(err, { scope: "usePro.initialFetch" });
@@ -125,6 +147,7 @@ export function usePro(): UseProResult {
     const unsubscribe = onCustomerInfoUpdate((info) => {
       if (!mounted.current) return;
       setIsPro(isProActive(info));
+      setCustomerInfo(info);
     });
 
     return () => {
@@ -133,23 +156,46 @@ export function usePro(): UseProResult {
     };
   }, []);
 
-  const purchase = useCallback(async (pkg: PurchasesPackage) => {
-    const info = await purchasePackage(pkg);
+  const purchase = useCallback(async (pkg: PurchasesPackage, change?: PlanChange) => {
+    const info = await purchasePackage(pkg, change);
     setIsPro(isProActive(info));
+    setCustomerInfo(info);
   }, []);
 
   const restore = useCallback(async () => {
     const info = await restorePurchases();
     setIsPro(isProActive(info));
+    setCustomerInfo(info);
   }, []);
+
+  // Derive plan metadata from the live entitlement + offering package identifiers.
+  // We match against the offering's product identifiers rather than hard-coding
+  // RC product id strings, so a dashboard rename doesn't silently break this.
+  const activeEntitlement = customerInfo?.entitlements.active[PRO_ENTITLEMENT_ID] ?? null;
+  const rawProductId = activeEntitlement?.productIdentifier ?? null;
+  const derivedPlan: CurrentPlan | null =
+    rawProductId && offerings
+      ? rawProductId === offerings.monthly?.product.identifier
+        ? "monthly"
+        : rawProductId === offerings.annual?.product.identifier
+          ? "annual"
+          : null
+      : null;
 
   // Apply the test override on read so both the initial + update-listener
   // state flows can still run without interference — tests only care about
   // the final `isPro` value components see.
+  const resolvedPro = proOverride ?? isPro;
+  const resolvedPlan = planOverride ?? (resolvedPro ? derivedPlan : null);
+
   return {
-    isPro: proOverride ?? isPro,
+    isPro: resolvedPro,
     loading: proOverride != null ? false : loading,
     offerings,
+    currentPlan: resolvedPlan,
+    productIdentifier: resolvedPro ? rawProductId : null,
+    willRenew: activeEntitlement?.willRenew ?? false,
+    expirationDate: activeEntitlement?.expirationDate ?? null,
     purchase,
     restore,
   };

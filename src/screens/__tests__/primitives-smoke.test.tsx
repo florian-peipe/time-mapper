@@ -266,8 +266,15 @@ describe("primitives-smoke — Settings", () => {
       wrap(
         <SettingsSubscriptionSection
           isPro={false}
+          currentPlan={null}
+          productIdentifier={null}
+          willRenew={false}
+          expirationDate={null}
+          monthlyPriceLabel={null}
+          annualSavingsPercent={0}
           restoreState="idle"
-          onManageSubscription={NO_OP}
+          onManagePlan={NO_OP}
+          onChangePlan={NO_OP}
           onRestore={NO_OP}
         />,
       ),
@@ -280,8 +287,15 @@ describe("primitives-smoke — Settings", () => {
       wrap(
         <SettingsSubscriptionSection
           isPro
+          currentPlan="annual"
+          productIdentifier="tm_pro_annual"
+          willRenew
+          expirationDate="2027-04-25T00:00:00Z"
+          monthlyPriceLabel="€4.99"
+          annualSavingsPercent={17}
           restoreState="idle"
-          onManageSubscription={NO_OP}
+          onManagePlan={NO_OP}
+          onChangePlan={NO_OP}
           onRestore={NO_OP}
         />,
       ),

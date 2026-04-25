@@ -9,7 +9,7 @@ import { useEntriesRepo } from "@/features/entries/useEntries";
 import { useLocationPermission, useNotificationPermission } from "@/features/permissions/hooks";
 import { readGlobalBuffers, BuffersSheet } from "./BuffersSheet";
 import { usePro } from "@/features/billing/usePro";
-import { openPaywall, type PaywallSource } from "@/features/billing/openPaywall";
+import { openPaywall, openPlanChange, type PaywallSource } from "@/features/billing/openPaywall";
 import { presentCustomerCenter } from "@/features/billing/revenuecat";
 import { useUiStore } from "@/state/uiStore";
 import { i18n, setLocale } from "@/lib/i18n";
@@ -55,7 +55,15 @@ export function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const { isPro, restore } = usePro();
+  const {
+    isPro,
+    restore,
+    offerings,
+    currentPlan,
+    productIdentifier,
+    willRenew,
+    expirationDate,
+  } = usePro();
   const [restoreState, setRestoreState] = useState<"idle" | "busy" | "done" | "error">("idle");
   const placesRepo = usePlacesRepo();
   const entriesRepo = useEntriesRepo();
@@ -79,6 +87,25 @@ export function SettingsScreen() {
   const handleOpenExportPaywall = useCallback(() => {
     handleOpenPaywall("export");
   }, [handleOpenPaywall]);
+
+  const monthlyPriceLabel = offerings?.monthly?.product.priceString ?? null;
+  const annualSavingsPercent = useMemo(() => {
+    const m = offerings?.monthly?.product.price;
+    const a = offerings?.annual?.product.price;
+    if (!m || !a || m <= 0) return 0;
+    return Math.max(0, Math.round((1 - a / 12 / m) * 100));
+  }, [offerings]);
+
+  const handleChangePlan = useCallback(
+    (target: "monthly" | "annual") => {
+      if (!productIdentifier) return;
+      openPlanChange({
+        source: target === "annual" ? "settings-upgrade" : "settings-downgrade",
+        currentProductId: productIdentifier,
+      });
+    },
+    [productIdentifier],
+  );
 
   const {
     retentionLabel,
@@ -260,8 +287,15 @@ export function SettingsScreen() {
 
         <SettingsSubscriptionSection
           isPro={isPro}
+          currentPlan={currentPlan}
+          productIdentifier={productIdentifier}
+          willRenew={willRenew}
+          expirationDate={expirationDate}
+          monthlyPriceLabel={monthlyPriceLabel}
+          annualSavingsPercent={annualSavingsPercent}
           restoreState={restoreState}
-          onManageSubscription={handleManageSubscription}
+          onManagePlan={handleManageSubscription}
+          onChangePlan={handleChangePlan}
           onRestore={handleRestore}
         />
 

@@ -143,16 +143,13 @@ describe("breadcrumb contract — geofence → entry → paywall", () => {
     expect(open!.data).not.toHaveProperty("longitude");
   });
 
-  test("openPaywall emits 'paywall-open' then 'paywall-closed' with {source, result}, no coords", async () => {
-    presentPaywallMock.mockResolvedValueOnce("CANCELLED");
+  test("openPaywall emits 'paywall-open' with {source}, no coords", async () => {
     openPaywall({ source: "settings" });
-    // openPaywall is fire-and-forget — drain microtasks to reach the trailing
-    // crumb. Matches the pattern in openPaywall.test.ts.
+    // openPaywall is fire-and-forget — drain microtasks.
     for (let i = 0; i < 4; i++) await Promise.resolve();
 
     const crumbs = emitted();
     const open = crumbs.find((c) => c.message === "paywall-open");
-    const closed = crumbs.find((c) => c.message === "paywall-closed");
 
     expect(open).toMatchObject({
       category: "paywall",
@@ -160,19 +157,12 @@ describe("breadcrumb contract — geofence → entry → paywall", () => {
       level: "info",
       data: { source: "settings" },
     });
-    expect(closed).toMatchObject({
-      category: "paywall",
-      message: "paywall-closed",
-      level: "info",
-      data: { source: "settings", result: "CANCELLED" },
-    });
-    for (const c of [open, closed]) {
-      expect(c!.data).not.toHaveProperty("latitude");
-      expect(c!.data).not.toHaveProperty("longitude");
-    }
+    expect(open!.data).not.toHaveProperty("latitude");
+    expect(open!.data).not.toHaveProperty("longitude");
+    // paywall-closed is now emitted by PaywallSheet on close — not by openPaywall.
   });
 
-  test("end-to-end script: geofence → entry-open → paywall-open → paywall-closed (ordered)", async () => {
+  test("end-to-end script: geofence → entry-open → paywall-open (ordered)", async () => {
     await handleGeofencingEvent(
       {
         eventType: EVENT_ENTER,
@@ -181,17 +171,15 @@ describe("breadcrumb contract — geofence → entry → paywall", () => {
       10_000,
     );
     await handleGeofencingEvent(null, 10_400); // CONFIRM past buffer
-    presentPaywallMock.mockResolvedValueOnce("CANCELLED");
     openPaywall({ source: "settings" });
     for (let i = 0; i < 4; i++) await Promise.resolve();
 
-    // Filter to known-stable messages; a future commit that adds a benign
-    // crumb (e.g. a second paywall source) must not fail this ordering test.
+    // Filter to known-stable messages.
     const messages = emitted().map((c) => c.message);
     const stable = messages.filter((m) =>
-      ["region-enter", "entry-open", "paywall-open", "paywall-closed"].includes(m ?? ""),
+      ["region-enter", "entry-open", "paywall-open"].includes(m ?? ""),
     );
-    expect(stable).toEqual(["region-enter", "entry-open", "paywall-open", "paywall-closed"]);
+    expect(stable).toEqual(["region-enter", "entry-open", "paywall-open"]);
   });
 });
 

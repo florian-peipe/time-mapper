@@ -1,5 +1,6 @@
 import { i18n } from "@/lib/i18n";
 import type { ThemeOverride } from "@/state/uiStore";
+import type { CurrentPlan } from "@/features/billing/usePro";
 
 /**
  * Right-side label for the Restore purchases row. Reflects the in-flight
@@ -10,6 +11,56 @@ export function restoreLabel(state: "idle" | "busy" | "done" | "error"): string 
   if (state === "done") return i18n.t("settings.subscription.restore.done");
   if (state === "error") return i18n.t("settings.subscription.restore.error");
   return undefined;
+}
+
+/**
+ * Right-side detail string for the active-Pro row in Settings. Shows the
+ * plan name and the next renewal / cancellation date.
+ */
+export function planLabel(
+  plan: CurrentPlan | null,
+  willRenew: boolean,
+  expirationDate: string | null,
+): string {
+  if (plan == null) return i18n.t("settings.subscription.plan.unknown");
+  const planText =
+    plan === "monthly"
+      ? i18n.t("settings.subscription.plan.monthly")
+      : i18n.t("settings.subscription.plan.annual");
+  const dateText = expirationDate ? formatShortDate(expirationDate) : "";
+  if (!willRenew) {
+    return i18n.t("settings.subscription.plan.cancelled", { plan: planText, date: dateText });
+  }
+  return i18n.t("settings.subscription.plan.renews", { plan: planText, date: dateText });
+}
+
+/**
+ * Title for the plan-change row (upgrade / downgrade). Returns null when the
+ * current plan is unknown so callers can hide the row entirely.
+ */
+export function changePlanCtaLabel(
+  current: CurrentPlan | null,
+  savingsPercent: number,
+): string | null {
+  if (current === "monthly") {
+    return savingsPercent > 0
+      ? i18n.t("settings.subscription.upgrade.titleWithSavings", { percent: savingsPercent })
+      : i18n.t("settings.subscription.upgrade.title");
+  }
+  if (current === "annual") return i18n.t("settings.subscription.downgrade.title");
+  return null;
+}
+
+function formatShortDate(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
 }
 
 /** Cycle order: System (null) → Light → Dark → System. */

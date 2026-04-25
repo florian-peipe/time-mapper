@@ -127,7 +127,8 @@ describe("usePro", () => {
     await act(async () => {
       await result.current.purchase(pkg);
     });
-    expect(mockPurchasePackage).toHaveBeenCalledWith(pkg);
+    // change is undefined when no plan-change context is provided.
+    expect(mockPurchasePackage).toHaveBeenCalledWith(pkg, undefined);
     expect(result.current.isPro).toBe(true);
   });
 
