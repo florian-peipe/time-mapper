@@ -197,6 +197,8 @@
   "addPlace.delete.body": "Der Ort wird aus deiner Liste entfernt. Deine Einträge bleiben erhalten.",
   "addPlace.delete.cta": "Ort löschen",
   "addPlace.delete.hint": "Öffnet eine Bestätigungsabfrage.",
+  "addPlace.customize": "Anpassen",
+  "addPlace.customizeHint": "Puffer, Ziele, Aussehen",
   "addPlace.map.unavailable": "Kartenvorschau in diesem Build nicht verfügbar.",
   "addPlace.map.androidKeyMissing": "Kartenvorschau nicht verfügbar — Android benötigt einen Google Maps API-Schlüssel. Siehe docs/SETUP.md.",
   "addPlace.map.accessibilityLabel": "Kartenvorschau zentriert auf die ausgewählte Adresse.",

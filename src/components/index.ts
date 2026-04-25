@@ -1,5 +1,6 @@
 export { BackButton } from "./BackButton";
 export { Banner, type BannerTone } from "./Banner";
+export { CollapsibleSection } from "./CollapsibleSection";
 export { Button, type ButtonVariant, type ButtonSize } from "./Button";
 export { Card } from "./Card";
 export { Chip, type ChipTone } from "./Chip";

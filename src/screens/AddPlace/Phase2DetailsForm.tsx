@@ -4,6 +4,7 @@ import Slider from "@react-native-community/slider";
 import { useTheme } from "@/theme/useTheme";
 import { PLACE_COLORS } from "@/theme/tokens";
 import { i18n } from "@/lib/i18n";
+import { CollapsibleSection } from "@/components";
 import { AddressPreviewCard } from "./AddressPreviewCard";
 import { AppearanceCard } from "./AppearanceCard";
 import { BuffersCard } from "./BuffersCard";
@@ -144,34 +145,43 @@ export function Phase2DetailsForm({
         />
       </View>
 
-      <BuffersCard
-        entryBufferMin={entryBufferMin}
-        onChangeEntryBufferMin={onChangeEntryBufferMin}
-        exitBufferMin={exitBufferMin}
-        onChangeExitBufferMin={onChangeExitBufferMin}
-        visible={visible}
-      />
+      <CollapsibleSection
+        title={i18n.t("addPlace.customize")}
+        hint={i18n.t("addPlace.customizeHint")}
+        defaultOpen={false}
+        testID="add-place-customize"
+      >
+        <View style={{ gap: t.space[5] - 2 }}>
+          <BuffersCard
+            entryBufferMin={entryBufferMin}
+            onChangeEntryBufferMin={onChangeEntryBufferMin}
+            exitBufferMin={exitBufferMin}
+            onChangeExitBufferMin={onChangeExitBufferMin}
+            visible={visible}
+          />
 
-      <GoalsCard
-        dailyGoalEnabled={dailyGoalEnabled}
-        onChangeDailyGoalEnabled={onChangeDailyGoalEnabled}
-        dailyGoalHours={dailyGoalHours}
-        onChangeDailyGoalHours={onChangeDailyGoalHours}
-        dailyGoalDays={dailyGoalDays}
-        onChangeDailyGoalDays={onChangeDailyGoalDays}
-        weeklyGoalEnabled={weeklyGoalEnabled}
-        onChangeWeeklyGoalEnabled={onChangeWeeklyGoalEnabled}
-        weeklyGoalHours={weeklyGoalHours}
-        onChangeWeeklyGoalHours={onChangeWeeklyGoalHours}
-      />
+          <GoalsCard
+            dailyGoalEnabled={dailyGoalEnabled}
+            onChangeDailyGoalEnabled={onChangeDailyGoalEnabled}
+            dailyGoalHours={dailyGoalHours}
+            onChangeDailyGoalHours={onChangeDailyGoalHours}
+            dailyGoalDays={dailyGoalDays}
+            onChangeDailyGoalDays={onChangeDailyGoalDays}
+            weeklyGoalEnabled={weeklyGoalEnabled}
+            onChangeWeeklyGoalEnabled={onChangeWeeklyGoalEnabled}
+            weeklyGoalHours={weeklyGoalHours}
+            onChangeWeeklyGoalHours={onChangeWeeklyGoalHours}
+          />
 
-      <AppearanceCard
-        colorIdx={colorIdx}
-        onChangeColorIdx={onChangeColorIdx}
-        iconIdx={iconIdx}
-        onChangeIconIdx={onChangeIconIdx}
-        chosenColor={chosenColor}
-      />
+          <AppearanceCard
+            colorIdx={colorIdx}
+            onChangeColorIdx={onChangeColorIdx}
+            iconIdx={iconIdx}
+            onChangeIconIdx={onChangeIconIdx}
+            chosenColor={chosenColor}
+          />
+        </View>
+      </CollapsibleSection>
     </View>
   );
 }
