@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import type { Router } from "expo-router";
 import { useSnackbarStore } from "@/state/snackbarStore";
+import { captureException } from "@/lib/crash";
 import { i18n } from "@/lib/i18n";
 import { exportEntriesCsv } from "@/features/diagnostics/exportEntries";
 import { getTelemetryEnabled, setTelemetryEnabled } from "@/features/diagnostics/telemetryConsent";
@@ -98,7 +99,7 @@ export function useSettingsDataHandlers({
             .show({ message: i18n.t("settings.data.export.unavailable"), ttlMs: 4000 });
         }
       } catch (err) {
-        console.warn("backup export failed", err);
+        captureException(err, { scope: "backupExport" });
         useSnackbarStore
           .getState()
           .show({ message: i18n.t("settings.data.export.failed"), ttlMs: 4000 });
@@ -122,7 +123,7 @@ export function useSettingsDataHandlers({
             .show({ message: i18n.t("settings.data.export.unavailable"), ttlMs: 4000 });
         }
       } catch (err) {
-        console.warn("CSV export failed", err);
+        captureException(err, { scope: "csvExport" });
         useSnackbarStore
           .getState()
           .show({ message: i18n.t("settings.data.export.failed"), ttlMs: 4000 });
@@ -162,7 +163,7 @@ export function useSettingsDataHandlers({
                         // same place the user first entered.
                         router.replace("/(onboarding)/welcome");
                       } catch (err) {
-                        console.warn("resetAllData failed", err);
+                        captureException(err, { scope: "resetAllData" });
                       }
                     })();
                   },

@@ -52,7 +52,7 @@ localizations:
     supportUrl: "https://timemapper.app/support"
     marketingUrl: "https://timemapper.app"
     privacyPolicyUrl: "https://timemapper.app/privacy"
-    whatsNew: "Time Mapper 1.0 — first public release. Add places, track time automatically, stay private."
+    whatsNew: "Places tab with map + list view. Per-place daily and weekly goals with notifications. Day / Week / Month / Year timeline and stats. RevenueCat-hosted paywall and Customer Center."
 
   de-DE:
     subtitle: "Ort-basiertes Zeittracking"
@@ -92,7 +92,7 @@ localizations:
     supportUrl: "https://timemapper.app/support"
     marketingUrl: "https://timemapper.app"
     privacyPolicyUrl: "https://timemapper.app/privacy"
-    whatsNew: "Time Mapper 1.0 — erste öffentliche Version. Orte hinzufügen, Zeit automatisch verfolgen, privat bleiben."
+    whatsNew: "Orte-Tab mit Karten- und Listenansicht. Tages- und Wochenziele pro Ort mit Benachrichtigungen. Tag / Woche / Monat / Jahr-Navigation in Verlauf und Statistik."
 
 # App privacy labels — fill these in App Store Connect → App Privacy.
 # Apple translates these to the user-visible "Data Not Collected" / "Data Linked to You" cards.

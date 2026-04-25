@@ -6,6 +6,7 @@
 import { Platform } from "react-native";
 import type * as ExpoNotifications from "expo-notifications";
 import type { KvRepo } from "@/db/repository/kv";
+import { captureException } from "@/lib/crash";
 import { i18n } from "@/lib/i18n";
 import { KV_KEYS } from "@/db/kvKeys";
 
@@ -39,6 +40,6 @@ export async function configureNotificationChannels(kv: KvRepo): Promise<void> {
     }
     kv.set(KV_KEYS.NOTIFIER_CHANNELS_CONFIGURED, "1");
   } catch (err) {
-    console.warn("[notifier] channel config failed:", err);
+    captureException(err, { scope: "notifications.channels" });
   }
 }

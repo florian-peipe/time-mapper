@@ -18,6 +18,7 @@ import { EntriesRepo } from "@/db/repository/entries";
 import type { Effect } from "@/features/tracking/stateMachine";
 import type { PlacesRepo } from "@/db/repository/places";
 import type { Place } from "@/db/schema";
+import { captureException } from "@/lib/crash";
 import { nowS as getNowS } from "@/lib/time";
 import { maybeNotifyGoalReached as goalsNotifier } from "@/features/goals/goalsNotifier";
 import { decideNotification, readRecent, writeRecent } from "./consolidation";
@@ -48,7 +49,7 @@ export async function fireNotification(title: string, body: string): Promise<voi
       trigger: null, // immediate
     });
   } catch (err) {
-    console.warn("[notifier] fire failed:", err);
+    captureException(err, { scope: "notifications.fire" });
   }
 }
 

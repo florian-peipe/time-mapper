@@ -22,7 +22,7 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "UIBackgroundModes": ["location", "fetch", "processing"],
+        "UIBackgroundModes": ["location", "processing"],
         "BGTaskSchedulerPermittedIdentifiers": ["com.timemapper.app.geofence"],
         "NSLocationWhenInUseUsageDescription": "Time Mapper uses your location to detect when you arrive at a place you've saved — so it can start the timer automatically. Your location stays on your device.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Time Mapper uses Always location so it can start and stop timers automatically when you enter or leave your saved places — even with the app closed. Your location never leaves your device.",
@@ -63,7 +63,6 @@
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
         "POST_NOTIFICATIONS",
-        "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
         "com.android.vending.BILLING"
       ]
@@ -93,7 +92,7 @@
           },
           "android": {
             "compileSdkVersion": 35,
-            "targetSdkVersion": 34,
+            "targetSdkVersion": 35,
             "minSdkVersion": 24
           }
         }

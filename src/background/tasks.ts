@@ -11,7 +11,7 @@ import { TASK_NAME } from "@/features/tracking/geofenceService";
 import { maybeNotifyForEffects } from "@/features/notifications/notifier";
 import { recordBgFire } from "@/features/tracking/trackingHealth";
 import { nowS as getNowS } from "@/lib/time";
-import { addBreadcrumb } from "@/lib/crash";
+import { addBreadcrumb, captureException } from "@/lib/crash";
 
 /** iOS event type → state machine event kind. */
 const EVENT_ENTER = 1;
@@ -143,13 +143,13 @@ function register(): void {
   if (TaskManager.isTaskDefined(TASK_NAME)) return;
   TaskManager.defineTask(TASK_NAME, async ({ data, error }) => {
     if (error) {
-      console.warn("[geofence-task] error:", error);
+      captureException(error, { scope: "geofence-task" });
       return;
     }
     try {
       await handleGeofencingEvent((data as GeofencingData) ?? null);
     } catch (err) {
-      console.error("[geofence-task] handler failed:", err);
+      captureException(err, { scope: "geofence-task-handler" });
     }
   });
 }
