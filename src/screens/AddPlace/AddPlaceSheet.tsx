@@ -68,6 +68,16 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
     setWeeklyGoalHours,
   } = form;
 
+  // Tracks the selection that was active when the user tapped the pencil to
+  // re-pick an address. If set, "close" means "cancel address edit and go back
+  // to Phase 2" rather than closing the whole modal.
+  const [prevSelected, setPrevSelected] = React.useState<typeof selected>(null);
+
+  // Reset prevSelected whenever the sheet closes so the next open is clean.
+  React.useEffect(() => {
+    if (!visible) setPrevSelected(null);
+  }, [visible]);
+
   useAutocompleteSuggestions({ query, editing, selected, setSuggestions, setSearching, setApiError });
 
   const { handleSave, handleDelete, shouldPaywall } = useAddPlaceSave({
@@ -96,10 +106,22 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   });
 
   const handleEditAddress = () => {
-    // Pre-fill Phase 1 with the current address description so the user
-    // doesn't start from a blank search box (especially useful in edit mode).
+    // Save current selection so the X button can cancel back to Phase 2
+    // instead of closing the whole modal.
+    setPrevSelected(selected);
     if (selected) setQuery(selected.description);
     setSelected(null);
+  };
+
+  // X button: if we're in address-edit mode, cancel back to Phase 2;
+  // otherwise close the modal normally.
+  const handleSheetClose = () => {
+    if (prevSelected !== null) {
+      setSelected(prevSelected);
+      setPrevSelected(null);
+    } else {
+      onClose();
+    }
   };
 
   const handlePickSuggestion = async (s: PlaceSuggestion) => {
@@ -113,6 +135,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
         longitude: details.lng,
       });
       setApiError(null);
+      setPrevSelected(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setApiError(msg);
@@ -122,6 +145,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
         latitude: 0,
         longitude: 0,
       });
+      setPrevSelected(null);
     } finally {
       setResolvingPick(false);
     }
@@ -137,7 +161,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
   return (
     <Sheet
       visible={visible}
-      onClose={onClose}
+      onClose={handleSheetClose}
       heightPercent={88}
       title={sheetTitle}
       testID="add-place-sheet"
