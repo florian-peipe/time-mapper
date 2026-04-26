@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { Icon } from "@/components";
 import { i18n } from "@/lib/i18n";
 import { useTheme } from "@/theme/useTheme";
-import { tryLoadNativeMaps } from "@/lib/nativeMaps";
+import { tryLoadNativeMaps, isNativeMapUsable } from "@/lib/nativeMaps";
 import type { Place } from "@/db/schema";
 
 /**
@@ -51,7 +51,7 @@ export function PlacesMapView({ places, onPressPlace, onLongPressMap }: PlacesMa
   const Maps = React.useMemo(() => tryLoadNativeMaps(), []);
   const region = useMemo(() => regionCoveringAll(places), [places]);
 
-  if (!Maps) {
+  if (!Maps || !isNativeMapUsable()) {
     return (
       <View
         style={{

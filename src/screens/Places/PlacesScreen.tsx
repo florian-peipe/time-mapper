@@ -62,15 +62,21 @@ export function PlacesScreen() {
     [openSheet],
   );
 
+  // Toggle is always shown — PlacesMapView handles the no-key placeholder itself.
+  // Only the long-press-to-create gesture requires a working map.
   const mapOk = isNativeMapUsable();
-  const effectiveMode: ViewMode = !mapOk ? "list" : mode;
-  const showToggle = mapOk;
+  const effectiveMode: ViewMode = mode;
+  const showToggle = true;
 
   const body =
     places.length === 0 ? (
       <PlacesEmptyState onAdd={handleAdd} />
     ) : effectiveMode === "map" ? (
-      <PlacesMapView places={places} onPressPlace={handleEdit} onLongPressMap={handleLongPressOnMap} />
+      <PlacesMapView
+        places={places}
+        onPressPlace={handleEdit}
+        onLongPressMap={mapOk ? handleLongPressOnMap : undefined}
+      />
     ) : (
       <PlacesListView places={places} onPressPlace={handleEdit} />
     );
