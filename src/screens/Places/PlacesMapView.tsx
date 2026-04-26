@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { View } from "react-native";
-import { Banner } from "@/components";
+import { Text, View } from "react-native";
+import { Icon } from "@/components";
 import { i18n } from "@/lib/i18n";
 import { useTheme } from "@/theme/useTheme";
 import { tryLoadNativeMaps } from "@/lib/nativeMaps";
@@ -50,8 +50,28 @@ export function PlacesMapView({ places, onPressPlace }: PlacesMapViewProps) {
 
   if (!Maps) {
     return (
-      <View style={{ padding: t.space[5] }}>
-        <Banner tone="warning" title={i18n.t("addPlace.map.unavailable")} />
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          gap: t.space[3],
+          padding: t.space[5],
+          backgroundColor: t.color("color.surface2"),
+        }}
+      >
+        <Icon name="map" size={32} color={t.color("color.fg3")} />
+        <Text
+          style={{
+            fontSize: t.type.size.s,
+            color: t.color("color.fg3"),
+            fontFamily: t.type.family.sans,
+            textAlign: "center",
+            lineHeight: t.type.size.s * t.type.lineHeight.body,
+          }}
+        >
+          {i18n.t("addPlace.map.unavailable")}
+        </Text>
       </View>
     );
   }

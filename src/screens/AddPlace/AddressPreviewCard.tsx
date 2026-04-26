@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
 import { Icon, Input, WidgetBoundary } from "@/components";
 import { i18n } from "@/lib/i18n";
@@ -7,10 +7,9 @@ import { MapPreview } from "./MapPreview";
 import type { Selection } from "./usePlaceForm";
 
 /**
- * Name input + formatted-address preview + MapPreview as one unit. Rendered
- * as a Fragment so the outer Phase2DetailsForm column can apply its
- * inter-section `gap` to each of the three children uniformly. Keeping this
- * dumb (parent owns `name`/`onChangeName`) matches the Phase-2 contract.
+ * Unified card: name input + address line (with edit pencil) + map preview,
+ * all inside a single bordered container. The map bleeds to the card edges
+ * via negative margin; the card's overflow:hidden clips its corners.
  */
 export function AddressPreviewCard({
   selected,
@@ -18,6 +17,7 @@ export function AddressPreviewCard({
   onChangeName,
   radius,
   chosenColor,
+  onRequestEditAddress,
 }: {
   selected: Selection;
   name: string;
@@ -26,67 +26,83 @@ export function AddressPreviewCard({
   radius: number;
   /** Currently-picked place color — stroke/fill of the MapPreview circle. */
   chosenColor: string;
+  /** Called when the user taps the pencil to re-pick the address. */
+  onRequestEditAddress: () => void;
 }) {
   const t = useTheme();
-  return (
-    <>
-      {/* Name field. */}
-      <View style={{ flexDirection: "column", gap: t.space[1] + 2 }}>
-        <Text
-          accessibilityRole="text"
-          style={{
-            fontSize: t.type.size.s,
-            color: t.color("color.fg2"),
-            fontFamily: t.type.family.sans,
-            fontWeight: t.type.weight.medium,
-          }}
-        >
-          {i18n.t("addPlace.field.name")}
-        </Text>
-        <Input
-          testID="add-place-name"
-          value={name}
-          onChangeText={onChangeName}
-          accessibilityLabel={i18n.t("addPlace.field.name")}
-        />
-      </View>
+  const hasCoords = selected.latitude !== 0 || selected.longitude !== 0;
 
-      {/* Address preview card. */}
-      <View
-        accessibilityRole="text"
-        accessibilityLabel={`${i18n.t("addPlace.field.address")}, ${selected.description}`}
-        style={{
-          flexDirection: "row",
-          alignItems: "flex-start",
-          gap: t.space[3] - 2,
-          paddingVertical: t.space[3],
-          paddingHorizontal: 14,
-          backgroundColor: t.color("color.surface2"),
-          borderRadius: t.radius.md - 2,
-        }}
-      >
-        <View style={{ marginTop: 2 }}>
-          <Icon name="map-pin" size={18} color={t.color("color.fg2")} />
+  return (
+    <View
+      style={{
+        backgroundColor: t.color("color.surface"),
+        borderRadius: t.radius.md,
+        borderWidth: 1,
+        borderColor: t.color("color.border"),
+        overflow: "hidden",
+      }}
+    >
+      {/* Name + address — padded content area */}
+      <View style={{ padding: t.space[4], gap: t.space[3] }}>
+        {/* Name field */}
+        <View style={{ gap: t.space[1] + 2 }}>
+          <Text
+            style={{
+              fontSize: t.type.size.s,
+              color: t.color("color.fg2"),
+              fontFamily: t.type.family.sans,
+              fontWeight: t.type.weight.medium,
+            }}
+          >
+            {i18n.t("addPlace.field.name")}
+          </Text>
+          <Input
+            testID="add-place-name"
+            value={name}
+            onChangeText={onChangeName}
+            accessibilityLabel={i18n.t("addPlace.field.name")}
+          />
         </View>
-        <Text
-          style={{
-            flex: 1,
-            fontSize: t.type.size.body - 1,
-            color: t.color("color.fg2"),
-            fontFamily: t.type.family.sans,
-          }}
+
+        {/* Address line with pencil edit */}
+        <View
+          style={{ flexDirection: "row", alignItems: "center", gap: t.space[2] }}
+          accessibilityRole="text"
+          accessibilityLabel={`${i18n.t("addPlace.field.address")}, ${selected.description}`}
         >
-          {selected.description}
-        </Text>
+          <Icon name="map-pin" size={14} color={t.color("color.fg3")} />
+          <Text
+            style={{
+              flex: 1,
+              fontSize: t.type.size.xs + 1,
+              color: t.color("color.fg3"),
+              fontFamily: t.type.family.sans,
+              lineHeight: (t.type.size.xs + 1) * t.type.lineHeight.snug,
+            }}
+            numberOfLines={2}
+          >
+            {selected.description}
+          </Text>
+          <Pressable
+            testID="add-place-address-edit"
+            onPress={onRequestEditAddress}
+            accessibilityRole="button"
+            accessibilityLabel={i18n.t("addPlace.address.edit")}
+            hitSlop={t.space[3]}
+            style={{ padding: t.space[1] }}
+          >
+            <Icon name="pencil" size={14} color={t.color("color.fg3")} />
+          </Pressable>
+        </View>
       </View>
 
       {/*
-        Map preview — only rendered when we have real coordinates.
-        Demo-mode picks (offline fallback) + freshly-resolved Photon
-        picks both carry lat/lng. Hide the preview when either is 0
-        rather than drawing a pin in the middle of the Atlantic.
+        Map preview — bleeds to the card edges via negative horizontal + bottom
+        margin, then the parent's overflow:hidden clips it to the card radius.
+        Only rendered when we have real coordinates (demo/offline picks carry
+        lat/lng=0 and would draw a pin in the middle of the Atlantic).
       */}
-      {selected.latitude !== 0 || selected.longitude !== 0 ? (
+      {hasCoords ? (
         <WidgetBoundary scope="addPlace.mapPreview">
           <MapPreview
             latitude={selected.latitude}
@@ -94,9 +110,10 @@ export function AddressPreviewCard({
             radiusM={radius}
             color={chosenColor}
             testID="add-place-map-preview"
+            containerStyle={{ borderRadius: 0 }}
           />
         </WidgetBoundary>
       ) : null}
-    </>
+    </View>
   );
 }

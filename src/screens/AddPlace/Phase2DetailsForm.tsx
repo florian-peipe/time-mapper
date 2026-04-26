@@ -11,16 +11,6 @@ import { BuffersCard } from "./BuffersCard";
 import { GoalsCard } from "./GoalsCard";
 import type { Selection } from "./usePlaceForm";
 
-/**
- * Phase-2 of the AddPlaceSheet: the full editor once the user has picked
- * (or is editing) a place. A thin vertical orchestrator over purpose-built
- * sub-cards (address, appearance, buffers, goals) plus the radius slider
- * kept inline — it's a single control and doesn't earn its own file.
- *
- * Render order matches the pre-split layout one-for-one so the snapshot
- * test and a11y assertions stay green.
- */
-
 const RADIUS_MIN = 25;
 const RADIUS_MAX = 300;
 
@@ -50,6 +40,8 @@ export type Phase2DetailsFormProps = {
   onChangeWeeklyGoalEnabled: (v: boolean) => void;
   weeklyGoalHours: number;
   onChangeWeeklyGoalHours: (v: number) => void;
+  /** Called when the user taps the pencil to re-pick the address. */
+  onRequestEditAddress: () => void;
 };
 
 export function Phase2DetailsForm({
@@ -77,17 +69,21 @@ export function Phase2DetailsForm({
   onChangeWeeklyGoalEnabled,
   weeklyGoalHours,
   onChangeWeeklyGoalHours,
+  onRequestEditAddress,
 }: Phase2DetailsFormProps) {
   const t = useTheme();
   const chosenColor = PLACE_COLORS[colorIdx] ?? PLACE_COLORS[0]!;
+
   return (
-    <View style={{ flexDirection: "column", gap: t.space[5] - 2 }}>
+    <View style={{ flexDirection: "column", gap: t.space[5] }}>
+      {/* Address + name card */}
       <AddressPreviewCard
         selected={selected}
         name={name}
         onChangeName={onChangeName}
         radius={radius}
         chosenColor={chosenColor}
+        onRequestEditAddress={onRequestEditAddress}
       />
 
       {/* Radius slider — single control, kept inline. */}
@@ -145,42 +141,43 @@ export function Phase2DetailsForm({
         />
       </View>
 
+      {/* Buffers — always visible */}
+      <BuffersCard
+        entryBufferMin={entryBufferMin}
+        onChangeEntryBufferMin={onChangeEntryBufferMin}
+        exitBufferMin={exitBufferMin}
+        onChangeExitBufferMin={onChangeExitBufferMin}
+        visible={visible}
+      />
+
+      {/* Goals — always visible */}
+      <GoalsCard
+        dailyGoalEnabled={dailyGoalEnabled}
+        onChangeDailyGoalEnabled={onChangeDailyGoalEnabled}
+        dailyGoalHours={dailyGoalHours}
+        onChangeDailyGoalHours={onChangeDailyGoalHours}
+        dailyGoalDays={dailyGoalDays}
+        onChangeDailyGoalDays={onChangeDailyGoalDays}
+        weeklyGoalEnabled={weeklyGoalEnabled}
+        onChangeWeeklyGoalEnabled={onChangeWeeklyGoalEnabled}
+        weeklyGoalHours={weeklyGoalHours}
+        onChangeWeeklyGoalHours={onChangeWeeklyGoalHours}
+      />
+
+      {/* Appearance — collapsed by default */}
       <CollapsibleSection
         title={i18n.t("addPlace.customize")}
-        hint={i18n.t("addPlace.customizeHint")}
+        hint={i18n.t("addPlace.customizeHint.appearance")}
         defaultOpen={false}
-        testID="add-place-customize"
+        testID="add-place-appearance"
       >
-        <View style={{ gap: t.space[5] - 2 }}>
-          <BuffersCard
-            entryBufferMin={entryBufferMin}
-            onChangeEntryBufferMin={onChangeEntryBufferMin}
-            exitBufferMin={exitBufferMin}
-            onChangeExitBufferMin={onChangeExitBufferMin}
-            visible={visible}
-          />
-
-          <GoalsCard
-            dailyGoalEnabled={dailyGoalEnabled}
-            onChangeDailyGoalEnabled={onChangeDailyGoalEnabled}
-            dailyGoalHours={dailyGoalHours}
-            onChangeDailyGoalHours={onChangeDailyGoalHours}
-            dailyGoalDays={dailyGoalDays}
-            onChangeDailyGoalDays={onChangeDailyGoalDays}
-            weeklyGoalEnabled={weeklyGoalEnabled}
-            onChangeWeeklyGoalEnabled={onChangeWeeklyGoalEnabled}
-            weeklyGoalHours={weeklyGoalHours}
-            onChangeWeeklyGoalHours={onChangeWeeklyGoalHours}
-          />
-
-          <AppearanceCard
-            colorIdx={colorIdx}
-            onChangeColorIdx={onChangeColorIdx}
-            iconIdx={iconIdx}
-            onChangeIconIdx={onChangeIconIdx}
-            chosenColor={chosenColor}
-          />
-        </View>
+        <AppearanceCard
+          colorIdx={colorIdx}
+          onChangeColorIdx={onChangeColorIdx}
+          iconIdx={iconIdx}
+          onChangeIconIdx={onChangeIconIdx}
+          chosenColor={chosenColor}
+        />
       </CollapsibleSection>
     </View>
   );

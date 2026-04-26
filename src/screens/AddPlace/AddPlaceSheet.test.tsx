@@ -135,6 +135,11 @@ async function gotoPhase2() {
   await waitFor(() => screen.getByText("Geofence radius"));
 }
 
+/** Expand the Appearance collapsible so color/icon testIDs are in the tree. */
+function expandAppearance() {
+  fireEvent.press(screen.getByTestId("add-place-appearance-toggle"));
+}
+
 beforeEach(() => {
   jest.useFakeTimers();
   useSheetStore.setState({ active: null, payload: null, pendingPlaceForm: null });
@@ -218,6 +223,7 @@ describe("AddPlaceSheet — Phase 2 (editor)", () => {
   it("renders 8 color swatches", async () => {
     setup({});
     await gotoPhase2();
+    expandAppearance();
     for (let i = 0; i < 8; i++) {
       expect(screen.getByTestId(`add-place-color-${i}`)).toBeTruthy();
     }
@@ -226,6 +232,7 @@ describe("AddPlaceSheet — Phase 2 (editor)", () => {
   it("tapping a color swatch updates the selection", async () => {
     setup({});
     await gotoPhase2();
+    expandAppearance();
     // Initially swatch #0 is selected.
     expect(screen.getByTestId("add-place-color-0").props.accessibilityState).toEqual(
       expect.objectContaining({ selected: true }),
@@ -242,6 +249,7 @@ describe("AddPlaceSheet — Phase 2 (editor)", () => {
   it("renders 9 icon tiles", async () => {
     setup({});
     await gotoPhase2();
+    expandAppearance();
     for (let i = 0; i < 9; i++) {
       expect(screen.getByTestId(`add-place-icon-${i}`)).toBeTruthy();
     }
@@ -250,6 +258,7 @@ describe("AddPlaceSheet — Phase 2 (editor)", () => {
   it("tapping an icon updates the selection", async () => {
     setup({});
     await gotoPhase2();
+    expandAppearance();
     expect(screen.getByTestId("add-place-icon-0").props.accessibilityState).toEqual(
       expect.objectContaining({ selected: true }),
     );
@@ -279,6 +288,8 @@ describe("AddPlaceSheet — Save", () => {
     await waitFor(() => screen.getByText("Geofence radius"));
     // Change the name.
     fireEvent.changeText(screen.getByTestId("add-place-name"), "Studio");
+    // Expand Appearance to access color/icon pickers.
+    expandAppearance();
     // Switch to icon 2 (dumbbell).
     fireEvent.press(screen.getByTestId("add-place-icon-2"));
     // Switch to color 4.

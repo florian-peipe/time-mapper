@@ -1,7 +1,7 @@
 import React from "react";
-import { View } from "react-native";
+import { Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { useTheme } from "@/theme/useTheme";
-import { Banner } from "@/components";
+import { Icon } from "@/components";
 import { i18n } from "@/lib/i18n";
 import { tryLoadNativeMaps, isNativeMapUsable } from "@/lib/nativeMaps";
 
@@ -15,6 +15,9 @@ export type MapPreviewProps = {
   /** Color of the pin + circle stroke. Usually the current place color. */
   color: string;
   testID?: string;
+  /** Override the outer container style — e.g. pass { borderRadius: 0 } when
+   *  the parent already clips with overflow:hidden. */
+  containerStyle?: StyleProp<ViewStyle>;
 };
 
 /**
@@ -36,43 +39,73 @@ function regionFromRadius(lat: number, lng: number, radiusM: number) {
   };
 }
 
+/** Neutral 180-pt placeholder shown when the map SDK or key is absent. */
+function MapPlaceholder({
+  testID,
+  containerStyle,
+}: {
+  testID?: string;
+  containerStyle?: StyleProp<ViewStyle>;
+}) {
+  const t = useTheme();
+  return (
+    <View
+      testID={testID}
+      style={[
+        {
+          height: 180,
+          borderRadius: t.radius.md,
+          backgroundColor: t.color("color.surface2"),
+          alignItems: "center",
+          justifyContent: "center",
+          gap: t.space[2],
+        },
+        containerStyle,
+      ]}
+    >
+      <Icon name="map" size={22} color={t.color("color.fg3")} />
+      <Text
+        style={{
+          fontSize: t.type.size.xs,
+          color: t.color("color.fg3"),
+          fontFamily: t.type.family.sans,
+          textAlign: "center",
+          paddingHorizontal: t.space[5],
+          lineHeight: t.type.size.xs * t.type.lineHeight.body,
+        }}
+      >
+        {i18n.t("addPlace.map.placeholderHint")}
+      </Text>
+    </View>
+  );
+}
+
 /**
  * 180-pt tall map preview centered on a place, with a marker pin and a
- * translucent circle at the geofence radius. Non-interactive in v1 — the
- * user picks the address via autocomplete, then sees what the geofence
- * will actually cover.
+ * translucent circle at the geofence radius. Non-interactive — the user picks
+ * the address via autocomplete, then sees what the geofence will cover.
  *
- * Graceful degradation: when `react-native-maps` fails to load (Expo Go,
- * Jest, a hypothetical platform where the module is absent) or the Google
- * Maps for Android SDK key is missing on Android, we render an info-tone
- * Banner explaining the preview is available once the build is configured.
+ * Graceful degradation: when the map SDK is absent or the Android key is
+ * missing, renders a neutral surface-2 placeholder at the same footprint.
  */
-export function MapPreview({ latitude, longitude, radiusM, color, testID }: MapPreviewProps) {
+export function MapPreview({
+  latitude,
+  longitude,
+  radiusM,
+  color,
+  testID,
+  containerStyle,
+}: MapPreviewProps) {
   const t = useTheme();
   const Maps = React.useMemo(() => tryLoadNativeMaps(), []);
   const mapUsable = React.useMemo(() => isNativeMapUsable(), []);
 
-  if (!Maps) {
+  if (!Maps || !mapUsable) {
     return (
-      <View testID={testID}>
-        <Banner
-          tone="info"
-          title={i18n.t("addPlace.map.unavailable")}
-          testID={testID ? `${testID}-fallback` : undefined}
-        />
-      </View>
-    );
-  }
-
-  if (!mapUsable) {
-    return (
-      <View testID={testID}>
-        <Banner
-          tone="warning"
-          title={i18n.t("addPlace.map.androidKeyMissing")}
-          testID={testID ? `${testID}-fallback` : undefined}
-        />
-      </View>
+      <MapPlaceholder
+        testID={testID ? `${testID}-fallback` : undefined}
+        containerStyle={containerStyle}
+      />
     );
   }
 
@@ -85,12 +118,15 @@ export function MapPreview({ latitude, longitude, radiusM, color, testID }: MapP
       testID={testID}
       accessibilityRole="image"
       accessibilityLabel={i18n.t("addPlace.map.accessibilityLabel")}
-      style={{
-        height: 180,
-        borderRadius: t.radius.md,
-        overflow: "hidden",
-        backgroundColor: t.color("color.surface2"),
-      }}
+      style={[
+        {
+          height: 180,
+          borderRadius: t.radius.md,
+          overflow: "hidden",
+          backgroundColor: t.color("color.surface2"),
+        },
+        containerStyle,
+      ]}
     >
       <MapView
         style={{ flex: 1 }}

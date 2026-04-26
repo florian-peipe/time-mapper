@@ -35,6 +35,7 @@ const baseProps = {
   onChangeWeeklyGoalEnabled: jest.fn(),
   weeklyGoalHours: 10,
   onChangeWeeklyGoalHours: jest.fn(),
+  onRequestEditAddress: jest.fn(),
 };
 
 function wrap(ui: React.ReactNode) {
@@ -62,35 +63,33 @@ describe("Phase2DetailsForm", () => {
 
   it("composes address, goals, buffers, and appearance sub-sections", () => {
     const { getByTestId } = render(wrap(<Phase2DetailsForm {...baseProps} />));
-    // Sub-cards are always rendered (just visually collapsed) so testIDs are
-    // findable without expanding the Customize section.
+    // Goals and buffers are always visible. Appearance is collapsible.
     expect(getByTestId("add-place-daily-goal-toggle")).toBeTruthy();
     expect(getByTestId("add-place-weekly-goal-toggle")).toBeTruthy();
     expect(getByTestId("add-place-radius")).toBeTruthy();
   });
 
-  it("Customize section starts closed", () => {
+  it("Appearance section starts closed", () => {
     const { getByTestId } = render(wrap(<Phase2DetailsForm {...baseProps} />));
-    const toggle = getByTestId("add-place-customize-toggle");
+    const toggle = getByTestId("add-place-appearance-toggle");
     expect(toggle.props.accessibilityState.expanded).toBe(false);
   });
 
-  it("tapping Customize expands the section", () => {
+  it("tapping Appearance expands the section", () => {
     const { getByTestId } = render(wrap(<Phase2DetailsForm {...baseProps} />));
-    const toggle = getByTestId("add-place-customize-toggle");
+    const toggle = getByTestId("add-place-appearance-toggle");
     expect(toggle.props.accessibilityState.expanded).toBe(false);
     fireEvent.press(toggle);
     expect(toggle.props.accessibilityState.expanded).toBe(true);
   });
 
-  it("save works without ever opening Customize (defaults applied)", () => {
+  it("save works without ever opening Appearance (defaults applied)", () => {
     // Phase2DetailsForm only renders the form fields; the save button lives in
     // AddPlaceSheet. This test verifies the form renders without errors when
-    // Customize is never opened — confirming defaults propagate correctly.
+    // Appearance is never opened — confirming defaults propagate correctly.
     const { getByTestId } = render(wrap(<Phase2DetailsForm {...baseProps} />));
     expect(getByTestId("add-place-radius")).toBeTruthy();
-    // Customize section is still closed — no interaction needed
-    const toggle = getByTestId("add-place-customize-toggle");
+    const toggle = getByTestId("add-place-appearance-toggle");
     expect(toggle.props.accessibilityState.expanded).toBe(false);
   });
 });

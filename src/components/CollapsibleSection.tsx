@@ -1,6 +1,12 @@
-import React, { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import React, { useRef, useState } from "react";
+import { Animated, LayoutAnimation, Platform, Pressable, Text, UIManager, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
+import { Icon } from "./Icon";
+
+// LayoutAnimation requires explicit opt-in on Android.
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type Props = {
   title: string;
@@ -13,11 +19,38 @@ type Props = {
 export function CollapsibleSection({ title, hint, defaultOpen = false, testID, children }: Props) {
   const [expanded, setExpanded] = useState(defaultOpen);
   const t = useTheme();
+  const chevronAnim = useRef(new Animated.Value(defaultOpen ? 1 : 0)).current;
+
+  const toggle = () => {
+    LayoutAnimation.configureNext({
+      duration: t.motion.duration.base,
+      create: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+      update: { type: LayoutAnimation.Types.easeInEaseOut },
+      delete: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+    });
+    Animated.timing(chevronAnim, {
+      toValue: expanded ? 0 : 1,
+      duration: t.motion.duration.base,
+      useNativeDriver: true,
+    }).start();
+    setExpanded((v) => !v);
+  };
+
+  const chevronRotation = chevronAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
 
   return (
     <View>
       <Pressable
-        onPress={() => setExpanded((v) => !v)}
+        onPress={toggle}
         testID={testID ? `${testID}-toggle` : undefined}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
@@ -25,13 +58,9 @@ export function CollapsibleSection({ title, hint, defaultOpen = false, testID, c
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingVertical: t.space[3],
-          paddingHorizontal: t.space[4],
-          backgroundColor: t.color("color.surface"),
-          borderWidth: 1,
-          borderColor: t.color("color.border"),
-          borderRadius: t.radius.md,
-          opacity: pressed ? 0.7 : 1,
+          paddingVertical: t.space[2],
+          minHeight: t.minTouchTarget,
+          opacity: pressed ? 0.6 : 1,
         })}
       >
         <View style={{ flex: 1 }}>
@@ -58,22 +87,11 @@ export function CollapsibleSection({ title, hint, defaultOpen = false, testID, c
             </Text>
           ) : null}
         </View>
-        <Text
-          style={{
-            fontSize: t.type.size.s,
-            color: t.color("color.fg3"),
-            fontFamily: t.type.family.sans,
-            marginLeft: t.space[2],
-            transform: [{ rotate: expanded ? "180deg" : "0deg" }],
-          }}
-        >
-          ›
-        </Text>
+        <Animated.View style={{ transform: [{ rotate: chevronRotation }] }}>
+          <Icon name="chevron-down" size={16} color={t.color("color.fg3")} />
+        </Animated.View>
       </Pressable>
-      {/* Always rendered so testID lookups work; visually hidden when collapsed. */}
-      <View style={{ overflow: "hidden", maxHeight: expanded ? 10000 : 0 }}>
-        <View style={{ paddingTop: t.space[3] }}>{children}</View>
-      </View>
+      {expanded ? <View style={{ paddingTop: t.space[2] }}>{children}</View> : null}
     </View>
   );
 }

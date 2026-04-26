@@ -31,23 +31,43 @@ tags:
     visible: "Time Mapper"
     timeout: 60000
 
-# Tap the LogBox X button position twice with a delay — dismisses the toast if present,
-# harmless tap on empty space otherwise. X bounds: ~[970,2207][1022,2259] on 1080x2400.
-- tapOn:
-    point: "92%,93%"
-- waitForAnimationToEnd:
-    timeout: 2000
-- tapOn:
-    point: "92%,93%"
-- waitForAnimationToEnd:
-    timeout: 1000
+# Dismiss expo-dev-client info screen if it appears (dev builds only)
+- runFlow:
+    when:
+      visible: "Runtime version"
+    commands:
+      - tapOn: "Continue"
+      - waitForAnimationToEnd:
+          timeout: 1000
 
-- tapOn: "Get started"
+# Welcome — use testID + retry (JS thread may be busy on first cold launch)
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-welcome-continue"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-welcome-continue"
+- runFlow:
+    when:
+      notVisible: "How it works"
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - tapOn:
+          id: "onboarding-welcome-continue"
+- runFlow:
+    when:
+      notVisible: "How it works"
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 4000
+      - tapOn:
+          id: "onboarding-welcome-continue"
 
 # How it works
 - extendedWaitUntil:
     visible: "How it works"
-    timeout: 10000
+    timeout: 15000
 - tapOn: "Continue"
 
 # Goals and stats

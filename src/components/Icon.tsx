@@ -41,6 +41,8 @@ import {
   Repeat,
   List as ListIcon,
   Map as MapIcon,
+  Pencil,
+  ChevronDown,
   type LucideProps,
 } from "lucide-react-native";
 import { useTheme } from "@/theme/useTheme";
@@ -92,6 +94,8 @@ const ICONS = {
   repeat: Repeat,
   list: ListIcon,
   map: MapIcon,
+  pencil: Pencil,
+  "chevron-down": ChevronDown,
 } as const;
 
 export type IconName = keyof typeof ICONS;

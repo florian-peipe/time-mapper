@@ -95,6 +95,13 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
     onSaved,
   });
 
+  const handleEditAddress = () => {
+    // Pre-fill Phase 1 with the current address description so the user
+    // doesn't start from a blank search box (especially useful in edit mode).
+    if (selected) setQuery(selected.description);
+    setSelected(null);
+  };
+
   const handlePickSuggestion = async (s: PlaceSuggestion) => {
     setResolvingPick(true);
     try {
@@ -204,6 +211,7 @@ export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: Ad
           onChangeWeeklyGoalEnabled={setWeeklyGoalEnabled}
           weeklyGoalHours={weeklyGoalHours}
           onChangeWeeklyGoalHours={setWeeklyGoalHours}
+          onRequestEditAddress={handleEditAddress}
         />
       )}
     </Sheet>

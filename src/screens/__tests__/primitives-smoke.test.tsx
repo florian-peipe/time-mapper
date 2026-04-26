@@ -93,6 +93,7 @@ describe("primitives-smoke — AddPlace", () => {
           onChangeName={NO_OP}
           radius={100}
           chosenColor="#FF6A3D"
+          onRequestEditAddress={NO_OP}
         />,
       ),
     );

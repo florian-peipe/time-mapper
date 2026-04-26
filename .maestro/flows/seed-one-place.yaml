@@ -23,6 +23,15 @@ appId: com.timemapper.app
     visible: "Time Mapper"
     timeout: 60000
 
+# Dismiss expo-dev-client info screen if it appears (dev builds only)
+- runFlow:
+    when:
+      visible: "Runtime version"
+    commands:
+      - tapOn: "Continue"
+      - waitForAnimationToEnd:
+          timeout: 1000
+
 # Welcome slide — React Navigation may not be ready immediately on warm
 # restarts (Metro cache makes the bundle load much faster). Tap once, then
 # check if the next slide appeared; if not, wait and tap again.
