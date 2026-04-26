@@ -236,7 +236,7 @@ describe("TimelineScreen", () => {
     setup({ nowMs });
     fireEvent.press(screen.getByTestId("timeline-fab"));
     expect(useSheetStore.getState().active).toBe("entryEdit");
-    expect(useSheetStore.getState().payload).toEqual({ entryId: null });
+    expect(useSheetStore.getState().payload).toMatchObject({ entryId: null });
   });
 
   it("tapping an EntryRow opens the entryEdit sheet with that entry's id", () => {

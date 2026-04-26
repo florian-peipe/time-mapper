@@ -23,7 +23,7 @@ export type PaywallSource =
 export type PaywallMode = "subscribe" | "change";
 
 export type SheetPayload =
-  | { entryId: string | null }
+  | { entryId: string | null; defaultDate?: string }
   | {
       placeId: string | null;
       source?: AddPlaceSource;

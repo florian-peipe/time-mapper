@@ -103,10 +103,10 @@ describe("StatsScreen", () => {
   it("cycling to Day mode hides the week bar chart", () => {
     const nowMs = new Date(2026, 3, 15, 12, 0, 0).getTime();
     setup({ nowMs });
-    // Initial mode = week; tap mode label to cycle → month → year → day.
-    fireEvent.press(screen.getByTestId("stats-nav-mode"));
-    fireEvent.press(screen.getByTestId("stats-nav-mode"));
-    fireEvent.press(screen.getByTestId("stats-nav-mode"));
+    // Initial mode = week; long-press mode label to cycle → month → year → day.
+    fireEvent(screen.getByTestId("stats-nav-mode"), "longPress");
+    fireEvent(screen.getByTestId("stats-nav-mode"), "longPress");
+    fireEvent(screen.getByTestId("stats-nav-mode"), "longPress");
     // Now on day mode — chart is hidden.
     expect(screen.queryByTestId("week-bar-chart")).toBeNull();
   });

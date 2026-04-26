@@ -1,10 +1,10 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTheme } from "@/theme/useTheme";
-import { Icon } from "@/components";
+import { DatePickerSheet, Icon } from "@/components";
 import { i18n } from "@/lib/i18n";
 import { localeForDateApis } from "@/lib/time";
-import { MODES, PERIOD_DAYS, type RangeMode } from "@/lib/range";
+import { MODES, PERIOD_DAYS, rangeForMode, type RangeMode } from "@/lib/range";
 import { openSheet as openPaywallIfGated } from "./dayNavGuard";
 
 type Props = {
@@ -30,9 +30,11 @@ export const FREE_HISTORY_DAYS = 14;
 /**
  * Header bar shown at the top of Timeline: `< [period label + total] >`.
  *
- * Tapping the label cycles the aggregation mode forward
- * (Day → Week → Month → Year → Day). Long-pressing cycles backward for
- * quick long-range jumps. Chevrons step `offset` within the current mode.
+ * Tapping the label opens a date-picker sheet for direct date navigation.
+ * Long-pressing the label cycles the aggregation mode forward
+ * (Day → Week → Month → Year → Day).
+ * Chevrons step `offset` within the current mode.
+ * A "Today" chip appears whenever offset !== 0 to jump back to the current period.
  *
  * Free users hitting a back-nav that would land beyond `FREE_HISTORY_DAYS`
  * get the paywall instead of the nav.
@@ -47,11 +49,19 @@ export function DayNavHeader({
   testID,
 }: Props) {
   const t = useTheme();
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const forwardDisabled = offset >= 0;
   const label = formatPeriodLabel(mode, offset);
   const hours = Math.floor(totalMin / 60);
   const minutes = totalMin % 60;
+
+  // The date at the start of the currently viewed period — used to open the
+  // calendar picker at the right month.
+  const currentDate = useMemo(
+    () => new Date(rangeForMode(mode, offset).startS * 1000),
+    [mode, offset],
+  );
 
   const goBack = useCallback(() => {
     const next = offset - 1;
@@ -71,18 +81,20 @@ export function DayNavHeader({
     const idx = MODES.indexOf(mode);
     const next = MODES[(idx + 1) % MODES.length]!;
     onChangeMode(next);
-    // Reset offset when the mode changes — offsets are period-scoped, so
-    // staying on "-3 days" after flipping to Week would jump to "-3 weeks"
-    // which is rarely what the user intended.
     onChangeOffset(0);
   }, [mode, onChangeMode, onChangeOffset]);
 
-  const cycleModeBackward = useCallback(() => {
-    const idx = MODES.indexOf(mode);
-    const next = MODES[(idx - 1 + MODES.length) % MODES.length]!;
-    onChangeMode(next);
-    onChangeOffset(0);
-  }, [mode, onChangeMode, onChangeOffset]);
+  const handlePickDate = useCallback(
+    (date: Date) => {
+      setPickerOpen(false);
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+      const dayOffset = Math.round((date.getTime() - todayMidnight.getTime()) / 86400000);
+      onChangeMode("day");
+      onChangeOffset(dayOffset);
+    },
+    [onChangeMode, onChangeOffset],
+  );
 
   const iconBtn = {
     minWidth: t.minTouchTarget,
@@ -95,74 +107,113 @@ export function DayNavHeader({
   };
 
   return (
-    <View
-      testID={testID}
-      style={{
-        paddingTop: t.space[2],
-        paddingHorizontal: t.space[5],
-        paddingBottom: t.space[3],
-        flexDirection: "row",
-        alignItems: "center",
-        gap: t.space[2],
-      }}
-    >
-      <Pressable
-        onPress={goBack}
-        testID={testID ? `${testID}-prev` : undefined}
-        accessibilityRole="button"
-        accessibilityLabel={i18n.t("daynav.label.prev")}
-        hitSlop={8}
-        style={iconBtn}
+    <>
+      <View
+        testID={testID}
+        style={{
+          paddingTop: t.space[2],
+          paddingHorizontal: t.space[5],
+          paddingBottom: t.space[3],
+          flexDirection: "row",
+          alignItems: "center",
+          gap: t.space[2],
+        }}
       >
-        <Icon name="chevron-left" size={20} color={t.color("color.fg2")} />
-      </Pressable>
-
-      <Pressable
-        onPress={cycleModeForward}
-        onLongPress={cycleModeBackward}
-        accessibilityRole="button"
-        accessibilityLabel={modeA11yLabel(mode)}
-        accessibilityHint={i18n.t("daynav.mode.hint")}
-        testID={testID ? `${testID}-mode` : undefined}
-        style={{ flex: 1, alignItems: "center" }}
-      >
-        <Text
-          style={{
-            fontSize: t.type.size.l,
-            fontWeight: t.type.weight.bold,
-            color: t.color("color.fg"),
-            fontFamily: t.type.family.sans,
-            letterSpacing: -0.3,
-          }}
+        <Pressable
+          onPress={goBack}
+          testID={testID ? `${testID}-prev` : undefined}
+          accessibilityRole="button"
+          accessibilityLabel={i18n.t("daynav.label.prev")}
+          hitSlop={8}
+          style={iconBtn}
         >
-          {label}
-        </Text>
-        <Text
-          style={{
-            fontSize: t.type.size.xs,
-            color: t.color("color.fg3"),
-            fontFamily: t.type.family.sans,
-            marginTop: 2,
-            fontVariant: ["tabular-nums"],
-          }}
-        >
-          {i18n.t("daynav.label.tracked", { hours, minutes })}
-        </Text>
-      </Pressable>
+          <Icon name="chevron-left" size={20} color={t.color("color.fg2")} />
+        </Pressable>
 
-      <Pressable
-        onPress={goForward}
-        testID={testID ? `${testID}-next` : undefined}
-        accessibilityRole="button"
-        accessibilityLabel={i18n.t("daynav.label.next")}
-        accessibilityState={{ disabled: forwardDisabled }}
-        disabled={forwardDisabled}
-        hitSlop={8}
-        style={[iconBtn, { opacity: forwardDisabled ? 0.3 : 1 }]}
-      >
-        <Icon name="chevron-right" size={20} color={t.color("color.fg2")} />
-      </Pressable>
-    </View>
+        <Pressable
+          onPress={() => setPickerOpen(true)}
+          onLongPress={cycleModeForward}
+          accessibilityRole="button"
+          accessibilityLabel={modeA11yLabel(mode)}
+          accessibilityHint={i18n.t("daynav.mode.hint")}
+          testID={testID ? `${testID}-mode` : undefined}
+          style={{ flex: 1, alignItems: "center" }}
+        >
+          <Text
+            style={{
+              fontSize: t.type.size.l,
+              fontWeight: t.type.weight.bold,
+              color: t.color("color.fg"),
+              fontFamily: t.type.family.sans,
+              letterSpacing: -0.3,
+            }}
+          >
+            {label}
+          </Text>
+          <Text
+            style={{
+              fontSize: t.type.size.xs,
+              color: t.color("color.fg3"),
+              fontFamily: t.type.family.sans,
+              marginTop: 2,
+              fontVariant: ["tabular-nums"],
+            }}
+          >
+            {i18n.t("daynav.label.tracked", { hours, minutes })}
+          </Text>
+        </Pressable>
+
+        {/* "Today" chip — only visible when not viewing the current period */}
+        {offset !== 0 ? (
+          <Pressable
+            onPress={() => onChangeOffset(0)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={i18n.t("daynav.label.today")}
+            testID={testID ? `${testID}-today` : undefined}
+            style={{
+              paddingVertical: t.space[1],
+              paddingHorizontal: t.space[2],
+              borderRadius: t.radius.pill,
+              borderWidth: 1,
+              borderColor: t.color("color.accent"),
+            }}
+          >
+            <Text
+              style={{
+                fontSize: t.type.size.xs,
+                fontWeight: t.type.weight.semibold,
+                color: t.color("color.accent"),
+                fontFamily: t.type.family.sans,
+              }}
+            >
+              {i18n.t("daynav.label.today")}
+            </Text>
+          </Pressable>
+        ) : null}
+
+        <Pressable
+          onPress={goForward}
+          testID={testID ? `${testID}-next` : undefined}
+          accessibilityRole="button"
+          accessibilityLabel={i18n.t("daynav.label.next")}
+          accessibilityState={{ disabled: forwardDisabled }}
+          disabled={forwardDisabled}
+          hitSlop={8}
+          style={[iconBtn, { opacity: forwardDisabled ? 0.3 : 1 }]}
+        >
+          <Icon name="chevron-right" size={20} color={t.color("color.fg2")} />
+        </Pressable>
+      </View>
+
+      <DatePickerSheet
+        visible={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onPickDate={handlePickDate}
+        currentDate={currentDate}
+        isPro={isPro ?? false}
+      />
+    </>
   );
 }
 
@@ -229,7 +280,6 @@ function formatYearLabel(offset: number): string {
 }
 
 function computeWeekBounds(offset: number): { start: Date; end: Date } {
-  // Anchor on local Monday — matches the German convention used in Stats.
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   const day = start.getDay();

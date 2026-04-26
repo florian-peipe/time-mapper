@@ -17,9 +17,11 @@ export type EntryEditSheetProps = {
   /** null → "New entry" mode. Otherwise hydrate from the stored entry. */
   entryId: string | null;
   onClose: () => void;
+  /** ISO date string — when set, new entries default to this date (09:00–10:00). */
+  defaultDate?: string | null;
 };
 
-export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProps) {
+export function EntryEditSheet({ visible, entryId, onClose, defaultDate }: EntryEditSheetProps) {
   const t = useTheme();
   const { places } = usePlaces();
 
@@ -40,7 +42,7 @@ export function EntryEditSheet({ visible, entryId, onClose }: EntryEditSheetProp
     grossMin,
     pauseMin,
     netMin,
-  } = useEntryEditForm(entryId, places);
+  } = useEntryEditForm(entryId, places, defaultDate);
 
   // When New mode and places load, default placeId to the first place.
   useEffect(() => {

@@ -3,7 +3,11 @@ import type { Place } from "@/db/schema";
 import { useEntriesRepo } from "@/features/entries/useEntries";
 import { defaultEnd, defaultStart, pauseDateToMinutes, pauseMinutesToDate } from "./entryEditUtils";
 
-export function useEntryEditForm(entryId: string | null, _places: Place[]) {
+export function useEntryEditForm(
+  entryId: string | null,
+  _places: Place[],
+  defaultDate?: string | null,
+) {
   const entriesRepo = useEntriesRepo();
 
   const [placeId, setPlaceId] = useState<string | null>(null);
@@ -27,14 +31,14 @@ export function useEntryEditForm(entryId: string | null, _places: Place[]) {
         setEntrySource(e.source);
       }
     } else {
-      const now = new Date();
-      setStartDate(defaultStart(now));
-      setEndDate(defaultEnd(now));
+      const anchor = defaultDate ? new Date(defaultDate) : new Date();
+      setStartDate(defaultStart(anchor));
+      setEndDate(defaultEnd(anchor));
       setPauseDate(pauseMinutesToDate(0));
       setNote("");
       setEntrySource(null);
     }
-  }, [entryId, entriesRepo]);
+  }, [entryId, entriesRepo, defaultDate]);
 
   const grossMin = useMemo(
     () => Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / 60_000)),

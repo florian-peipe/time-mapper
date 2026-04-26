@@ -53,6 +53,12 @@ export function SheetHost() {
 
   const entryId =
     active === "entryEdit" && payload && "entryId" in payload ? payload.entryId : null;
+  const defaultDate =
+    active === "entryEdit" && payload && "defaultDate" in payload
+      ? typeof payload.defaultDate === "string"
+        ? payload.defaultDate
+        : undefined
+      : undefined;
   const placeId = active === "addPlace" && payload && "placeId" in payload ? payload.placeId : null;
   const addPlaceSource =
     active === "addPlace" && payload && "source" in payload
@@ -72,7 +78,9 @@ export function SheetHost() {
       : undefined;
   const paywallCurrentProductId =
     active === "paywall" && payload && "currentProductId" in payload
-      ? (typeof payload.currentProductId === "string" ? payload.currentProductId : undefined)
+      ? typeof payload.currentProductId === "string"
+        ? payload.currentProductId
+        : undefined
       : undefined;
 
   const handleAddPlaceSaved = useCallback(() => {
@@ -84,7 +92,12 @@ export function SheetHost() {
 
   return (
     <>
-      <EntryEditSheet visible={active === "entryEdit"} entryId={entryId} onClose={close} />
+      <EntryEditSheet
+        visible={active === "entryEdit"}
+        entryId={entryId}
+        defaultDate={defaultDate}
+        onClose={close}
+      />
       <AddPlaceSheet
         visible={active === "addPlace"}
         placeId={placeId}

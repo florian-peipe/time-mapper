@@ -63,8 +63,8 @@ export function TimelineScreen() {
   );
 
   const handleAddManual = useCallback(() => {
-    openSheet("entryEdit", { entryId: null });
-  }, [openSheet]);
+    openSheet("entryEdit", { entryId: null, defaultDate: new Date(startS * 1000).toISOString() });
+  }, [openSheet, startS]);
 
   // Quick-add pivot: if the user is inside (or within 2× radius of) a
   // saved place and nothing is tracking right now, the primary action

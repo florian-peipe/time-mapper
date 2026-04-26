@@ -9159,7 +9159,7 @@ exports[`snapshots — main screens Stats (empty week) 1`] = `
                     },
                   ],
                   "props": {
-                    "accessibilityHint": "Long-press to cycle backward",
+                    "accessibilityHint": "Long-press to change period",
                     "accessibilityLabel": "Viewing week — tap to switch to month",
                     "accessibilityRole": "button",
                     "accessibilityState": {
@@ -10541,7 +10541,7 @@ exports[`snapshots — main screens Timeline with a single seeded place 1`] = `
                     },
                   ],
                   "props": {
-                    "accessibilityHint": "Long-press to cycle backward",
+                    "accessibilityHint": "Long-press to change period",
                     "accessibilityLabel": "Viewing day — tap to switch to week",
                     "accessibilityRole": "button",
                     "accessibilityState": {

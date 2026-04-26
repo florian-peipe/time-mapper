@@ -89,19 +89,36 @@ describe("DayNavHeader", () => {
     );
   });
 
-  it("tapping the label cycles the aggregation mode forward", () => {
-    const { onChangeMode, onChangeOffset } = mount({ offset: -3, mode: "day" });
+  it("tapping the label opens the date-picker sheet", () => {
+    mount({ offset: 0 });
     fireEvent.press(screen.getByTestId("day-nav-header-mode"));
+    expect(screen.getByText("Go to date")).toBeTruthy();
+  });
+
+  it("long-pressing the label cycles the aggregation mode forward", () => {
+    const { onChangeMode, onChangeOffset } = mount({ offset: -3, mode: "day" });
+    fireEvent(screen.getByTestId("day-nav-header-mode"), "longPress");
     expect(onChangeMode).toHaveBeenCalledWith("week");
-    // Mode change resets offset so "day -3" doesn't carry into "week -3".
     expect(onChangeOffset).toHaveBeenCalledWith(0);
   });
 
-  it("long-pressing the label cycles the aggregation mode backward", () => {
-    const { onChangeMode } = mount({ offset: 0, mode: "day" });
-    fireEvent(screen.getByTestId("day-nav-header-mode"), "longPress");
-    // Backward from "day" wraps to "year".
-    expect(onChangeMode).toHaveBeenCalledWith("year");
+  it("shows a 'Today' chip when offset is non-zero and hides it at offset 0", () => {
+    const { rerender } = mount({ offset: -2 });
+    expect(screen.getByTestId("day-nav-header-today")).toBeTruthy();
+    rerender(
+      <ThemeProvider schemeOverride="light">
+        <DayNavHeader
+          mode="day"
+          offset={0}
+          totalMin={120}
+          isPro={false}
+          onChangeMode={jest.fn()}
+          onChangeOffset={jest.fn()}
+          testID="day-nav-header"
+        />
+      </ThemeProvider>,
+    );
+    expect(screen.queryByTestId("day-nav-header-today")).toBeNull();
   });
 
   it("shows 'This week' in week mode at offset 0", () => {
