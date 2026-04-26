@@ -24,7 +24,13 @@ export type PaywallMode = "subscribe" | "change";
 
 export type SheetPayload =
   | { entryId: string | null }
-  | { placeId: string | null; source?: AddPlaceSource }
+  | {
+      placeId: string | null;
+      source?: AddPlaceSource;
+      /** Pre-filled location from a map long-press. When set, AddPlaceSheet
+       *  skips Phase 1 search and opens directly in Phase 2. */
+      seed?: { latitude: number; longitude: number; description: string };
+    }
   | {
       paywallSource: PaywallSource;
       /** Defaults to "subscribe". "change" hides the non-target package card. */

@@ -30,6 +30,7 @@ import { NoteSection } from "@/screens/EntryEdit/NoteSection";
 // Places
 import { PlacesListView } from "@/screens/Places/PlacesListView";
 import { PlacesEmptyState } from "@/screens/Places/PlacesEmptyState";
+import { MapListToggle } from "@/components";
 // Settings
 import { HourRow } from "@/screens/Settings/HourRow";
 import { ProChip } from "@/screens/Settings/ProChip";
@@ -203,6 +204,16 @@ describe("primitives-smoke — Places", () => {
 
   it("PlacesEmptyState", () => {
     const { toJSON } = render(wrap(<PlacesEmptyState onAdd={NO_OP} />));
+    assertRenders(toJSON());
+  });
+
+  it("MapListToggle (map active)", () => {
+    const { toJSON } = render(wrap(<MapListToggle mode="map" onSetMode={NO_OP} />));
+    assertRenders(toJSON());
+  });
+
+  it("MapListToggle (list active)", () => {
+    const { toJSON } = render(wrap(<MapListToggle mode="list" onSetMode={NO_OP} />));
     assertRenders(toJSON());
   });
 });

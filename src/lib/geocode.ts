@@ -28,6 +28,7 @@ export type AutocompleteResult = {
 };
 
 const PHOTON_URL = "https://photon.komoot.io/api/";
+const PHOTON_REVERSE_URL = "https://photon.komoot.io/reverse";
 
 /**
  * In-memory cache for recent Photon queries. Typing "wo, wor, worl, world"
@@ -65,6 +66,43 @@ function cacheSet(key: string, suggestions: PlaceSuggestion[], nowMs: number): v
 /** Test-only — wipes the autocomplete cache so each test starts clean. */
 export function __resetAutocompleteCacheForTests(): void {
   cache.clear();
+}
+
+/**
+ * Reverse-geocode a coordinate pair to a human-readable address string.
+ * Uses the same Photon backend as `autocomplete` — no API key, EU-hosted.
+ *
+ * Throws on network failure, non-200, or empty result so the caller can
+ * fall back to a coordinate string. The signal is optional and only used
+ * for cancellation (e.g. if the user dismisses the sheet before the call
+ * resolves).
+ */
+export async function reverseGeocode(
+  lat: number,
+  lng: number,
+  signal?: AbortSignal,
+): Promise<{ description: string }> {
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lng),
+    limit: "1",
+  });
+  const res = await fetch(`${PHOTON_REVERSE_URL}?${params.toString()}`, { signal });
+  if (!res.ok) throw new Error(`Photon reverse HTTP ${res.status}`);
+  const data = (await res.json()) as PhotonResponse;
+  const feature = (data.features ?? [])[0];
+  if (!feature) throw new Error("Photon reverse: no results");
+  const p = feature.properties ?? {};
+  const streetLine =
+    p.street && p.housenumber
+      ? `${p.street} ${p.housenumber}`
+      : (p.street ?? p.name ?? p.city ?? "");
+  const tail = [p.postcode, p.city, p.state, p.country]
+    .filter((v): v is string => typeof v === "string" && v.length > 0)
+    .join(", ");
+  const description = [streetLine, tail].filter((s) => s.length > 0).join(", ");
+  if (!description) throw new Error("Photon reverse: empty description");
+  return { description };
 }
 
 /**

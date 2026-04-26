@@ -9,7 +9,8 @@
  * Hydration priority (highest first):
  *   1. `pendingPlaceForm` from the sheet store (post-paywall restore).
  *   2. `editingPlace` — the place being edited.
- *   3. Defaults (for the "new place" flow).
+ *   3. `initialSelected` — a coordinate seed from a map long-press.
+ *   4. Defaults (for the "new place" flow).
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PLACE_COLORS } from "@/theme/tokens";
@@ -119,6 +120,10 @@ export type UsePlaceFormOpts = {
   places: Place[];
   /** Device KV repo — reads the global buffer defaults for new places. */
   kv: KvRepo;
+  /** Pre-seeded location for a new place (e.g. from a map long-press). When
+   *  set and no other higher-priority hydration applies, the form opens in
+   *  Phase 2 with this selection pre-filled. */
+  initialSelected?: Selection | null;
 };
 
 export type UsePlaceFormResult = {
@@ -169,7 +174,7 @@ export type UsePlaceFormResult = {
 };
 
 export function usePlaceForm(opts: UsePlaceFormOpts): UsePlaceFormResult {
-  const { placeId, visible, source, places, kv } = opts;
+  const { placeId, visible, source, places, kv, initialSelected } = opts;
   const pendingPlaceForm = useSheetStore((s) => s.pendingPlaceForm);
   const setPendingPlaceForm = useSheetStore((s) => s.setPendingPlaceForm);
 
@@ -274,6 +279,10 @@ export function usePlaceForm(opts: UsePlaceFormOpts): UsePlaceFormResult {
       setDailyGoalDays(vals.dailyGoalDays);
       setWeeklyGoalEnabled(vals.weeklyGoalEnabled);
       if (vals.weeklyGoalEnabled) setWeeklyGoalHours(vals.weeklyGoalHours);
+    } else if (justOpened && initialSelected) {
+      // Seed from a map long-press: skip Phase 1, open Phase 2 directly.
+      // All other fields stay at their current (default) values.
+      setSelected(initialSelected);
     } else if (!visible) {
       setQuery("");
       setSelected(null);
@@ -299,6 +308,7 @@ export function usePlaceForm(opts: UsePlaceFormOpts): UsePlaceFormResult {
     placeId,
     source,
     setPendingPlaceForm,
+    initialSelected,
   ]);
 
   return {

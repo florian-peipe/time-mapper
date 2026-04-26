@@ -20,6 +20,7 @@
   "places.toggle.map": "Map",
   "places.toggle.list": "List",
   "places.map.accessibilityLabel": "Map showing your saved places",
+  "places.map.longPressHint": "Long-press the map to add a place",
   "timeline.nearby.inside": "Inside {{name}}",
   "timeline.nearby.near": "~{{meters}}m from {{name}}",
   "timeline.fab.startHere": "Start tracking at {{name}}",

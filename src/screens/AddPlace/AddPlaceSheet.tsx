@@ -10,7 +10,7 @@ import { geocodePlace, type PlaceSuggestion } from "@/lib/geocode";
 import type { AddPlaceSource } from "@/state/sheetStore";
 import { Phase1SearchStep } from "./Phase1SearchStep";
 import { Phase2DetailsForm } from "./Phase2DetailsForm";
-import { usePlaceForm } from "./usePlaceForm";
+import { usePlaceForm, type Selection } from "./usePlaceForm";
 import { useAutocompleteSuggestions } from "./useAutocompleteSuggestions";
 import { useAddPlaceSave } from "./useAddPlaceSave";
 
@@ -21,15 +21,18 @@ export type AddPlaceSheetProps = {
   source?: AddPlaceSource;
   onClose: () => void;
   onSaved?: (placeId: string) => void;
+  /** Pre-filled location from a map long-press. Passed as `initialSelected` to
+   *  usePlaceForm so the sheet opens directly in Phase 2. */
+  seed?: Selection | null;
 };
 
-export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved }: AddPlaceSheetProps) {
+export function AddPlaceSheet({ visible, placeId, source, onClose, onSaved, seed }: AddPlaceSheetProps) {
   const t = useTheme();
   const { places, create, update, remove, restore, count } = usePlaces();
   const { isPro } = usePro();
   const kv = useKvRepo();
 
-  const form = usePlaceForm({ placeId, visible, source, places, kv });
+  const form = usePlaceForm({ placeId, visible, source, places, kv, initialSelected: seed });
   const {
     editing,
     query,

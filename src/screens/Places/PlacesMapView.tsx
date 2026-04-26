@@ -39,9 +39,12 @@ function regionCoveringAll(places: Place[]) {
 export type PlacesMapViewProps = {
   places: Place[];
   onPressPlace: (placeId: string) => void;
+  /** Called when the user long-presses an empty area of the map — used to
+   *  trigger a tap-to-create-place flow. */
+  onLongPressMap?: (coord: { latitude: number; longitude: number }) => void;
 };
 
-export function PlacesMapView({ places, onPressPlace }: PlacesMapViewProps) {
+export function PlacesMapView({ places, onPressPlace, onLongPressMap }: PlacesMapViewProps) {
   const t = useTheme();
   // Dynamic require keeps this component Expo-Go safe; re-evaluate only once
   // per mount so we don't re-resolve the module on every render.
@@ -87,6 +90,12 @@ export function PlacesMapView({ places, onPressPlace }: PlacesMapViewProps) {
         showsUserLocation
         showsMyLocationButton={false}
         toolbarEnabled={false}
+        onLongPress={
+          onLongPressMap
+            ? (e: { nativeEvent: { coordinate: { latitude: number; longitude: number } } }) =>
+                onLongPressMap(e.nativeEvent.coordinate)
+            : undefined
+        }
       >
         {places.map((p) => (
           <React.Fragment key={p.id}>

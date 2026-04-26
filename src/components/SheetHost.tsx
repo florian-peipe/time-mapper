@@ -58,6 +58,10 @@ export function SheetHost() {
     active === "addPlace" && payload && "source" in payload
       ? narrowAddPlaceSource(payload.source)
       : undefined;
+  const addPlaceSeed =
+    active === "addPlace" && payload && "seed" in payload && payload.seed != null
+      ? payload.seed
+      : null;
   const paywallSource =
     active === "paywall" && payload && "paywallSource" in payload
       ? narrowPaywallSource(payload.paywallSource)
@@ -85,6 +89,7 @@ export function SheetHost() {
         visible={active === "addPlace"}
         placeId={placeId}
         source={addPlaceSource}
+        seed={addPlaceSeed}
         onClose={close}
         onSaved={handleAddPlaceSaved}
       />
